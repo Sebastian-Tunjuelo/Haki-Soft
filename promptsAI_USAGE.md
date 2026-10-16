@@ -15,6 +15,13 @@ Este archivo contiene el **registro histórico, secuencial e íntegro (sin omisi
 | **Prompt #003** | `2026-10-16` | `Antigravity` | `Planeación`, `Gobernanza`, `Backend`, `Frontend`, `IA`, `Tests` | Refinamiento de `sdd-process.md` (sin *skills* ni ejemplos de specs, impacto de SDD en el aplicativo final MVP/Demo, mención de archivos sin rutas y catálogo de `SPEC-00` a `SPEC-12` Deploy), actualización de `CONTEXT.md` (IA limitada en el MVP solo a tareas de imagen y texto y contrato exacto `AiAdvisorInputContractSchema` para `AiAdvisorService`) y adaptación de `architecture-overview.md`, `taskboard.md` y `pbp-development.md` al flujo completo de pagos y plazos (`7d` inicial, `24h` respuesta a extensión, `hasta +7d` extensión única, `32h` revisión por entrega, máx. 2 correcciones y `30m` ventana final). | [`planning/sdd-process.md`](file:///c:/Users/maico/Desktop/Haki-Suave/planning/sdd-process.md), [`planning/architecture-overview.md`](file:///c:/Users/maico/Desktop/Haki-Suave/planning/architecture-overview.md), [`.agents/CONTEXT.md`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/CONTEXT.md), [`planning/taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Suave/planning/taskboard.md), [`planning/pbp-development.md`](file:///c:/Users/maico/Desktop/Haki-Suave/planning/pbp-development.md), [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/prompts/AI_USAGE.md) |
 | **Prompt #004** | `2026-10-16` | `Antigravity` | `Gobernanza`, `Planeación`, `Frontend`, `Backend`, `IA`, `Tests` | Investigación profunda mediante `find-skills` e instalación multi-agente (`.agents/skills`, `.kiro/skills` y `.claude/skills`) de las *skills* oficiales de valor real para el stack del proyecto, y creación/adaptación 100% a **TaskStream AI** de la skill `taskstream-spec` (`SKILL.md`, `references/guia-de-secciones.md`, `references/validacion.md` y `scripts/check-spec.mjs`) sin residuos externos. | [`.agents/skills/taskstream-spec/SKILL.md`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/skills/taskstream-spec/SKILL.md), [`.agents/skills/taskstream-spec/references/guia-de-secciones.md`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/skills/taskstream-spec/references/guia-de-secciones.md), [`.agents/skills/taskstream-spec/references/validacion.md`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/skills/taskstream-spec/references/validacion.md), [`.agents/skills/taskstream-spec/scripts/check-spec.mjs`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/skills/taskstream-spec/scripts/check-spec.mjs) *(más réplicas en `.kiro/skills/` y `.claude/skills/`)*, [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/prompts/AI_USAGE.md) |
 | **Prompt #005** | `2026-10-16` | `Antigravity` | `Gobernanza` | Creación del repositorio privado `Haki-Soft` en GitHub bajo la cuenta `Sebastian-Tunjuelo`, commit inicial con los 211 archivos del monorepo y adición de los 4 colaboradores del equipo con permiso `write`: `Samuel-Duque`, `GeorgeAMS`, `SaraMLopera` y `MaicolD0930`. | [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #006** | `2026-10-16` | `Cursor` | `Planeación` | Lectura/comprensión del contexto del proyecto; generación de preguntas de aclaración **sin modificar archivos**. | Ninguno (solo lectura) |
+| **Prompt #007** | `2026-10-16` | `Cursor` | `Planeación` | Respuestas de negocio a preguntas 1–12 (extensión, disputas, wallets, Gig vs publicación, IA fuera de sesión). | Ninguno (solo diálogo) |
+| **Prompt #008** | `2026-10-16` | `Cursor` | `Planeación` | Aclaraciones 3, 5–7, 10–11 (mediación post-2ª corrección, Gig fijo, bandeja de ofertas, arranque mutuo, una wallet). | Ninguno (solo diálogo) |
+| **Prompt #009** | `2026-10-16` | `Cursor` | `Planeación` | Confirmación: tras reembolso la actividad muere y el Freelancer queda desligado (sin reapertura automática). | Ninguno (solo diálogo) |
+| **Prompt #010** | `2026-10-16` | `Cursor` | `Planeación`, `Gobernanza`, `Backend` | Aplicar todas las aclaraciones en la documentación SSoT y planeación alineada. | [`.agents/CONTEXT.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/CONTEXT.md), [`planning/architecture-overview.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/architecture-overview.md), [`planning/taskboard.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/taskboard.md), [`planning/pbp-development.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/pbp-development.md), [`planning/sdd-process.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/sdd-process.md), [`validacion.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/skills/taskstream-spec/references/validacion.md) (+ réplicas), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #011** | `2026-10-16` | `Cursor` | `Planeación`, `Gobernanza`, `Frontend`, `Backend`, `IA`, `Tests` | Redactar e implementar SPEC-00 y SPEC-01; redactar SPEC-02 y SPEC-03 sin implementar integraciones externas. | `specs/_template.md`, `specs/README.md`, `specs/SPEC-00.md`, `specs/SPEC-01.md`, `specs/SPEC-02.md`, `specs/SPEC-03.md`, `packages/shared-schemas/`, `apps/web/`, `apps/api/`, `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `pnpm-lock.yaml`, `.gitignore`, `.env.example`, `planning/taskboard.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md` |
+| **Prompt #012** | `2026-10-16` | `Antigravity` | `Herramientas / DX`, `Backend`, `Gobernanza` | Aprovisionamiento e integración en el proyecto `Haki-Soft` del CLI interactivo oficial de Open Payments (`tools/open-payments-cli`) y del servidor MCP (`tools/open-payments-mcp`) con compilación TypeScript, configuración `.env.example`, desacoplamiento Git y manual operativo `tools/README.md`. | [`tools/README.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/README.md), [`tools/open-payments-cli/.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/.env.example), [`tools/open-payments-cli/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli), [`tools/open-payments-mcp/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-mcp), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 
 ---
 
@@ -492,3 +499,147 @@ https://github.com/SaraMLopera
 
 https://github.com/MaicolD0930
 ```
+
+---
+
+### Prompt #006 — Lectura y Comprensión del Contexto (Sin Modificaciones)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Planeación`
+* **Resumen de su funcionalidad:** El agente leyó `.agents/CONTEXT.md` y la planeación, contrastó el estado del repo (sin `specs/` ni `apps/` aún) y formuló preguntas de aclaración de negocio sin editar archivos.
+* **Archivos creados / modificados:** Ninguno
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Bien, la idea es que entiendas el contexto y la informacion con la cual estaa estructurada el proyecto, la idea que que leas todo y generes preguntas sobre lo que tengas dudad, no modifiques nada aun, solo lectura y comprension.
+```
+
+---
+
+### Prompt #007 — Respuestas Iniciales a Preguntas de Aclaración (1–12)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Planeación`
+* **Resumen de su funcionalidad:** Cierra reglas: reembolso auto si no hay extensión; extensión solo al vencer; post-2ª corrección aceptar o mediación; ventana 30m; 4% a wallet dueño; misma cuenta ofrece/contrata; sesión enfocada a backend + front de pruebas (IA fuera).
+* **Archivos creados / modificados:** Ninguno
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+1. Reembolso automatico
+2. solo al vencer
+3. Tras segunda, otorga posibilidad de aceptar o si no reembolso.
+4. El inicia un contador de 30m, si en esos 30m no se genera una peticion de disputa se libera automaticamente.
+5. No la entiendo, explica en un contexto
+6. Explica mejor con ejemplo
+7. Con que te refieren con varios hilos dame un ejemplo.
+8. Si puede ofrecer y aceptar trabajos
+9. ese porcentaje va directo a otra wallet, la del dueño
+10. expliame con un ejemplo
+11. explicame con un ejemplo
+12. Lo de la ia no lo tengas en cuenta, solo haremos el back en esta sesion con  front de pruebas.
+
+Las demas ya te las responde depsues
+```
+
+---
+
+### Prompt #008 — Aclaraciones de Negocio (3, 5–7, 10–11)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Planeación`
+* **Resumen de su funcionalidad:** Precisa mediación admin tras petición post-2ª corrección; Gig fijo no negociable vs ofertas `<=` tope; bandeja de ofertas; flujo solo tras aceptación mutua; una sola wallet activa con reemplazo.
+* **Archivos creados / modificados:** Ninguno
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+3. Por eso tras finalizar la seguna correccion puede afirmar que es lo que quiere si no se realiza peticion de reembolso donde entra administracion a mediar.
+5. Correcto si no acepta darle mas plazo, se realiza reembolso.
+6. Si el que realiza trabajo publica a un precio sus servicios esto es directo no negociable, En cambio si una persona ofrece generar trabajo ejemplo: busco editor de fotos pago maximo 50 dolares, ahi el trabajador puede hacer ofertas <=50.
+7. Referente a los varios hilos, Carlos le aparecen las ofertas y puede ver los perfiles de los ofertantes, y tomar o aceptar la que el quiera de esas.
+10. Pues el flujo no comienza hasta que ambos lados acepten dicha actividad o de lo contrario el que busca el trabajo cancele la peticion antes de ser aceptada.
+11. Solo se le permitira una, En caso de querer cambiar debe añadir una nueva se reemplaza por la anterior, pero siempre debe haber una activa.
+```
+
+---
+
+### Prompt #009 — Reembolso Termina la Actividad
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Planeación`
+* **Resumen de su funcionalidad:** Confirma que ante reembolso la orden/actividad muere, el Freelancer queda desligado y el Buyer busca otra persona en un ciclo nuevo (sin `REFUNDED_AND_REOPENED`).
+* **Archivos creados / modificados:** Ninguno
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+5. Si se genera el reembolso simplemente esa actividad muere, y por ejemplo no me cumplieron la actividad puedo buscar otra persona y el que no cumplio simplemente queda desatado de dicha actividad.
+```
+
+---
+
+### Prompt #010 — Corrección Documental del CONTEXT y Planeación Alineada
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Planeación`, `Gobernanza`, `Backend`
+* **Resumen de su funcionalidad:** Actualiza la SSoT (`.agents/CONTEXT.md`) y documentos de planeación/validación para reflejar todas las aclaraciones de los prompts #006–#009: extensión solo al vencer, reembolsos que matan la actividad, mediación post-2ª corrección, Gig vs bandeja de ofertas, wallet única, 4% a wallet del dueño, arranque tras aceptación mutua, enums/schemas/state machine alineados.
+* **Archivos creados / modificados:**
+  * [`.agents/CONTEXT.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/CONTEXT.md) *(Modificado)*
+  * [`planning/architecture-overview.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/architecture-overview.md) *(Modificado)*
+  * [`planning/taskboard.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/taskboard.md) *(Modificado)*
+  * [`planning/pbp-development.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/pbp-development.md) *(Modificado)*
+  * [`planning/sdd-process.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/sdd-process.md) *(Modificado)*
+  * [`.agents/skills/taskstream-spec/references/validacion.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/skills/taskstream-spec/references/validacion.md) *(Modificado; sincronizado a réplicas `.claude` / `.kiro`)*
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Considerando todas estas aclaraciones, realiza las correciones en el contexto para que quede mucho mas claro en la documentacion del proyecto.
+```
+
+---
+
+### Prompt #011 — Redactar e implementar SPEC-00 y SPEC-01; redactar SPEC-02 y SPEC-03
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Planeación`, `Gobernanza`, `Frontend`, `Backend`, `IA`, `Tests`
+* **Resumen de su funcionalidad:** Crea la carpeta `specs/` (`SPEC-00`, testeada), implementa contratos Zod, mocks, monorepo Next.js 15.5 / NestJS 10.4 / Prisma 6 y pruebas de invariantes (`SPEC-01`, testeada) y deja `SPEC-02` y `SPEC-03` solo redactadas, sin implementar Clerk, Open Payments ni la escena 3D.
+* **Archivos creados / modificados:**
+  * `specs/_template.md`, `specs/README.md`, `specs/SPEC-00.md`, `specs/SPEC-01.md`, `specs/SPEC-02.md`, `specs/SPEC-03.md`
+  * `packages/shared-schemas/`
+  * `apps/web/`, `apps/api/` (sin `open-payments.service.ts` ni `escrow-payment.service.ts`)
+  * `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `pnpm-lock.yaml`, `.gitignore`, `.env.example`
+  * `planning/taskboard.md`
+  * `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+necesito que redactes y implementes la spec 0 y 1 y luego redactes las specs hasta la fase una osea spec 2 y 3 solo redactes no implementes
+```
+
+---
+
+### Prompt #012 — Aprovisionamiento e Integración de CLI y Servidor MCP de Open Payments en Haki-Soft
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Herramientas / DX`, `Backend`, `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. Clona e instala en `tools/open-payments-cli` el CLI interactivo oficial de la **Interledger Foundation** con dependencias aisladas mediante `pnpm install --ignore-workspace`.
+  2. Clona, instala y compila a JavaScript (`dist/index.js`) en `tools/open-payments-mcp` el servidor MCP para Open Payments API con dependencias aisladas mediante `pnpm install --ignore-workspace` y `pnpm build`.
+  3. Desacopla los directorios `.git` internos de ambas herramientas para integrarlas limpiamente al árbol de control de versiones de `Haki-Soft`.
+  4. Crea la plantilla de entorno `tools/open-payments-cli/.env.example` y documenta exhaustivamente en `tools/README.md` el manual de ejecución interactiva, el modo `.env`, los 13 comandos disponibles, las 9 tools MCP y la configuración para Antigravity (`~/.gemini/config/mcp_config.json`).
+  5. Mantiene la trazabilidad inmutable y sincronización dual de gobernanza en `AI_USAGE.md`, `promptsAI_USAGE.md` y `prompts/AI_USAGE.md`.
+* **Archivos creados / modificados:**
+  * [`tools/README.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/README.md) *(Creado)*
+  * [`tools/open-payments-cli/.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/.env.example) *(Creado)*
+  * [`tools/open-payments-cli/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli) *(Instalado)*
+  * [`tools/open-payments-mcp/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-mcp) *(Instalado / Compilado)*
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+@[conversation:"Interledger CLI And MCP Tools"] pon el cli y mcp en este proyecto
+```
+

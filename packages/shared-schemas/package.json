@@ -1,0 +1,27 @@
+{
+  "name": "@taskstream/shared-schemas",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Contratos Zod, invariantes financieras y mocks de TaskStream AI (SPEC-01).",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "22.13.14",
+    "typescript": "5.7.3",
+    "vitest": "3.2.4"
+  }
+}

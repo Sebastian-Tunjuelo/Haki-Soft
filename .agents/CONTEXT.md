@@ -38,8 +38,11 @@ Los trabajadores digitales independientes y contratistas en todo el continente a
 **Reglas Inmutables de Valor en TaskStream AI:**
 
 * **Pago Único en un Solo Bloque (Sin Hitos ni Pagos Divididos):** Todo encargo se financia mediante **un único bloqueo del 100% del presupuesto acordado** al inicio del trabajo y se liquida en **un único desembolso** cuando finaliza el ciclo de entrega y la ventana final de reclamaciones de 30 minutos. No existen pagos fraccionados, entregas parciales pagadas ni acuerdos porcentuales divididos.
-* **Comisión Transparente del 4% (Desembolso 96% / 4%):** La plataforma aplica una comisión plana reducida del **4%** sobre el valor acordado para diferenciarse competitivamente de las pasarelas y marketplaces tradicionales. Si el encargo acordado es de **\$100.00 USD**, el Escrow recibe **\$100.00 USD**, transfiere **\$96.00 USD (96%)** al Freelancer al liberarse el pago y retiene **\$4.00 USD (4%)** para TaskStream.
+* **Comisión Transparente del 4% (Desembolso 96% / 4%):** La plataforma aplica una comisión plana reducida del **4%** sobre el valor acordado. Si el encargo acordado es de **\$100.00 USD**, el Escrow recibe **\$100.00 USD**; al liberarse el pago transfiere **\$96.00 USD (96%)** a la wallet del Freelancer y **\$4.00 USD (4%)** a una **wallet distinta de la plataforma / dueño** (no se deja la comisión “retenida” dentro de `taskstream-escrow` como saldo informal).
 * **Costo de Conversión de Divisa (FX Doble) Asumido por el Cliente (Buyer):** El comprador asume siempre el costo de conversión cambiaria tanto al fondear el Escrow (desde su divisa local hacia `USD`) como en el escenario de un reembolso de vuelta a su billetera (desde `USD` hacia su divisa local).
+* **Una sola Wallet Activa por Usuario:** Cada usuario puede tener **solo una** `walletAddress` activa y verificada. Para cambiar de billetera debe registrar y verificar una nueva, que **reemplaza** a la anterior; siempre debe existir exactamente una activa.
+* **Cuenta Unificada Buyer/Seller:** El mismo usuario puede **ofrecer** trabajos (Seller) y **contratar** trabajos (Buyer) cambiando de modo en la UI; no está prohibido operar en ambos roles en la plataforma (órdenes distintas).
+* **Muerte de la Actividad tras Reembolso:** Cuando se ejecuta un reembolso del **100%**, esa orden/actividad **muere**: el Freelancer queda **desligado** y el Buyer, si desea continuar, debe buscar a otra persona mediante un ciclo nuevo (nueva contratación o nueva publicación). **No** existe reapertura automática de la misma orden (`REFUNDED_AND_REOPENED` queda **retirado** del dominio).
 * **Alcance de Auditoría de IA en el MVP (Exclusivo para Imagen y Texto) y Suscripción Planteada a Futuro:** En el MVP, el Consejero de IA (`AiAdvisorService`) **únicamente auditará y asesorará tareas que tengan que ver con IMAGEN y TEXTO**. El resto de tipos de entregables (video, audio, archivos de código complejos, etc.) así como el modelo de suscripción opcional (`Buyer AI Pro Subscription`) **quedan planteados como visión a futuro, pero no entrarán dentro del MVP**. Para crear `AiAdvisorReportSchema`, es requisito concretar con claridad en su especificación (`SPEC-08.md`) el **contrato exacto de entrada que recibirá `AiAdvisorService`**.
 
 ---
@@ -63,7 +66,7 @@ El desarrollo del proyecto se rige por especificaciones vivas (`SPEC-00.md` para
 | Célula / Rol | Integrantes | Responsabilidades Nucleares en el Monorepo (`apps/` y `packages/`) |
 | :---- | :---- | :---- |
 | **Equipo Frontend** | **2 Desarrolladores** (`FE-1`, `FE-2`) | **`FE-1` (Core UI, Marketplace & Negociación):** Catálogo de las 6 categorías, tablón de tareas publicadas por clientes, sala de negociación de presupuesto, gestión de extensión única (hasta 7 días adicionales con ventana de decisión de 24h), revisión de entregas (32h con máx. 2 correcciones globales), ventana final de reclamaciones (30 min), perfiles multimoneda y dashboards. **`FE-2` (Experiencia 3D Scroll-Driven & Visor Protegido):** Narrativa visual e interfaz inmersiva con animaciones 3D vinculadas al scroll (**`GSAP ScrollTrigger` + `Lenis` + `@react-three/fiber v9`**) y visores del módulo *Protected Preview* para los 6 tipos de archivo. |
-| **Equipo Backend** | **2 Desarrolladores** (`BE-1`, `BE-2`) | **`BE-1` (Pagos Open Payments & Ciclo de Vida Financiero):** Integración `@interledger/open-payments` (con intervención de IA mínima/nula en el servicio core de pagos abiertos), bloqueo único en `taskstream-escrow`, desembolso **96% / 4%**, reembolsos automáticos y manuales del **100%** (por rechazo o falta de respuesta en 24h a solicitud de extensión, por no entregar dentro de la extensión aprobada o por fallo administrativo en disputa), ventana final de reclamaciones de 30 min e idempotencia. **`BE-2` (Storage R2 Sin Límite MVP, Workers & Timers BullMQ):** Subida directa con Presigned URLs a Cloudflare R2, colas BullMQ + Redis para marcas de agua (`sharp`, `ffmpeg`) y temporizadores independientes (**7 días** de entrega inicial, **24 horas** de respuesta a extensión, **hasta 7 días adicionales** de extensión única, **32 horas** de revisión por entrega y **30 minutos** de ventana final de reclamaciones). |
+| **Equipo Backend** | **2 Desarrolladores** (`BE-1`, `BE-2`) | **`BE-1` (Pagos Open Payments & Ciclo de Vida Financiero):** Integración `@interledger/open-payments` (IA mínima/nula en el servicio core), bloqueo único en `taskstream-escrow`, desembolso **96% Freelancer + 4% wallet dueño**, reembolsos **100%** (sin extensión al vencer 7d, rechazo/silencio 24h a extensión, fallo de extensión, o fallo admin en disputa), ventana final 30 min e idempotencia. **`BE-2` (Storage R2 Sin Límite MVP, Workers & Timers BullMQ):** Presigned URLs a R2, workers `sharp`/`ffmpeg` y relojes BullMQ (**7d**, **24h**, **+7d solo al vencer**, **32h**, **30m**). |
 | **Equipo IA** | **1 Desarrollador** (`AI-1`) | **`AI-1` (Orquestador Consultivo para Imagen y Texto & Contratos IA):** Especificación en `SPEC-08.md` del contrato exacto de entrada que recibe `AiAdvisorService` (`AiAdvisorInputContractSchema`) y su salida (`AiAdvisorReportSchema`), auditar y asesorar en el MVP **exclusivamente tareas de imagen y texto**, validación determinista pre-IA y defensas contra *Prompt Injection*. |
 
 
@@ -100,11 +103,12 @@ A partir del requisito de actualizar **Next.js a una versión entre la 15 y la 1
 ## 4. Gestión de Identidad, Alcance Continental y Verificación de Billetera
 
 * **Uso de Wallet Addresses Multimoneda en Toda América (Open Payments v7.4.0):** Cada contratista y freelancer del continente americano se identifica mediante su **Wallet Address** con formato URL HTTPS estándar (ej. `https://ilp.interledger-test.dev/usuario-latam`), operando de forma nativa con la moneda configurada en su proveedor de billetera (`USD`, `CAD`, `MXN`, `COP`, `BRL`, `ARS`, `CLP`, `PEN`, `UYU`, `CRC`, `DOP`, `GTQ`, `EUR`, etc.).
+* **Cardinalidad de Wallet (Regla Inmutable):** Un usuario tiene **exactamente una** wallet activa verificada. Al registrar una nueva wallet verificada, la anterior queda **reemplazada** (deja de ser la activa). Sin wallet verificada activa no puede publicar, ofertar, contratar ni cobrar.
 * **Protocolo de Verificación Criptográfica de Posesión (`Subject Grant` — Guía Oficial Open Payments):**
-  1. **Autenticación Social (Clerk):** El usuario inicia sesión con Google o GitHub mediante Clerk (`clerkUserId`).
+  1. **Autenticación Social (Clerk):** El usuario inicia sesión con Google o GitHub mediante Clerk (`clerkUserId`). La misma cuenta unificada permite alternar **Buyer Mode / Seller Mode**.
   2. **Descubrimiento de Metadatos (`walletAddress.get`):** Al registrar su `walletAddress`, el backend en NestJS consulta `GET {walletAddress}` mediante `unauthenticatedClient.walletAddress.get({ url })` para descubrir el `authServer`, el `resourceServer`, el `assetCode` (moneda local del usuario) y el `assetScale`.
   3. **Desafío GNAP Interact con `subject.sub_ids`:** El backend solicita al `authServer` una concesión interactiva sin movimiento de fondos (`client.grant.request`) enviando `subject: { sub_ids: [{ format: 'uri', id: userWalletAddress }] }` y un `interact` con `start: ['redirect']` y `finish: { method: 'redirect', uri: callbackUrl, nonce: clientNonce }`.
-  4. **Confirmación de Titularidad y Verificación de Hash:** El usuario aprueba el consentimiento en el IdP de su proveedor de billetera (Interledger Test Wallet / Rafiki). Al volver al callback de NestJS (`/api/v1/auth/wallet/callback?interact_ref=...&hash=...`), el backend verifica criptográficamente el hash (`SHA-256(clientNonce + "\n" + finishNonce + "\n" + interact_ref + "\n" + authServerUrl)`), ejecuta `client.grant.continue` para confirmar la respuesta `subject` y marca la billetera como `isVerified: true` en PostgreSQL. Ninguna billetera con `isVerified: false` puede publicar tareas, negociar presupuestos, recibir desembolsos ni contratar encargos.
+  4. **Confirmación de Titularidad y Verificación de Hash:** El usuario aprueba el consentimiento en el IdP de su proveedor de billetera (Interledger Test Wallet / Rafiki). Al volver al callback de NestJS (`/api/v1/auth/wallet/callback?interact_ref=...&hash=...`), el backend verifica criptográficamente el hash (`SHA-256(clientNonce + "\n" + finishNonce + "\n" + interact_ref + "\n" + authServerUrl)`), ejecuta `client.grant.continue` para confirmar la respuesta `subject` y marca la billetera como `isVerified: true` en PostgreSQL (reemplazando cualquier wallet activa previa). Ninguna billetera con `isVerified: false` puede publicar tareas, ofertar, recibir desembolsos ni contratar encargos.
 
 ---
 
@@ -119,27 +123,30 @@ La plataforma **TaskStream AI** opera su propia billetera oficial en Interledger
 3. **Conversión de Divisa (FX Doble) Asumida Íntegramente por el Buyer:**
    * **En el Fondeo (Entrada al Escrow):** Los encargos se referencian en `USD` en la cuenta `taskstream-escrow`. NestJS crea un `IncomingPayment` en `taskstream-escrow` por el 100% del valor acordado (ej. `\$100.00 USD`) y solicita un `Quote` desde la `walletAddress` del Buyer fijando `receiveAmount = \$100.00 USD`. El Buyer absorbe el costo de conversión desde su moneda local (`MXN`, `COP`, `BRL`, `ARS`, `CAD`, etc.).
    * **En el Reembolso (Salida del Escrow hacia el Buyer):** Si una tarea termina en reembolso (por vencimiento de plazo sin entrega, por re-publicación de la tarea, por rechazo o expiración de 24h en solicitud de prórroga, o por fallo del Administrador en una apelación), `taskstream-escrow` crea un `Quote` fijando `debitAmount = \$100.00 USD` (el 100% exacto custodiado en el Escrow). El Buyer recibe en su billetera el monto resultante tras la segunda conversión cambiaria (`USD -> Divisa del Buyer`), asumiendo así el costo de la doble conversión sin generar déficit en la cuenta de custodia.
-4. **Distribución en el Desembolso (96% Freelancer / 4% Plataforma):** Al completarse satisfactoriamente un trabajo y cerrarse la ventana final de apelación de 30 minutos, el backend ejecuta desde `taskstream-escrow` una transferencia (`OutgoingPayment`) por el **96% del valor bloqueado (`\$96.00 USD`)** hacia la `walletAddress` del Freelancer (convertido automáticamente a su moneda local por la red Interledger) y retiene el **4% (`\$4.00 USD`)** como comisión de plataforma.
+4. **Distribución en el Desembolso (96% Freelancer / 4% Wallet del Dueño):** Al completarse satisfactoriamente un trabajo y cerrarse la ventana final de reclamaciones de 30 minutos sin petición de disputa, el backend ejecuta desde `taskstream-escrow` **dos** transferencias (`OutgoingPayment`):
+   * **96%** (`\$96.00 USD` de ejemplo) hacia la `walletAddress` activa del Freelancer.
+   * **4%** (`\$4.00 USD` de ejemplo) hacia la **wallet oficial del dueño / plataforma** (billetera distinta de `taskstream-escrow` y distinta de la del Freelancer).
 
 ---
 
-### 5.2. Flujo Preliminar (Etapa 0): Publicación de Tarea por el Cliente y Negociación de Presupuesto
+### 5.2. Flujo Preliminar (Etapa 0): Dos Modalidades de Contratación (Gig Fijo vs. Publicación con Ofertas)
 
-Además de la contratación directa de *Gigs* publicados por los freelancers, **TaskStream AI** incorpora un flujo completo de **Publicación de Tarea por el Solicitante y Negociación a la Baja**:
+**TaskStream AI** distingue de forma estricta dos formas de llegar a una orden. **El flujo financiero (escrow, relojes de 7d / 32h / 30m, etc.) no comienza hasta que ambas partes hayan aceptado la actividad** y el Buyer complete el fondeo. Antes de ese punto, quien publicó la petición puede **cancelarla** si aún no fue aceptada.
 
-1. **Publicación de la Tarea por el Solicitante (Buyer A):**
-   * El Cliente (A) publica una tarea/trabajo en el tablón del Marketplace indicando: **Categoría** (1 de las 6 del MVP), **Título y Descripción detallada**, **Criterios de Aceptación preliminares**, **Plazo de Entrega requerido (máximo 7 días)** y un **Presupuesto Inicial Máximo (`initialBudgetUSDInCents`)**.
-   * La publicación queda activa en estado `OPEN_FOR_PROPOSALS`.
-2. **Contacto y Propuesta del Freelancer (Seller B):**
-   * Un Freelancer (B) explora las tareas abiertas, visualiza la publicación del Cliente (A) e inicia un hilo de contacto/negociación (`NegotiationThread`).
-   * El Freelancer (B) puede aceptar el presupuesto dispuesto originalmente por el Cliente (A) o **negociar el precio proponiendo un monto menor** (`proposedBudgetUSDInCents <= initialBudgetUSDInCents`). **Regla de Negocio Estricta:** El valor negociado siempre debe ser menor (o igual, si se acepta sin rebaja) al presupuesto planteado inicialmente por el cliente; el sistema rechaza cualquier contraoferta que supere el `initialBudgetUSDInCents`.
-3. **Bifurcación de la Negociación en 2 Caminos:**
-   * **Camino 1 — Acuerdo de Presupuesto y Paso al Flujo Convencional:**
-     * El Cliente (A) y el Freelancer (B) llegan a un acuerdo sobre el precio final (`agreedAmountUSDInCents <= initialBudgetUSDInCents`) y los criterios de aceptación.
-     * Se genera la **Tarjeta de Encargo Estructurada (`TaskOrderCard`)** por el monto acordado, la publicación se cierra para nuevos postulantes (`AGREED_AND_LOCKED`) y **se inicia inmediatamente la Etapa 1 del flujo convencional de la tarea** (bloqueo del 100% del monto acordado en `taskstream-escrow`).
-   * **Camino 2 — Discrepancia, Fin del Contacto y Continuidad de la Publicación:**
-     * El Cliente (A) y el Freelancer (B) discrepan en el presupuesto o alcance y cualquiera de los dos finaliza la negociación (**\[Terminar Contacto / Rechazar Propuesta\]**).
-     * Se cierra definitivamente el hilo de comunicación entre el Cliente (A) y ese Freelancer (B) (`status = DISCREPANCY_CLOSED_PATH_2`), y **la publicación original del Cliente (A) continúa 100% activa (`OPEN_FOR_PROPOSALS`)** en el marketplace para recibir propuestas y negociaciones de más freelancers.
+#### A. Contratación Directa de un Gig (Precio Fijo — No Negociable)
+
+1. El Freelancer publica un **Gig** con precio fijo (ej. *“Edición de fotos — \$80 USD”*).
+2. El Buyer pulsa **Contratar** a ese precio: **no hay negociación**; el monto del Gig es el monto de la orden.
+3. Cuando **ambos lados aceptan** la actividad y el Buyer fondea el escrow, se genera la `TaskOrderCard` y arranca la Etapa 1 (`ESCROW_LOCKED`).
+
+#### B. Publicación de Tarea por el Buyer (Presupuesto Tope — Ofertas `<=` Máximo)
+
+1. **Publicación (Buyer A):** Publica en el tablón indicando categoría, título, descripción, criterios preliminares, plazo (máx. 7 días) y **presupuesto máximo** (`initialBudgetUSDInCents`). Estado: `OPEN_FOR_PROPOSALS`.
+2. **Bandeja de ofertas (Freelancers):** Varios freelancers pueden enviar propuestas en paralelo con `proposedBudgetUSDInCents <= initialBudgetUSDInCents`. El sistema **rechaza** cualquier oferta por encima del tope. El Buyer ve la **lista de ofertas y perfiles** y **elige una**.
+3. **Aceptación mutua y arranque:**
+   * Al aceptar una oferta, la publicación pasa a `AGREED_AND_LOCKED`, las demás ofertas quedan descartadas respecto a esa publicación, y **solo entonces** (tras aceptación de ambas partes + fondeo) arranca la Etapa 1.
+   * Si no hay acuerdo con un ofertante concreto, esa propuesta se cierra (`DISCREPANCY_CLOSED_PATH_2`) y la publicación **sigue** `OPEN_FOR_PROPOSALS` para el resto.
+   * El Buyer puede **cancelar** la publicación antes de aceptar alguna oferta.
 
 ---
 
@@ -149,61 +156,58 @@ Además de la contratación directa de *Gigs* publicados por los freelancers, **
 
 | Situación | Plazo | Regla |
 | :--- | ---: | :--- |
-| **Entrega inicial** | **7 días** | Plazo inicial máximo para que el Freelancer entregue el trabajo. |
-| **Respuesta a una solicitud de extensión** | **24 horas** | El Buyer debe aprobar o rechazar la extensión. |
-| **Extensión de entrega** | **Hasta 7 días adicionales** | Solo puede solicitarse y aprobarse **una única vez por orden** (límite total de hasta 14 días desde el inicio original). |
-| **Revisión de una entrega** | **32 horas** | El Buyer puede aceptar, solicitar correcciones o dejar vencer el plazo. |
-| **Ventana final de reclamaciones** | **30 minutos** | Comienza después de una aceptación expresa o automática (tras vencer las 32 horas). |
-| **Correcciones** | **Máximo 2 por orden** | El límite se aplica a toda la orden y **no se reinicia** con nuevas entregas ni con una extensión. |
+| **Entrega inicial** | **7 días** | Plazo inicial máximo para entregar. Si vence **sin** solicitud de extensión → **reembolso automático 100%** (`AUTO_REFUNDED_INITIAL_EXPIRED`) y la actividad **muere**. |
+| **Respuesta a una solicitud de extensión** | **24 horas** | El Buyer debe aprobar o rechazar. Solo aplica si el Freelancer pidió extensión **al vencer** los 7 días (no antes). |
+| **Extensión de entrega** | **Hasta 7 días adicionales** | **Una única vez por orden**, solicitada **únicamente al vencer** el plazo inicial (límite total hasta 14 días desde el inicio). |
+| **Revisión de una entrega** | **32 horas** | El Buyer puede aceptar, solicitar correcciones (máx. 2 globales) o dejar vencer el plazo (aceptación automática). |
+| **Ventana final de reclamaciones** | **30 minutos** | Tras aceptación expresa o automática. Si en esos 30 min **no** hay petición de disputa → libera **96% Freelancer + 4% wallet dueño**. Si hay petición → `DISPUTED`. |
+| **Correcciones** | **Máximo 2 por orden** | Contador global; **no se reinicia** con nuevas entregas ni con extensión. Tras la **2ª** re-entrega el Buyer puede **aceptar** o **pedir reembolso/mediación** (Administración). |
 
 #### Etapa 1: Inicio de una Orden y Plazo Inicial de Entrega (7 Días)
 
-1. El Buyer contrata al Freelancer y deposita el **100 % de los fondos** correspondientes en el escrow de TaskStream (`taskstream-escrow`) mediante concesión interactiva GNAP.
-2. La orden pasa a estar activa (`ESCROW_LOCKED`) y comienza el **plazo inicial de entrega de 7 días**.
-3. El Freelancer debe entregar el trabajo conforme a los requisitos y el alcance acordados en la orden.
+1. Tras la **aceptación mutua** de la actividad (Gig fijo o oferta elegida sobre publicación), el Buyer deposita el **100 %** en `taskstream-escrow` mediante concesión interactiva GNAP.
+2. La orden pasa a `ESCROW_LOCKED` y comienza el **plazo inicial de 7 días**.
+3. El Freelancer debe entregar conforme al alcance acordado.
 
 #### Etapa 2: Si el Freelancer Entrega Dentro de los Primeros 7 Días (o de la Extensión Aprobada) — Revisión de 32 Horas
 
 1. El Freelancer sube su entregable a Cloudflare R2 (`/originals/{taskId}/{revision}/`), el sistema genera el *Protected Preview* con marca de agua en `/previews/{taskId}/{revision}/` y, **si la tarea corresponde a imagen o texto**, el servicio `AiAdvisorService` genera el informe consultivo (`AiAdvisorReportSchema`).
 2. Se inicia el **periodo de revisión del Buyer (`IN_REVIEW`)**, quien tiene un máximo de **32 horas** para responder:
-   * **Aceptar la entrega:** La aceptación **no libera el dinero de inmediato**. Primero se desbloquea el archivo original final y comienza la **ventana final de reclamaciones de 30 minutos** (`FINAL_CLAIM_WINDOW_30M`). Si transcurren los 30 minutos sin reclamación, se libera el **96 % para el Freelancer y el 4 % para TaskStream** (`COMPLETED`).
-   * **No responder en 32 horas (Aceptación Automática):** Si pasan las **32 horas** sin respuesta del Buyer, la entrega se considera **aceptada automáticamente** y comienza la **ventana final de reclamaciones de 30 minutos** (`FINAL_CLAIM_WINDOW_30M`). La falta de respuesta durante las 32 horas no libera inmediatamente los fondos: primero debe transcurrir la ventana de 30 minutos sin reclamaciones antes de liberar el **96 % al Freelancer y el 4 % a TaskStream**.
-   * **Solicitar correcciones (Máximo 2 por orden):** El Buyer puede pedir hasta **2 correcciones globales por orden** (`REVISION_REQUESTED`) dentro del alcance acordado originalmente. Cada vez que el Freelancer vuelve a entregar el trabajo corregido, comienza un **nuevo periodo de revisión de 32 horas** para el Buyer. El contador de correcciones es global para toda la orden y no se reinicia con nuevas entregas ni con una extensión.
+   * **Aceptar la entrega:** La aceptación **no libera el dinero de inmediato**. Se desbloquea el archivo original y comienza la **ventana final de 30 minutos** (`FINAL_CLAIM_WINDOW_30M`). Si transcurren los 30 minutos **sin petición de disputa**, se libera el **96 % al Freelancer** y el **4 % a la wallet del dueño** (`COMPLETED`).
+   * **No responder en 32 horas (Aceptación Automática):** Se considera aceptada y arranca la misma ventana de **30 minutos** antes de liberar **96% / 4%**.
+   * **Solicitar correcciones (Máximo 2 por orden):** Hasta **2** correcciones globales (`REVISION_REQUESTED`). Cada re-entrega reinicia **32 horas** de revisión. El contador **no** se reinicia con extensión.
+   * **Tras la 2ª corrección (re-entrega final bajo el límite):** El Buyer puede **afirmar/aceptar** lo entregado (sigue a la ventana de 30 min) **o** presentar una **petición de reembolso / mediación**, momento en el cual entra **Administración** (`DISPUTED`). No hay reembolso automático “a ciegas” solo por agotar las 2 correcciones: hace falta la petición explícita de mediación o, en la ventana de 30 min, la petición de disputa.
 
-#### Etapa 3: Si No Hay Acuerdo Después de las 2 Correcciones o Se Presenta una Reclamación en los 30 Minutos Finales (Disputa Administrativa)
+#### Etapa 3: Disputa Administrativa (Petición tras 2ª Corrección o en la Ventana de 30 Minutos)
 
-1. **No hay acuerdo después de las 2 correcciones:** Si se agotan las **2 correcciones** y las partes no logran llegar a un acuerdo, se abre una **disputa administrativa (`DISPUTED`)**.
-2. **Reclamación válida durante la ventana final de 30 minutos:** Si durante la ventana final de **30 minutos** (`FINAL_CLAIM_WINDOW_30M`) se presenta una reclamación válida (por ejemplo, al detectar discrepancia o corrupción en el archivo original desbloqueado), **se suspende y detiene de inmediato la liberación automática de fondos** en BullMQ y se abre la **disputa administrativa (`DISPUTED`)**.
+1. **Petición de reembolso/mediación tras la 2ª corrección:** Si el Buyer no afirma la entrega y solicita mediación, la orden pasa a `DISPUTED`.
+2. **Petición de disputa en la ventana final de 30 minutos:** Si durante `FINAL_CLAIM_WINDOW_30M` se registra una petición de disputa, **se suspende de inmediato** el job de liberación automática en BullMQ y la orden pasa a `DISPUTED`.
 3. **Reglas de la Disputa Administrativa:**
-   * Los fondos permanecen retenidos en el escrow: mientras la disputa siga pendiente, **no se realiza ningún reembolso automático ni se libera automáticamente el pago al Freelancer**.
-   * El Administrador revisa los requisitos y el alcance acordados originalmente, las entregas realizadas, las solicitudes de corrección y sus respuestas, los informes consultivos de IA (en tareas de imagen y texto) y los mensajes/evidencias de ambas partes.
-   * **Decisión Binaria Justificada:** La decisión debe estar acompañada de una justificación basada en las evidencias:
-     * **Si favorece al Buyer** (el Freelancer no cumplió los requisitos acordados): se reembolsa el **100 %** del importe reembolsable de la orden al Buyer (`REFUNDED`).
-     * **Si favorece al Freelancer** (cumplió los requisitos y el Buyer rechaza injustificadamente o exige tareas fuera del alcance acordado): se libera el **96 % al Freelancer y el 4 % a TaskStream** (`COMPLETED`).
+   * Fondos retenidos en escrow: **sin** reembolso ni liberación automáticos mientras la disputa esté pendiente.
+   * El Administrador revisa requisitos, entregas, correcciones, evidencias y (si aplica) informes consultivos de IA.
+   * **Decisión binaria justificada:**
+     * A favor del Buyer → reembolso **100%** (`REFUNDED`); la actividad **muere** y el Freelancer queda desligado.
+     * A favor del Freelancer → liberación **96% Freelancer / 4% wallet dueño** (`COMPLETED`).
 
-#### Etapa 4: Si el Freelancer No Entrega Dentro de los Primeros 7 Días (Extensión Única de Hasta 7 Días Adicionales y Ventana de 24 Horas)
+#### Etapa 4: Si el Freelancer No Entrega Dentro de los Primeros 7 Días (Extensión Solo al Vencer)
 
-Si vence el plazo inicial de 7 días sin que el Freelancer entregue el trabajo, puede solicitar **una única extensión de hasta 7 días adicionales** (`EXTENSION_REQUESTED`):
+Al **vencer** el plazo inicial de 7 días sin entrega:
 
-1. **El Buyer recibe la solicitud de extensión (24 Horas para Responder):**
-   * TaskStream notifica al Buyer, quien dispone de un máximo de **24 horas** para aprobar o rechazar la solicitud. No se permite una segunda extensión para la misma orden.
-2. **Si el Buyer aprueba la extensión (en $\le$ 24 horas):**
-   * El Freelancer recibe **hasta 7 días adicionales**, contados a partir del vencimiento del plazo inicial (límite total de entrega de **hasta 14 días** desde el inicio original de la orden, estado `ESCROW_EXTENDED`).
-   * La extensión no reinicia el contador global de 2 correcciones. Si el Freelancer entrega dentro del plazo extendido, se aplica el flujo normal de revisión de **32 horas**, máximo 2 correcciones y ventana final de **30 minutos**.
-3. **Si el Buyer rechaza la extensión y solicita el reembolso (en $\le$ 24 horas):**
-   * TaskStream devuelve el **100 %** del importe reembolsable de la orden al Buyer (`REFUNDED`, pudiendo también reabrir su publicación de forma limpia en `REFUNDED_AND_REOPENED`).
-4. **Si el Buyer no responde en 24 horas (Reembolso Automático):**
-   * Se activa el **reembolso automático del 100 %** del importe reembolsable de la orden al Buyer (`AUTO_REFUNDED_BY_TIMEOUT`) y se notifica a las partes que venció el plazo inicial, que el Freelancer solicitó una extensión y que, al no recibir respuesta del Buyer dentro de las 24 horas, se procesó el reembolso.
-5. **Si el Buyer aprobó la extensión, pero el Freelancer tampoco entrega dentro de la extensión:**
-   * Si el Freelancer no entrega antes de que venza el plazo extendido (hasta +7 días), se procesa un **reembolso automático del 100 %** del importe reembolsable de la orden al Buyer (`AUTO_REFUNDED_EXTENDED_EXPIRED`), no se permite segunda extensión y se notifica a ambas partes sobre el vencimiento y el reembolso.
+1. **Si el Freelancer NO solicita extensión:** reembolso automático del **100%** (`AUTO_REFUNDED_INITIAL_EXPIRED`); la actividad **muere**.
+2. **Si el Freelancer solicita extensión (solo permitido al vencer, no antes)** (`EXTENSION_REQUESTED`): el Buyer tiene **24 horas** para aprobar o rechazar. Una sola extensión por orden.
+3. **Buyer aprueba (≤ 24h):** hasta **+7 días** adicionales (`ESCROW_EXTENDED`, máx. 14 días totales desde el inicio). No reinicia el contador de 2 correcciones. Si entrega a tiempo → flujo normal de revisión 32h / 30m.
+4. **Buyer rechaza y pide reembolso (≤ 24h):** reembolso **100%** (`REFUNDED`); actividad muere; Freelancer desligado.
+5. **Buyer no responde en 24h:** reembolso automático **100%** (`AUTO_REFUNDED_BY_TIMEOUT`); actividad muere.
+6. **Buyer aprobó pero el Freelancer no entrega en la extensión:** reembolso automático **100%** (`AUTO_REFUNDED_EXTENDED_EXPIRED`); sin segunda extensión; actividad muere.
 
 ### 5.4. Idempotencia en los Pagos
 
 Toda operación financiera hacia `@interledger/open-payments` exige una clave determinista única almacenada en PostgreSQL con restricción `UNIQUE`:
 
 * Para bloqueo inicial del encargo: `SHA256(taskId + ":" + attemptNumber + ":ESCROW_LOCK")`
-* Para desembolso 96/4 al freelancer: `SHA256(taskId + ":FREELANCER_PAYOUT_96_4")`
-* Para reembolso 100% al cliente (manual, por re-publicación o automático por vencimiento de 24h o de extensión): `SHA256(taskId + ":" + attemptNumber + ":BUYER_REFUND_100")`
+* Para desembolso 96% al freelancer: `SHA256(taskId + ":FREELANCER_PAYOUT_96")`
+* Para comisión 4% a la wallet del dueño: `SHA256(taskId + ":PLATFORM_FEE_PAYOUT_4")`
+* Para reembolso 100% al Buyer (rechazo, timeouts, disputa a favor Buyer, o 7d sin extensión): `SHA256(taskId + ":" + attemptNumber + ":BUYER_REFUND_100")`
 
 ---
 
@@ -279,16 +283,16 @@ En el MVP de **TaskStream AI**, el servicio de Inteligencia Artificial (`AiAdvis
 
 ### 8.1. Perfiles de Contratista (Buyer) y Freelancer (Seller) en Toda América
 
-Se utiliza una **Cuenta Unificada en Clerk** con cambio de modo en tiempo real (`Buyer Mode` / `Seller Mode`) dentro de la interfaz:
+Se utiliza una **Cuenta Unificada en Clerk** con cambio de modo en tiempo real (`Buyer Mode` / `Seller Mode`). El mismo usuario **puede ofrecer y contratar** trabajos (roles en órdenes distintas).
 
-* **Atributos Compartidos:** `userId` (UUID), `clerkId`, `displayName`, `avatarUrl`, `countryCode` (`US`, `CA`, `MX`, `CO`, `BR`, `AR`, `CL`, `PE`, `UY`, `CR`, `DO`, `GT`, `EC`, `PA`, etc.), `walletAddress` (URL HTTPS verificada mediante GNAP Subject Grant), `walletAssetCode` (`USD`, `CAD`, `MXN`, `COP`, `BRL`, `ARS`, `CLP`, `PEN`, `UYU`, etc.) y `walletAssetScale`.
+* **Atributos Compartidos:** `userId` (UUID), `clerkId`, `displayName`, `avatarUrl`, `countryCode`, y **una sola** `walletAddress` activa verificada (GNAP Subject Grant) con su `walletAssetCode` / `walletAssetScale`. Cambiar wallet = reemplazar la activa.
 * **Perfil Freelancer (`Seller`):**
-  * Bio profesional, habilidades, idiomas, etiqueta opcional de **Web Monetization** en su portafolio público y catálogo por categoría.
-  * **Publicación de "Gigs" y Postulación a Tareas de Clientes:** Capacidad de ofrecer paquetes propios y de negociar presupuestos `<= presupuesto inicial` en tareas publicadas por Buyers.
-  * **Gestión de Plazos y Extensión Única:** Seguimiento del plazo inicial de **7 días** y opción de solicitar **una única extensión de hasta 7 días adicionales** (límite total de hasta 14 días).
+  * Bio, habilidades, idiomas, Web Monetization opcional y catálogo por categoría.
+  * **Gigs a precio fijo (no negociable)** y **ofertas `<=` tope** sobre publicaciones de Buyers.
+  * **Plazos:** 7 días iniciales; **una** extensión de hasta +7 días **solo al vencer** el plazo (si no la pide → reembolso automático y actividad muere).
 * **Perfil Contratista (`Buyer`):**
-  * **Publicación y Negociación de Tareas:** Panel para publicar tareas con presupuesto tope inicial, negociar precios a la baja (Camino 1) o descartar propuestas manteniendo activa la publicación (Camino 2).
-  * **Gestión de Escrow, Extensión (24h), Revisión (32h) y Ventana Final (30m):** Opciones para aprobar o rechazar una extensión dentro de **24 horas** (con reembolso automático del 100 % si no responde en 24h), revisar cada entrega durante **32 horas** (aceptar, pedir hasta **2 correcciones globales** por orden o dejar vencer las 32h para aceptación automática) y presentar una reclamación fundada dentro de la **ventana final de 30 minutos**.
+  * **Publicaciones con presupuesto tope** y **bandeja de ofertas** (elige una entre perfiles/propuestas; puede cancelar antes de aceptar).
+  * **Escrow, extensión (24h), revisión (32h), máx. 2 correcciones, ventana 30m** y, tras la 2ª corrección o en los 30m, **petición de mediación/disputa** hacia Administración.
 
 ### 8.2. Contratos de Datos en Zod (`shared-schemas`)
 
@@ -331,19 +335,19 @@ export const MvpAiAuditableModalityEnum = z.enum([
  * ESTADOS DEL CICLO DE VIDA DE LA ORDEN
  */
 export const TaskLifecycleStatusEnum = z.enum([
-  'PENDING_ESCROW_FUNDING',
+  'PENDING_ESCROW_FUNDING',         // Ambas partes aceptaron; esperando fondeo GNAP del Buyer
   'ESCROW_LOCKED',                  // Plazo inicial de 7 días activo
-  'EXTENSION_REQUESTED',            // Única extensión de hasta +7 días solicitada; Buyer tiene 24h para responder
-  'ESCROW_EXTENDED',                // Extensión aprobada (hasta 14 días totales desde el inicio original)
-  'IN_REVIEW',                      // Entrega en revisión del Buyer (Reloj de 32 horas por entrega)
-  'REVISION_REQUESTED',             // Corrección solicitada (Máximo 2 globales por orden)
-  'FINAL_CLAIM_WINDOW_30M',         // Aceptación expresa o automática (tras 32h); ventana final de 30 minutos
-  'DISPUTED',                       // Disputa administrativa (tras 2 correcciones sin acuerdo o reclamación en los 30 min)
-  'COMPLETED',                      // Liberación definitiva: 96% Freelancer / 4% TaskStream
-  'REFUNDED',                       // Reembolso 100% al Buyer (rechazo de extensión o fallo de disputa a favor del Buyer)
-  'REFUNDED_AND_REOPENED',          // Reembolso 100% al Buyer y reapertura limpia de la publicación
-  'AUTO_REFUNDED_BY_TIMEOUT',       // Reembolso automático 100% al Buyer por no responder en 24h a la extensión
-  'AUTO_REFUNDED_EXTENDED_EXPIRED', // Reembolso automático 100% al Buyer por no entregar dentro de la extensión aprobada
+  'EXTENSION_REQUESTED',            // Extensión pedida SOLO al vencer 7d; Buyer tiene 24h
+  'ESCROW_EXTENDED',                // Extensión aprobada (hasta 14 días totales desde el inicio)
+  'IN_REVIEW',                      // Entrega en revisión (32h)
+  'REVISION_REQUESTED',             // Corrección solicitada (máx. 2 globales)
+  'FINAL_CLAIM_WINDOW_30M',         // Aceptación expresa/automática; 30 min para pedir disputa
+  'DISPUTED',                       // Mediación admin (petición tras 2ª corrección o en los 30m)
+  'COMPLETED',                      // 96% Freelancer + 4% wallet dueño
+  'REFUNDED',                       // Reembolso 100%; actividad muere; Freelancer desligado
+  'AUTO_REFUNDED_INITIAL_EXPIRED',  // Vencieron 7d sin pedir extensión → reembolso 100%; actividad muere
+  'AUTO_REFUNDED_BY_TIMEOUT',       // Buyer no respondió en 24h a la extensión → reembolso 100%
+  'AUTO_REFUNDED_EXTENDED_EXPIRED', // No entregó dentro de la extensión aprobada → reembolso 100%
 ]);
 
 /**
@@ -427,20 +431,25 @@ export const TaskOrderCardSchema = z.object({
   paymentTerms: z.object({
     paymentModality: z.literal('SINGLE_BLOCK_ESCROW'),
     escrowWalletAddress: z.string().url().default('https://ilp.interledger-test.dev/taskstream-escrow'),
+    platformOwnerWalletAddress: z.string().url()
+      .describe('Wallet distinta del escrow que recibe el 4% de comisión del dueño/plataforma'),
     totalAmountUSDInCents: z.number().int().positive(),
     freelancerPayoutUSDInCents: z.number().int().positive().describe('96% para el Freelancer'),
-    platformFeeUSDInCents: z.number().int().nonnegative().describe('4% para TaskStream'),
+    platformFeeUSDInCents: z.number().int().nonnegative().describe('4% transferido a platformOwnerWalletAddress'),
     buyerAssumesDoubleFxConversion: z.literal(true),
-    deliveryReviewHours: z.literal(32).describe('32 horas para revisar cada entrega'),
-    finalClaimWindowMinutes: z.literal(30).describe('30 minutos de ventana final tras aceptación expresa o automática'),
+    deliveryReviewHours: z.literal(32),
+    finalClaimWindowMinutes: z.literal(30),
   }),
   executionDeadlineTerms: z.object({
     initialDeliveryDays: z.number().int().min(1).max(7).default(7),
-    maxExtensionExtraDays: z.literal(7).describe('Única extensión de hasta 7 días adicionales (máx. 14 días totales)'),
+    maxExtensionExtraDays: z.literal(7),
     maxExtensionsPerOrder: z.literal(1),
+    extensionOnlyAllowedWhenInitialDeadlineExpires: z.literal(true),
     buyerExtensionResponseWindowHours: z.literal(24),
+    autoRefundIfNoExtensionRequestedOnExpiry: z.literal(true),
     autoRefundOnExtensionResponseTimeout: z.literal(true),
     autoRefundOnExtendedDeadlineMissed: z.literal(true),
+    refundTerminatesActivityAndUnbindsFreelancer: z.literal(true),
     activeExtensionRequest: DeadlineExtensionRequestSchema.optional(),
   }),
   revisionTerms: z.object({
@@ -535,41 +544,51 @@ export const AiAdvisorReportSchema = z.object({
 ```gherkin
 # language: es
 
-Característica: Contratación, Escrow (96%/4%), Plazo Inicial (7d), Extensión Única (hasta +7d con 24h de respuesta), Revisión (32h con máx. 2 correcciones), Ventana Final (30m) y Disputas
+Característica: Contratación (Gig fijo vs ofertas), Escrow (96%/4% wallet dueño), Plazos, Extensión solo al vencer, Revisión, Ventana 30m y Disputas
 
-  Escenario: 1. Publicación de tarea por el Buyer y Negociación exitosa a la baja (Camino 1)
-    Dado que el Buyer publica una tarea con un presupuesto inicial de $100.00 USD
-    Cuando el Freelancer propone realizar el trabajo por $85.00 USD (valor menor o igual al presupuesto inicial)
-    Y el Buyer acepta la propuesta de $85.00 USD
-    Entonces se genera la orden por $85.00 USD cerrando la publicación para otros postulantes ("AGREED_AND_LOCKED")
+  Escenario: 1a. Gig a precio fijo (no negociable)
+    Dado que un Freelancer publica un Gig a $80.00 USD
+    Cuando el Buyer contrata ese Gig y ambas partes aceptan la actividad
+    Y el Buyer fondea el escrow
+    Entonces se crea la orden por $80.00 USD e inicia "ESCROW_LOCKED" con plazo de 7 días
 
-  Escenario: 2. Entrega a tiempo, revisión de 32 horas (aceptación expresa o automática) y ventana final de 30 minutos
-    Dado que una orden activa en "ESCROW_LOCKED" por $100.00 USD recibe una entrega dentro del plazo de 7 días
-    Entonces se inicia el periodo de revisión de 32 horas para el Buyer ("IN_REVIEW")
-    Cuando el Buyer acepta la entrega (o transcurren las 32 horas sin respuesta produciéndose aceptación automática)
-    Entonces comienza la ventana final de reclamaciones de 30 minutos ("FINAL_CLAIM_WINDOW_30M")
-    Cuando transcurren los 30 minutos sin que se presente ninguna reclamación
-    Entonces se libera el 96 % ($96.00 USD) para el Freelancer y el 4 % ($4.00 USD) para TaskStream ("COMPLETED")
+  Escenario: 1b. Publicación con presupuesto tope y bandeja de ofertas
+    Dado que el Buyer publica una tarea con presupuesto máximo de $100.00 USD
+    Cuando varios Freelancers envían ofertas <= $100.00 USD
+    Y el Buyer elige y acepta la oferta de $85.00 USD (ambas partes aceptan)
+    Y el Buyer fondea el escrow
+    Entonces la publicación pasa a "AGREED_AND_LOCKED", las demás ofertas quedan descartadas
+    Y se crea la orden por $85.00 USD en "ESCROW_LOCKED"
 
-  Escenario: 3. Solicitud de correcciones (máximo 2 por orden) y apertura de disputa administrativa si no hay acuerdo
-    Dado que el Buyer revisa una entrega dentro de su periodo de 32 horas
-    Cuando el Buyer solicita una corrección y el Freelancer vuelve a entregar el trabajo
-    Entonces comienza un nuevo periodo de revisión de 32 horas sin reiniciar el contador global de correcciones
-    Pero si se agotan las 2 correcciones permitidas por orden y las partes no llegan a un acuerdo
-    Entonces se abre una disputa administrativa ("DISPUTED") manteniendo los fondos retenidos en el escrow hasta que el Administrador emita una decisión justificada (100% al Buyer o 96%/4% al Freelancer)
+  Escenario: 2. Entrega a tiempo, 32h, ventana 30m sin disputa → 96%/4%
+    Dado que una orden en "ESCROW_LOCKED" recibe una entrega dentro de 7 días
+    Entonces inicia "IN_REVIEW" (32 horas)
+    Cuando el Buyer acepta (o vencen 32h sin respuesta)
+    Entonces inicia "FINAL_CLAIM_WINDOW_30M"
+    Cuando pasan 30 minutos sin petición de disputa
+    Entonces se libera 96% al Freelancer y 4% a la wallet del dueño ("COMPLETED")
 
-  Escenario: 4. Solicitud de extensión única de hasta 7 días adicionales y respuesta del Buyer en 24 horas
-    Dado que vence el plazo inicial de 7 días sin entrega y el Freelancer solicita una única extensión de hasta 7 días adicionales
-    Entonces se notifica al Buyer y comienza un plazo de 24 horas para aprobar o rechazar la solicitud ("EXTENSION_REQUESTED")
-    Y si el Buyer aprueba en 24 horas, el Freelancer recibe hasta 7 días adicionales (máximo 14 días desde el inicio) sin reiniciar el contador de 2 correcciones
-    Y si el Buyer rechaza la extensión y solicita el reembolso, se devuelve el 100 % al Buyer ("REFUNDED")
-    Pero si el Buyer no responde en 24 horas, se activa automáticamente el reembolso del 100 % al Buyer ("AUTO_REFUNDED_BY_TIMEOUT")
-    Y si el Buyer aprobó la extensión pero el Freelancer tampoco entrega dentro del plazo extendido, se procesa un reembolso automático del 100 % al Buyer ("AUTO_REFUNDED_EXTENDED_EXPIRED")
+  Escenario: 3. Tras la 2ª corrección: aceptar o pedir mediación (admin)
+    Dado que el Buyer ya usó 2 correcciones y el Freelancer re-entregó la segunda
+    Cuando el Buyer afirma/acepta la entrega
+    Entonces inicia la ventana de 30 minutos hacia la liberación 96%/4%
+    Pero si el Buyer presenta petición de reembolso/mediación
+    Entonces la orden pasa a "DISPUTED" con fondos retenidos hasta decisión justificada del Admin (100% Buyer o 96%/4%)
 
-  Escenario: 5. Suspensión de liberación de pago al presentarse una reclamación en la ventana final de 30 minutos
-    Dado que una orden se encuentra en la ventana final de reclamaciones de 30 minutos ("FINAL_CLAIM_WINDOW_30M")
-    Cuando se presenta una reclamación válida antes de que finalicen los 30 minutos
-    Entonces se suspende de inmediato la liberación automática del dinero y la orden pasa a "DISPUTED" para revisión justificada del Administrador
+  Escenario: 4. Extensión solo al vencer los 7 días
+    Dado que vencen 7 días sin entrega
+    Cuando el Freelancer no solicita extensión
+    Entonces se reembolsa 100% al Buyer ("AUTO_REFUNDED_INITIAL_EXPIRED") y la actividad muere
+    Pero si el Freelancer solicita extensión al vencer
+    Entonces el Buyer tiene 24h ("EXTENSION_REQUESTED")
+    Y si aprueba → hasta +7 días; si rechaza → "REFUNDED"; si no responde → "AUTO_REFUNDED_BY_TIMEOUT"
+    Y si aprobó pero no hay entrega en la extensión → "AUTO_REFUNDED_EXTENDED_EXPIRED"
+    Y en todo reembolso la actividad muere y el Freelancer queda desligado
+
+  Escenario: 5. Petición de disputa en la ventana de 30 minutos
+    Dado que la orden está en "FINAL_CLAIM_WINDOW_30M"
+    Cuando se registra una petición de disputa antes de que terminen los 30 minutos
+    Entonces se suspende la liberación automática y la orden pasa a "DISPUTED"
 ```
 
 ---
@@ -617,10 +636,12 @@ El proyecto se ejecuta desde `SPEC-00.md` (creación de la carpeta `specs` y su 
 
 | ID | Tema de la Decisión | Regla Oficial Vigente en el Contexto Maestro |
 | :---- | :---- | :---- |
-| **✅ Regla 1** | **Revisión de Entrega (`32h`) y Ventana Final de Reclamaciones (`30 min`)** | Cada entrega abre un periodo de revisión de **32 horas**. Si el Buyer acepta o vencen las 32 horas sin respuesta (aceptación automática), comienza una **ventana final de reclamaciones de 30 minutos**. Si transcurren los 30 minutos sin reclamación, se libera el **96 % al Freelancer y 4 % a TaskStream**. Si se presenta una reclamación válida en los 30 minutos, se suspende la liberación automática y pasa a disputa administrativa. |
-| **✅ Regla 2** | **Límite Global de Correcciones (`Máximo 2 por orden`) y Disputas** | El Buyer puede solicitar máximo **2 correcciones globales por orden** (no se reinicia con nuevas entregas ni con una extensión). Si se agotan las 2 correcciones sin acuerdo, se abre una **disputa administrativa** donde el Administrador decide de forma binaria y justificada (**100 % al Buyer** o **96 % / 4 % al Freelancer**). |
-| **✅ Regla 3** | **Extensión Única (`Hasta 7 días adicionales`) y Respuesta en `24h`** | Si no entrega en los primeros 7 días, el Freelancer puede solicitar **una única extensión de hasta 7 días adicionales** (hasta 14 días totales). El Buyer tiene **24 horas** para aprobar o rechazar. Si rechaza o no responde en 24 horas, o si el Freelancer tampoco entrega dentro de la extensión aprobada, se reembolsa el **100 %** al Buyer. |
-| **✅ Regla 4** | **Alcance del Consejero de IA (`Solo Imagen y Texto en MVP`) y Contrato en `SPEC-08`** | En el MVP, `AiAdvisorService` **solo audita y asesora tareas de imagen y texto**, concretando en `SPEC-08.md` el contrato exacto de entrada (`AiAdvisorInputContractSchema`) para producir `AiAdvisorReportSchema`. El resto de formatos y la suscripción se dejan planteados para Post-MVP. |
+| **✅ Regla 1** | **Revisión (`32h`) y Ventana Final (`30 min`)** | Cada entrega abre **32h** de revisión. Aceptación expresa o automática → **30 min** de ventana. Sin petición de disputa en esos 30 min → **96% Freelancer + 4% wallet del dueño**. Con petición → `DISPUTED`. |
+| **✅ Regla 2** | **Máximo 2 Correcciones y Mediación** | Máximo **2** correcciones globales por orden (no se reinician). Tras la **2ª** re-entrega el Buyer puede **aceptar** o **pedir reembolso/mediación** (Administración decide **100% Buyer** o **96%/4%**). |
+| **✅ Regla 3** | **Extensión Solo al Vencer + Reembolso Mata la Actividad** | Extensión **única**, **solo al vencer** los 7 días (no antes). Sin petición de extensión al vencer → `AUTO_REFUNDED_INITIAL_EXPIRED`. Buyer tiene **24h** para aprobar/rechazar; silencio, rechazo o fallo de extensión → reembolso **100%**. Todo reembolso **termina la actividad** y **desliga** al Freelancer (sin `REFUNDED_AND_REOPENED`). |
+| **✅ Regla 4** | **Gig Fijo vs Publicación con Ofertas + Arranque Mutuo** | Gig = precio **fijo no negociable**. Publicación = ofertas **`<=` tope**; Buyer elige una de la bandeja. El flujo (escrow/relojes) **no arranca** hasta aceptación mutua + fondeo; se puede cancelar la petición antes de aceptar. |
+| **✅ Regla 5** | **Una Wallet Activa + 4% a Wallet del Dueño** | Una sola wallet verificada por usuario (reemplazo al cambiar). Al completar, el **4%** se transfiere a la **wallet del dueño/plataforma**, no se queda informalmente en el escrow. |
+| **✅ Regla 6** | **Alcance del Consejero de IA (MVP)** | `AiAdvisorService` solo imagen/texto; contrato exacto en `SPEC-08.md`. Resto de formatos y suscripción = Post-MVP. |
 
 ---
 

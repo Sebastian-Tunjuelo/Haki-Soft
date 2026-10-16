@@ -90,34 +90,34 @@ flowchart LR
 
 #### A. Especificaciones de la Fase
 * **`SPEC-04.md`:** Catálogo de las 6 categorías del MVP, paquetes de servicios (*Gigs*), etiqueta Web Monetization y tablón de tareas publicadas por Buyers con presupuesto inicial y plazo inicial de hasta 7 días.
-* **`SPEC-05.md`:** Motor de negociación a la baja (`presupuesto propuesto <= presupuesto inicial`), **Camino 1** (acuerdo y creación de la orden) y **Camino 2** (fin del contacto por discrepancia manteniendo la publicación activa).
+* **`SPEC-05.md`:** Bandeja de ofertas sobre publicaciones (`proposedBudget <= initialBudget`), selección de una oferta por el Buyer, discriminación respecto al **Gig a precio fijo no negociable**, y arranque solo tras **aceptación mutua + fondeo**.
 
 #### B. Trabajo Paralelo por Rol
-* **`FE-1`:** Construye el catálogo, el formulario de publicación de tareas y la Sala de Negociación (validando en tiempo real que la propuesta sea `<= presupuesto inicial` y habilitando los botones para Camino 1 y Camino 2).
-* **`FE-2`:** Construye las animaciones con `ScrollTrigger` para la exploración de las 6 categorías y la transición visual al cerrarse un acuerdo.
-* **`BE-1`:** Implementa el módulo de negociación con transacciones ACID para Camino 1 y Camino 2.
-* **`BE-2`:** Implementa el módulo de Marketplace, filtros e indexación en base de datos.
-* **`AI-1`:** Implementa la validación de los criterios de aceptación de la orden y determina automáticamente si la orden corresponde a una modalidad auditable por IA en el MVP (**imagen o texto**).
+* **`FE-1`:** Catálogo, Gigs a precio fijo, formulario de publicación con tope, bandeja de ofertas (lista + perfiles) y aceptación/cancelación previa al escrow.
+* **`FE-2`:** Animaciones `ScrollTrigger` para categorías y transición al cerrar un acuerdo.
+* **`BE-1`:** Módulo de ofertas/aceptación mutua (ACID): elegir una oferta, descartar el resto, cancelar publicación antes de aceptar.
+* **`BE-2`:** Marketplace, filtros e indexación.
+* **`AI-1`:** Validación de criterios de aceptación y modalidad auditable (imagen/texto) cuando aplique.
 
 #### C. Criterio de Aprobación de Fase
-* `SPEC-04.md` y `SPEC-05.md` quedan `Aprobadas` tras verificar los flujos de publicación y negociación en Camino 1 y Camino 2.
+* `SPEC-04.md` y `SPEC-05.md` quedan `Aprobadas` tras verificar Gig fijo, bandeja de ofertas `<= tope` y arranque solo con aceptación mutua.
 
 ---
 
 ### Fase 3: Orquestación de Pago Único en Escrow (`96 % / 4 %` y Reembolsos `100 %`) (`SPEC-06`)
 
 #### A. Especificaciones de la Fase
-* **`SPEC-06.md`:** Depósito del 100 % de los fondos en `taskstream-escrow` al iniciar la orden, liberación del **96 % para el Freelancer y 4 % para TaskStream**, reembolsos del **100 %** al Buyer e idempotencia financiera.
+* **`SPEC-06.md`:** Depósito del 100 % en `taskstream-escrow`, liberación **96 % Freelancer + 4 % wallet del dueño** (dos `OutgoingPayment`), reembolsos **100 %** (actividad muere) e idempotencia.
 
 #### B. Trabajo Paralelo por Rol
-* **`BE-1` (`🛡️ Autoría Manual — Uso de IA Mínimo/Nulo`):** Implementa manualmente `escrow-payment.service.ts` con `@interledger/open-payments` (creación de `IncomingPayment`, `Quote` con `receiveAmount` fijo para el depósito del Buyer, `Quote` con `debitAmount` fijo para desembolsos 96 % / 4 % y reembolsos del 100 %, consulta de `GET /outgoing-payment-grant` y rotación de tokens).
-* **`BE-2`:** Implementa la tabla `OpenPaymentsTransaction` con clave única de idempotencia `SHA-256`, bloqueo transaccional en `EscrowLedger` y el receptor de Webhooks de Rafiki.
-* **`FE-1`:** Construye el Checkout de Custodia en Escrow mostrando el monto total, la distribución `96 % / 4 %` y la transición de la orden a activa (`ESCROW_LOCKED`) con su plazo inicial de **7 días**.
-* **`FE-2`:** Construye la escena 3D de la bóveda de custodia conectada a los estados financieros de la orden.
-* **`AI-1`:** Ejecuta las pruebas de contrato e invariantes contables (`100 % = 96 % + 4 %` e idempotencia).
+* **`BE-1` (`🛡️ Autoría Manual — Uso de IA Mínimo/Nulo`):** `escrow-payment.service.ts` con fondeo (`receiveAmount`), payout dual 96/4 a wallets distintas, reembolsos 100 %, grants y rotación de tokens.
+* **`BE-2`:** Idempotencia `SHA-256`, `EscrowLedger` con `platformOwnerWalletAddress`, webhooks Rafiki.
+* **`FE-1`:** Checkout mostrando 96 % / 4 % (wallet dueño) e inicio de **7 días** tras fondeo.
+* **`FE-2`:** Escena 3D de bóveda escrow.
+* **`AI-1`:** Invariantes `100 % = 96 % + 4 %` e idempotencia.
 
 #### C. Criterio de Aprobación de Fase
-* `SPEC-06.md` queda `Aprobada` verificando el depósito real en `taskstream-escrow` y el inicio del plazo de 7 días.
+* `SPEC-06.md` queda `Aprobada` con depósito real, payout dual verificado y start del plazo de 7 días.
 
 ---
 
@@ -142,20 +142,20 @@ flowchart LR
 ### Fase 5: Relojes (`7d`, `24h`, `+7d`, `32h`, `30m`), Correcciones (`SPEC-09`), Disputas (`SPEC-10`), Validación E2E (`SPEC-11`) y Deploy (`SPEC-12`)
 
 #### A. Especificaciones de la Fase
-* **`SPEC-09.md`:** Automatización de los plazos independientes:
-  * **7 días** para la entrega inicial (`INITIAL_DELIVERY_7D`).
-  * **Extensión única de hasta 7 días adicionales** (límite total de hasta 14 días) con **24 horas** para que el Buyer apruebe o rechace (`EXTENSION_RESPONSE_24H`); reembolso automático del **100 %** si el Buyer no responde en 24 horas o si el Freelancer tampoco entrega dentro de la extensión aprobada (`EXTENDED_DELIVERY_UP_TO_7D`).
-  * **32 horas** para revisar cada entrega (`DELIVERY_REVIEW_32H`), con un máximo global de **2 correcciones por orden** (que no se reinicia con nuevas entregas ni con una extensión) y aceptación automática si pasan las 32 horas sin respuesta.
-  * **30 minutos** de ventana final de reclamaciones (`FINAL_CLAIM_WINDOW_30M`) tras la aceptación expresa o automática antes de liberar el **96 % al Freelancer y 4 % a TaskStream**.
-* **`SPEC-10.md`:** Suspensión inmediata de la liberación automática si se presenta una reclamación válida durante los **30 minutos** finales, apertura de disputa administrativa si no hay acuerdo tras agotar las **2 correcciones**, retención de fondos sin automatismos mientras la disputa esté abierta y decisión binaria justificada del Administrador (**100 % al Buyer** o **96 % / 4 % al Freelancer**).
-* **`SPEC-11.md`:** Pruebas integrales de extremo a extremo de todo el aplicativo.
-* **`SPEC-12.md`:** Configuración productiva y `Deploy` final del MVP/Demo.
+* **`SPEC-09.md`:** Relojes independientes:
+  * **7 días** iniciales; si vencen **sin** pedir extensión → `AUTO_REFUNDED_INITIAL_EXPIRED` (actividad muere).
+  * Extensión **única solo al vencer** (+ hasta 7d); Buyer **24h**; silencio/rechazo/fallo de extensión → reembolso **100 %** (actividad muere).
+  * **32h** revisión / máx. **2** correcciones; tras 2ª re-entrega: aceptar o pedir mediación.
+  * **30m** sin petición de disputa → **96 % Freelancer + 4 % wallet dueño**.
+* **`SPEC-10.md`:** Disputa por petición (post-2ª corrección o en 30m); fondos retenidos; decisión binaria Admin (**100 % Buyer** o **96 % / 4 % wallet dueño**).
+* **`SPEC-11.md`:** Pruebas E2E.
+* **`SPEC-12.md`:** Deploy final.
 
 #### B. Trabajo Paralelo por Rol
-* **`BE-2`:** Implementa los 5 relojes independientes en BullMQ (`7d`, `24h`, `+7d`, `32h`, `30m`) y el servicio de notificaciones claras al Buyer y al Freelancer.
-* **`BE-1`:** Implementa las reglas de extensión única, el límite global de 2 correcciones, la suspensión atómica del pago ante una reclamación en los 30 minutos finales y el módulo de resolución administrativa binaria y justificada conectado a `escrow-payment.service.ts`.
-* **`FE-1`:** Construye la interfaz de solicitud/aprobación de extensión (con reloj de 24h), el panel de revisión de 32 horas con contador global de correcciones (`0/2`, `1/2`, `2/2`), la ventana final de 30 minutos para presentar reclamaciones y la Consola de Arbitraje del Administrador.
-* **`FE-2`:** Sincroniza las transiciones visuales 3D con la ventana final de 30 minutos, la liberación 96 % / 4 % y los estados de reembolso o disputa.
+* **`BE-2`:** Relojes BullMQ (`7d`, `24h`, `+7d solo al vencer`, `32h`, `30m`) y notificaciones.
+* **`BE-1`:** Extensión solo al vencer, límite 2 correcciones + mediación, suspensión atómica en 30m, arbitraje conectado a escrow.
+* **`FE-1`:** UI de extensión (24h), revisión 32h (`0/2`…`2/2`), ventana 30m, consola Admin.
+* **`FE-2`:** Transiciones 3D con payout 96/4 (wallet dueño) y estados de reembolso/disputa.
 * **`AI-1` + Todos:** Ejecutan la validación E2E completa (`SPEC-11.md`) y realizan el despliegue final a producción (`SPEC-12.md`), cerrando la trazabilidad en `AI_USAGE.md` y `promptsAI_USAGE.md`.
 
 #### C. Criterio de Aprobación Final del Proyecto

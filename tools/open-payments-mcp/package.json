@@ -1,0 +1,23 @@
+{
+  "name": "open-payments-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "pnpm build && node dist/index.js",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@interledger/open-payments": "^7.4.0",
+    "@modelcontextprotocol/sdk": "^1.20.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.33",
+    "typescript": "^5.9.3"
+  }
+}

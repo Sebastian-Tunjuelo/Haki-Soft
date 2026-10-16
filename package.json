@@ -1,0 +1,18 @@
+{
+  "name": "taskstream",
+  "private": true,
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=20.18.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "dev": "turbo run dev",
+    "typecheck": "turbo run typecheck"
+  },
+  "devDependencies": {
+    "turbo": "2.3.3",
+    "typescript": "5.7.3"
+  }
+}

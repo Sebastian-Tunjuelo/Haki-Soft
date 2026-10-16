@@ -36,9 +36,9 @@
 | **`T-F0-01`** | Todos | 🔴 `P0` | — | Definir la Única Fuente de Verdad en `CONTEXT.md` integrando el flujo completo de plazos (`7d`, `24h`, `+7d`, `32h`, `30m`), máximo 2 correcciones globales y alcance de IA exclusivo para imagen y texto en el MVP. | Ninguna | `[DONE]` |
 | **`T-F0-02`** | Todos | 🔴 `P0` | — | Instaurar la Política Inmutable de Uso y Trazabilidad de IA en `AGENTS.md`, `AI_USAGE.md` y `promptsAI_USAGE.md`. | `T-F0-01` | `[DONE]` |
 | **`T-F0-03`** | Todos | 🔴 `P0` | — | Generar los 4 documentos rectores de ingeniería: `architecture-overview.md` (con modelo de datos 3NF libre de *God-Entities*), `taskboard.md`, `pbp-development.md` y `sdd-process.md`. | `T-F0-02` | `[DONE]` |
-| **`T-F0-04`** | `AI-1` | 🔴 `P0` | `SPEC-00` | Ejecutar `SPEC-00.md`: crear la carpeta `specs` y su `README.md` con el índice maestro desde `SPEC-00` hasta `SPEC-12` (`Deploy`). | `T-F0-03` | `[READY_UNBLOCKED]` |
-| **`T-F0-05`** | `AI-1` | 🔴 `P0` | `SPEC-01` | Inicializar `shared-schemas` con los esquemas Zod globales (`TaskOrderCardSchema`, `DeadlineExtensionRequestSchema`, `AiAdvisorInputContractSchema`, `AiAdvisorReportSchema`) y generadores de *mocks* para desbloquear a los 5 desarrolladores. | `T-F0-04` | `[READY_UNBLOCKED]` |
-| **`T-F0-06`** | `FE-1` + `BE-2` | 🔴 `P0` | `SPEC-01` | Configurar la raíz del monorepo (`pnpm-workspace.yaml`, `turbo.json`), aplicación Frontend (Next.js 15.5 + React 19) y aplicación Backend (NestJS 10.4 + Prisma 6). | `T-F0-03` | `[READY_UNBLOCKED]` |
+| **`T-F0-04`** | `AI-1` | 🔴 `P0` | `SPEC-00` | Ejecutar `SPEC-00.md`: crear la carpeta `specs` y su `README.md` con el índice maestro desde `SPEC-00` hasta `SPEC-12` (`Deploy`). | `T-F0-03` | `[DONE]` |
+| **`T-F0-05`** | `AI-1` | 🔴 `P0` | `SPEC-01` | Inicializar `shared-schemas` con los esquemas Zod globales (`TaskOrderCardSchema`, `DeadlineExtensionRequestSchema`, `AiAdvisorInputContractSchema`, `AiAdvisorReportSchema`) y generadores de *mocks* para desbloquear a los 5 desarrolladores. | `T-F0-04` | `[DONE]` |
+| **`T-F0-06`** | `FE-1` + `BE-2` | 🔴 `P0` | `SPEC-01` | Configurar la raíz del monorepo (`pnpm-workspace.yaml`, `turbo.json`), aplicación Frontend (Next.js 15.5 + React 19) y aplicación Backend (NestJS 10.4 + Prisma 6). | `T-F0-03` | `[DONE]` |
 
 ---
 
@@ -51,7 +51,7 @@
 | **`T-F1-FE2-02`** | `FE-2` | 🟠 `P1` | `SPEC-03` | Construir la Hero Scene 3D de la Landing Page impulsada por `ScrollTrigger` a 60–120 FPS sin provocar re-renders en React. | `T-F1-FE2-01` | `[READY_UNBLOCKED]` |
 | **`T-F1-BE1-01`** | `BE-1` | 🔴 `P0` | `SPEC-02` | 🛡️ **`[MANUAL / IA MÍNIMA-NULA]`** Configurar credenciales `Ed25519` de la Test Wallet / Rafiki e implementar manualmente en `open-payments.service.ts` el descubrimiento con `UnauthenticatedClient` y la verificación de titularidad `Subject Grant` + verificación de hash `SHA-256`. | `T-F0-05` | `[READY_UNBLOCKED]` |
 | **`T-F1-BE2-01`** | `BE-2` | 🔴 `P0` | `SPEC-01`, `SPEC-02` | Desplegar el esquema normalizado Prisma 6 (`schema.prisma`) en PostgreSQL con las restricciones `CHECK` SQL y el webhook de sincronización de usuarios de Clerk. | `T-F0-06` | `[READY_UNBLOCKED]` |
-| **`T-F1-AI1-01`** | `AI-1` | 🟠 `P1` | `SPEC-01` | Crear la suite de pruebas de contratos en `shared-schemas` para validar invariantes de presupuestos, plazos y esquemas de IA. | `T-F0-05` | `[READY_UNBLOCKED]` |
+| **`T-F1-AI1-01`** | `AI-1` | 🟠 `P1` | `SPEC-01` | Crear la suite de pruebas de contratos en `shared-schemas` para validar invariantes de presupuestos, plazos y esquemas de IA. | `T-F0-05` | `[DONE]` |
 
 ---
 
@@ -73,7 +73,7 @@
 
 | ID Tarea | Rol | Prioridad | Spec Asociada | Descripción de la Tarea | Dependencias | Estado |
 | :---- | :---- | :---- | :---- | :---- | :---- | :---- |
-| **`T-F3-BE1-01`** | `BE-1` | 🔴 `P0` | `SPEC-06` | 🛡️ **`[MANUAL / IA MÍNIMA-NULA]`** Implementar manualmente `escrow-payment.service.ts` usando `@interledger/open-payments`: **(1)** Depósito del 100 % en `taskstream-escrow` al iniciar la orden (`receiveAmount = 100% USD`); **(2)** Liberación final del **96 % para el Freelancer y 4 % para TaskStream** (`debitAmount = 96% USD`); **(3)** Reembolso del **100 %** al Buyer (`debitAmount = 100% USD`) por vencimiento, falta de respuesta a extensión o disputa ganada por el Buyer; **(4)** Verificación de `GET /outgoing-payment-grant` y rotación/revocación de tokens. | `T-F1-BE1-01` | `[READY_UNBLOCKED]` |
+| **`T-F3-BE1-01`** | `BE-1` | 🔴 `P0` | `SPEC-06` | 🛡️ **`[MANUAL / IA MÍNIMA-NULA]`** `escrow-payment.service.ts`: **(1)** Depósito 100 % en escrow; **(2)** Dos payouts: **96 %** Freelancer + **4 %** wallet dueño; **(3)** Reembolso **100 %** (7d sin extensión, rechazo/silencio extensión, fallo extensión, Admin→Buyer) — actividad muere; **(4)** Grants / rotate / revoke. | `T-F1-BE1-01` | `[READY_UNBLOCKED]` |
 | **`T-F3-BE2-01`** | `BE-2` | 🔴 `P0` | `SPEC-06` | Implementar el guardia de idempotencia financiera (`SHA256` en `OpenPaymentsTransaction`), bloqueo transaccional sobre `EscrowLedger` y el receptor de Webhooks de Rafiki. | `T-F1-BE2-01` | `[READY_UNBLOCKED]` |
 | **`T-F3-FE1-01`** | `FE-1` | 🔴 `P0` | `SPEC-06` | Construir el Checkout de Custodia en Escrow: resumen del depósito del 100 %, distribución futura (`96 % Freelancer / 4 % TaskStream`), redirección al consentimiento GNAP y activación del plazo inicial de 7 días (`ESCROW_LOCKED`). | `T-F2-FE1-02` | `[READY_UNBLOCKED]` |
 | **`T-F3-FE2-01`** | `FE-2` | 🔴 `P0` | `SPEC-06` | Construir la **Escena 3D de Bóveda Escrow** en `@react-three/fiber v9` controlada por `GSAP ScrollTrigger` y eventos de estado de la orden. | `T-F1-FE2-02` | `[READY_UNBLOCKED]` |
@@ -114,9 +114,11 @@
 
 | # | Regla / Decisión | Definición Vigente en el Proyecto |
 | :---- | :---- | :---- |
-| **1** | **Plazo de Entrega Inicial y Extensión Única** | El Freelancer tiene **7 días** iniciales para entregar. Si vence sin entrega, puede solicitar **una única extensión de hasta 7 días adicionales** (hasta **14 días** totales desde el inicio). El Buyer tiene **24 horas** para aprobar o rechazar; si no responde en 24h o si el Freelancer tampoco entrega en la extensión aprobada, se reembolsa automáticamente el **100 %** al Buyer. |
-| **2** | **Revisión de 32 Horas y Máximo 2 Correcciones Globales** | Cada entrega abre un plazo de **32 horas** para el Buyer. El Buyer puede pedir máximo **2 correcciones globales por orden** (no se reinicia con nuevas entregas ni con una extensión). Si el Buyer acepta o no responde en 32 horas (aceptación automática), comienza la ventana final de **30 minutos**. |
-| **3** | **Ventana Final de 30 Minutos y Suspensión por Reclamación** | La aceptación expresa o automática inicia una ventana de **30 minutos**. Si transcurre sin reclamación, se libera el **96 % al Freelancer y 4 % a TaskStream**. Si alguien presenta una reclamación válida durante los 30 minutos (o si se agotan las 2 correcciones sin acuerdo), **se suspende inmediatamente la liberación automática de fondos** y pasa a disputa administrativa. |
-| **4** | **Disputa Administrativa Justificada y Binaria** | Mientras una disputa esté abierta, el dinero permanece retenido en el escrow sin automatismos. El Administrador evalúa todas las evidencias y emite una decisión acompañada de justificación: **100 % de reembolso al Buyer** o **96 % Freelancer / 4 % TaskStream**. |
-| **5** | **Alcance del Consejero de IA (`SPEC-08`)** | En el MVP, `AiAdvisorService` **solo audita y asesora tareas de imagen y texto** a partir del contrato exacto `AiAdvisorInputContractSchema`. El resto de tipos de tareas y la suscripción se dejan planteados pero fuera del MVP. |
-| **6** | **Redondeo Exacto en Centavos (`96 % / 4 %`)** | `platformFeeUSDInCents = Math.floor(totalAmountUSDInCents * 0.04)` y `freelancerPayoutUSDInCents = totalAmountUSDInCents - platformFeeUSDInCents`, asegurando suma exacta al 100 %. |
+| **1** | **Plazo Inicial y Extensión Solo al Vencer** | **7 días** iniciales. Extensión **única** de hasta **+7 días** **solo al vencer** (no antes). Sin pedir extensión al vencer → `AUTO_REFUNDED_INITIAL_EXPIRED`. Buyer tiene **24h**; rechazo, silencio o fallo de extensión → reembolso **100 %**. Todo reembolso **mata la actividad** y desliga al Freelancer. |
+| **2** | **Revisión 32h y Máx. 2 Correcciones** | Cada entrega: **32h**. Máx. **2** correcciones globales. Tras la **2ª** re-entrega: Buyer **acepta** o **pide mediación** (Admin). Timeout 32h = aceptación automática → ventana **30m**. |
+| **3** | **Ventana Final 30m** | Sin petición de disputa → **96 % Freelancer + 4 % wallet del dueño**. Con petición → `DISPUTED` (se cancela el job automático). |
+| **4** | **Disputa Admin Binaria** | Fondos retenidos. Decisión justificada: **100 % Buyer** o **96 % / 4 % wallet dueño**. |
+| **5** | **Gig Fijo vs Publicación + Arranque Mutuo** | Gig = precio **fijo no negociable**. Publicación = ofertas **`<=` tope**; Buyer elige una. Flujo escrow/relojes **solo tras aceptación mutua + fondeo**; cancelable antes de aceptar. |
+| **6** | **Una Wallet Activa + Comisión a Wallet Dueño** | Una sola wallet verificada activa por usuario (reemplazo al cambiar). El **4 %** se transfiere a la wallet del dueño/plataforma. |
+| **7** | **Alcance IA (`SPEC-08`)** | Solo imagen/texto en MVP vía `AiAdvisorInputContractSchema`. |
+| **8** | **Redondeo Exacto (`96 % / 4 %`)** | `platformFeeUSDInCents = Math.floor(totalAmountUSDInCents * 0.04)` y `freelancerPayoutUSDInCents = totalAmountUSDInCents - platformFeeUSDInCents`. |

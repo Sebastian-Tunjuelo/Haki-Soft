@@ -12,8 +12,8 @@
 
 * **Buyer (Contratante):** Publica o contrata un trabajo, negocia el presupuesto (siempre menor o igual al presupuesto inicial planteado) y deposita el 100 % de los fondos de la orden.
 * **Freelancer (Trabajador Independiente):** Realiza y entrega el trabajo contratado conforme a los requisitos y el alcance acordados.
-* **TaskStream AI (Plataforma y Custodia en Escrow):** Facilita la contratación, mantiene el dinero de la orden en su cuenta de custodia (`taskstream-escrow`) mientras corresponde, ejecuta los relojes deterministas de plazos, genera las vistas protegidas (*Protected Preview*), brinda asesoría consultiva con IA para entregas de **imagen y texto**, y aplica las reglas de revisión, reembolso (**100 %**) y liberación de pagos (**96 % Freelancer / 4 % TaskStream**).
-* **Administrador:** Interviene únicamente cuando existe una disputa o reclamación válida que no puede resolverse mediante el flujo normal, tomando una decisión binaria y justificada basada en las evidencias.
+* **TaskStream AI (Plataforma y Custodia en Escrow):** Facilita la contratación, custodia fondos en `taskstream-escrow`, ejecuta relojes deterministas, *Protected Preview*, IA consultiva (imagen/texto en MVP), reembolsos **100 %** y liberación **96 % Freelancer / 4 % wallet del dueño** (billetera distinta del escrow).
+* **Administrador:** Interviene cuando el Buyer pide **mediación/reembolso** tras la 2ª corrección o registra una **petición de disputa** en la ventana de 30 minutos; decide de forma binaria y justificada.
 
 ---
 
@@ -27,67 +27,44 @@ Los plazos del sistema son **independientes entre sí** y son gobernados en el B
 
 | Situación / Reloj Determinista | Plazo | Regla de Negocio Inmutable |
 | :--- | ---: | :--- |
-| **Entrega inicial (`INITIAL_DELIVERY_7D`)** | **7 días** | Plazo inicial máximo para que el Freelancer entregue el trabajo desde que se activa la orden en escrow. |
-| **Respuesta a solicitud de extensión (`EXTENSION_RESPONSE_24H`)** | **24 horas** | El Buyer debe aprobar o rechazar la solicitud de extensión. Si no responde en 24 horas, se activa el **reembolso automático del 100 %** al Buyer. |
-| **Extensión de entrega (`EXTENDED_DELIVERY_UP_TO_7D`)** | **Hasta 7 días adicionales** | Solo puede solicitarse y aprobarse **una única vez por orden** (límite total de hasta **14 días** desde el inicio original). Si vence sin entrega, se procesa el **reembolso automático del 100 %**. |
-| **Revisión de una entrega (`DELIVERY_REVIEW_32H`)** | **32 horas** | Plazo del Buyer para revisar cada entrega: puede aceptar, solicitar correcciones o dejar vencer el plazo (lo cual produce aceptación automática y abre la ventana final de 30 minutos). |
-| **Ventana final de reclamaciones (`FINAL_CLAIM_WINDOW_30M`)** | **30 minutos** | Comienza después de una aceptación expresa o automática (tras vencer las 32 horas). Si transcurre sin reclamación, se libera el **96 % al Freelancer y 4 % a TaskStream**. |
-| **Correcciones permitidas (`maxRevisions = 2`)** | **Máximo 2 por orden** | El límite es **global para toda la orden**: no se reinicia cuando se realiza una nueva entrega ni cuando se concede una extensión del plazo. |
+| **Entrega inicial (`INITIAL_DELIVERY_7D`)** | **7 días** | Si vence **sin** petición de extensión → **reembolso automático 100 %** (`AUTO_REFUNDED_INITIAL_EXPIRED`); la actividad **muere**. |
+| **Respuesta a solicitud de extensión (`EXTENSION_RESPONSE_24H`)** | **24 horas** | Solo si el Freelancer pidió extensión **al vencer** los 7 días (no antes). Silencio del Buyer → reembolso **100 %**. |
+| **Extensión (`EXTENDED_DELIVERY_UP_TO_7D`)** | **Hasta +7 días** | **Una** vez por orden; **solo al vencer** el plazo inicial (máx. 14 días totales). Sin entrega → reembolso **100 %**. |
+| **Revisión (`DELIVERY_REVIEW_32H`)** | **32 horas** | Aceptar, pedir corrección (máx. 2 globales) o timeout = aceptación automática → ventana 30 m. |
+| **Ventana final (`FINAL_CLAIM_WINDOW_30M`)** | **30 minutos** | Sin petición de disputa → **96 % Freelancer + 4 % wallet dueño**. Con petición → `DISPUTED`. |
+| **Correcciones (`maxRevisions = 2`)** | **Máx. 2 globales** | Tras la **2ª** re-entrega: Buyer **acepta** o **pide mediación** (Admin). No se reinicia con extensión. |
 
 ---
 
 ### 2.2. Detalle Arquitectónico del Ciclo de Vida Financiero y de Ejecución
 
-#### A. Inicio de una Orden y Depósito en Escrow
-1. El Buyer contrata al Freelancer (ya sea desde un paquete publicado o tras llegar a un acuerdo de presupuesto `<= presupuesto inicial` en la sala de negociación) y deposita el **100 % de los fondos** en `taskstream-escrow` mediante una concesión interactiva de Open Payments (`IncomingPayment` con `receiveAmount = 100% USD`, asumiendo el Buyer el costo de conversión cambiaria FX).
-2. La orden pasa a estar activa (`ESCROW_LOCKED`) y comienza el **plazo inicial de entrega de 7 días**.
-3. El Freelancer debe entregar el trabajo conforme a los requisitos y el alcance acordados en la orden.
+#### A. Modalidades de Contratación e Inicio (Escrow solo tras Aceptación Mutua)
+
+1. **Gig (precio fijo, no negociable):** El Freelancer publica un paquete a precio cerrado; el Buyer contrata ese monto sin contraoferta.
+2. **Publicación del Buyer (tope + bandeja de ofertas):** El Buyer publica con presupuesto máximo; varios freelancers ofertan `<= tope`; el Buyer ve ofertas/perfiles y **elige una**. Puede **cancelar** la publicación antes de aceptar.
+3. **Arranque:** El flujo financiero **no comienza** hasta que **ambas partes aceptan** la actividad y el Buyer deposita el **100 %** en `taskstream-escrow` (`receiveAmount = 100% USD`, Buyer asume FX). Entonces `ESCROW_LOCKED` + reloj de **7 días**.
 
 #### B. Si el Freelancer Entrega a Tiempo (Dentro de los Primeros 7 Días o de la Extensión Aprobada)
 Cuando el Freelancer sube la entrega a Cloudflare R2 (`/originals`), el sistema genera el *Protected Preview* con marca de agua (`/previews`), ejecuta la auditoría consultiva de IA (si la tarea corresponde a **imagen o texto**) e inicia el **periodo de revisión de 32 horas** del Buyer (`IN_REVIEW`). Durante esas **32 horas**, el Buyer tiene tres caminos:
 
-1. **Aceptar la entrega expresamente:**
-   * La aceptación **no libera el dinero de inmediato**.
-   * Se desbloquea el acceso al archivo original final y comienza la **ventana final de reclamaciones de 30 minutos** (`FINAL_CLAIM_WINDOW_30M`).
-   * Si transcurren los **30 minutos** sin reclamación, el Worker libera automáticamente los fondos: **96 % para el Freelancer** y **4 % para TaskStream** (`COMPLETED`).
-2. **No responder en 32 horas (Aceptación Automática por Inactividad):**
-   * Si pasan las **32 horas** sin respuesta del Buyer, la entrega se considera **aceptada automáticamente**.
-   * La falta de respuesta durante las 32 horas no libera inmediatamente los fondos: primero comienza la **ventana final de reclamaciones de 30 minutos** (`FINAL_CLAIM_WINDOW_30M`).
-   * Si no se presenta ninguna reclamación durante esos **30 minutos**, se libera el **96 % al Freelancer** y el **4 % a TaskStream** (`COMPLETED`).
-3. **Solicitar correcciones (Máximo 2 por orden):**
-   * El Buyer puede pedir ajustes o reorganización dentro del alcance original hasta un **máximo global de 2 correcciones por orden** (`REVISION_REQUESTED`).
-   * Cada vez que el Freelancer vuelve a entregar el trabajo corregido, comienza un **nuevo periodo de revisión de 32 horas** para el Buyer.
-   * Si después de las correcciones hay acuerdo y el Buyer acepta (o vencen las 32 horas), comienza la ventana final de reclamaciones de **30 minutos** previa a la liberación **96 % / 4 %**.
+1. **Aceptar expresamente:** No libera al instante → ventana **30 min**. Sin petición de disputa → **96 % Freelancer + 4 % wallet dueño** (`COMPLETED`).
+2. **Timeout 32h:** Aceptación automática → misma ventana de **30 min**.
+3. **Correcciones (máx. 2):** Cada re-entrega reinicia 32h. Tras la **2ª** re-entrega el Buyer puede **aceptar** (→ 30 min) o **pedir mediación/reembolso** (`DISPUTED`).
 
-#### C. Si No Hay Acuerdo Después de Agotar las 2 Correcciones (Disputa Administrativa)
-Si se agotan las **2 correcciones** y las partes no logran llegar a un acuerdo, se abre una **disputa administrativa (`DISPUTED`)**:
-* **Congelamiento de automatismos:** Los fondos permanecen retenidos en el escrow. Mientras la disputa siga abierta, **no se realiza ningún reembolso automático ni se libera automáticamente el pago al Freelancer**.
-* **Evaluación basada en evidencias:** El Administrador revisa los requisitos y el alcance acordados originalmente, las entregas realizadas (`0`, `1` y `2`), las solicitudes de corrección y sus respuestas, los informes consultivos de IA (en tareas de imagen y texto) y los mensajes entre ambas partes.
-* **Decisión binaria justificada:** Toda resolución administrativa debe ir acompañada de una justificación escrita basada en las evidencias:
-  * **Si favorece al Buyer** (el Freelancer no cumplió los requisitos acordados): se reembolsa el **100 %** del importe reembolsable de la orden al Buyer (`REFUNDED`).
-  * **Si favorece al Freelancer** (cumplió los requisitos y el Buyer rechaza injustificadamente o exige tareas fuera del alcance acordado): se libera el **96 % al Freelancer** y el **4 % a TaskStream** (`COMPLETED`).
+#### C. Disputa Administrativa (Petición Explícita)
+Se abre `DISPUTED` cuando el Buyer **pide mediación** tras la 2ª corrección o registra **petición de disputa** en los 30 min. Fondos retenidos sin automatismos. Admin decide con justificación: **100 % Buyer** (`REFUNDED`, actividad muere, Freelancer desligado) o **96 % / 4 % wallet dueño** (`COMPLETED`).
 
-#### D. Si el Freelancer No Entrega Dentro de los Primeros 7 Días (Flujo de Extensión Única de hasta 7 Días)
-Si vence el plazo inicial de 7 días sin entrega (o el Freelancer requiere ampliar el plazo antes del vencimiento), puede solicitar **una única extensión de hasta 7 días adicionales** (`EXTENSION_REQUESTED`):
-1. **Recepción y Ventana de 24 Horas del Buyer:** TaskStream notifica al Buyer, quien dispone de un máximo de **24 horas** para aprobar o rechazar la solicitud. No se permite una segunda extensión para la misma orden.
-2. **Caso 1 — El Buyer aprueba la extensión (en $\le$ 24h):**
-   * El Freelancer recibe **hasta 7 días adicionales**, contados a partir del vencimiento del plazo inicial (límite total de hasta **14 días** desde el inicio original de la orden).
-   * La extensión cambia el plazo disponible para entregar, pero **no reinicia el contador global de 2 correcciones**.
-   * Si el Freelancer entrega dentro del plazo extendido, se aplica el flujo normal de revisión de **32 horas**, máximo 2 correcciones globales y ventana final de **30 minutos**.
-3. **Caso 2 — El Buyer rechaza la extensión y solicita el reembolso (en $\le$ 24h):**
-   * TaskStream devuelve de inmediato el **100 %** del importe reembolsable de la orden al Buyer (`REFUNDED`, con opción de reabrir su publicación original de forma limpia si desea buscar otro freelancer).
-4. **Caso 3 — El Buyer no responde en 24 horas (Reembolso Automático por Silencio):**
-   * Al cumplirse las **24 horas** sin respuesta del Buyer, se activa el **reembolso automático del 100 %** del importe reembolsable hacia la billetera del Buyer (`AUTO_REFUNDED_BY_TIMEOUT`) y se notifica a ambas partes explicando el vencimiento del plazo inicial, la solicitud de extensión y la ejecución del reembolso por falta de respuesta.
-5. **Caso 4 — El Buyer aprobó la extensión, pero el Freelancer tampoco entrega dentro del plazo extendido:**
-   * Si vence el plazo extendido (hasta +7 días) sin que el Freelancer entregue, el Worker procesa un **reembolso automático del 100 %** del importe reembolsable al Buyer (`AUTO_REFUNDED_EXTENDED_EXPIRED`), no permite segunda extensión y notifica a ambas partes.
+#### D. Sin Entrega en 7 Días (Extensión Solo al Vencer)
+1. **Sin petición de extensión al vencer** → `AUTO_REFUNDED_INITIAL_EXPIRED` (actividad muere).
+2. **Con petición al vencer** (`EXTENSION_REQUESTED`): Buyer tiene **24h**.
+3. Aprueba → `ESCROW_EXTENDED` (hasta +7d; no reinicia correcciones).
+4. Rechaza → `REFUNDED` (actividad muere).
+5. No responde → `AUTO_REFUNDED_BY_TIMEOUT`.
+6. Aprobó pero no entrega en extensión → `AUTO_REFUNDED_EXTENDED_EXPIRED`.
+7. **Todo reembolso termina la actividad**; el Buyer busca otra persona en un ciclo nuevo (no hay `REFUNDED_AND_REOPENED`).
 
-#### E. Regla de Suspensión y Resolución ante una Reclamación en la Ventana Final de 30 Minutos
-Para cubrir de forma determinista el punto crítico de la **ventana final de 30 minutos (`FINAL_CLAIM_WINDOW_30M`)**:
-1. **Suspensión Inmediata del Pago Automático:** Cuando el Buyer presenta una reclamación válida dentro de los 30 minutos posteriores a la aceptación expresa o automática (por ejemplo, al detectar tras desbloquear el archivo original final que este está corrupto o no coincide con la vista previa), el Backend **cancela de forma atómica el job `FINAL_CLAIM_WINDOW_30M` en BullMQ** y cambia el estado de la orden a `DISPUTED`.
-2. **Prohibición de Ignorar la Reclamación:** Ningún pago puede liberarse automáticamente si existe una reclamación registrada dentro de esos 30 minutos.
-3. **Revisión por el Administrador:** El Administrador evalúa la reclamación comparando el archivo original entregado frente a los requisitos de la orden y la vista previa:
-   * Si la reclamación es procedente (incumplimiento o fraude en el archivo original), ejecuta el **reembolso del 100 % al Buyer** (`REFUNDED`).
-   * Si la reclamación es improcedente y el entregable cumple los requisitos acordados, reanuda y ejecuta la liberación del **96 % al Freelancer y 4 % a TaskStream** (`COMPLETED`) con su respectiva justificación.
+#### E. Ventana Final de 30 Minutos
+Si hay **petición de disputa** en los 30 min → cancelación atómica del job BullMQ → `DISPUTED`. Si no hay petición → liberación **96 % / 4 % wallet dueño**.
 
 ---
 
@@ -95,31 +72,31 @@ Para cubrir de forma determinista el punto crítico de la **ventana final de 30 
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PENDING_ESCROW_FUNDING: Orden acordada (100% en 1 bloque)
-    PENDING_ESCROW_FUNDING --> ESCROW_LOCKED: Buyer deposita fondos en taskstream-escrow\n[Inicia Plazo Inicial: 7 días]
+    [*] --> PENDING_ESCROW_FUNDING: Aceptación mutua (Gig fijo u oferta elegida)
+    PENDING_ESCROW_FUNDING --> ESCROW_LOCKED: Buyer fondea taskstream-escrow\n[Inicia 7 días]
 
-    ESCROW_LOCKED --> EXTENSION_REQUESTED: No entrega en 7d -> Freelancer pide única extensión (hasta +7 días)\n[Inicia Reloj Respuesta Buyer: 24 horas]
-    EXTENSION_REQUESTED --> ESCROW_EXTENDED: Buyer aprueba en <= 24h\n[Plazo extendido hasta +7 días / máx. 14 días totales]
-    EXTENSION_REQUESTED --> REFUNDED: Buyer rechaza extensión y pide reembolso en <= 24h (100% Buyer)
-    EXTENSION_REQUESTED --> AUTO_REFUNDED_BY_TIMEOUT: Buyer no responde en 24h\n[Reembolso automático 100% al Buyer + Notificación]
+    ESCROW_LOCKED --> AUTO_REFUNDED_INITIAL_EXPIRED: Vencen 7d sin pedir extensión\n[Reembolso 100% — actividad muere]
+    ESCROW_LOCKED --> EXTENSION_REQUESTED: Vencen 7d y Freelancer pide extensión (solo al vencer)\n[Buyer: 24h]
+    EXTENSION_REQUESTED --> ESCROW_EXTENDED: Buyer aprueba <= 24h\n[Hasta +7d / máx. 14d totales]
+    EXTENSION_REQUESTED --> REFUNDED: Buyer rechaza (100% — actividad muere)
+    EXTENSION_REQUESTED --> AUTO_REFUNDED_BY_TIMEOUT: Buyer no responde 24h
 
-    ESCROW_EXTENDED --> AUTO_REFUNDED_EXTENDED_EXPIRED: Freelancer tampoco entrega en la extensión\n[Reembolso automático 100% al Buyer + Sin 2da extensión]
+    ESCROW_EXTENDED --> AUTO_REFUNDED_EXTENDED_EXPIRED: Sin entrega en extensión
 
-    ESCROW_LOCKED --> IN_REVIEW: Freelancer entrega dentro de los 7 días\n[Inicia Reloj Revisión: 32 horas]
-    ESCROW_EXTENDED --> IN_REVIEW: Freelancer entrega dentro de la extensión\n[Inicia Reloj Revisión: 32 horas]
+    ESCROW_LOCKED --> IN_REVIEW: Entrega en plazo (32h)
+    ESCROW_EXTENDED --> IN_REVIEW: Entrega en extensión (32h)
 
-    IN_REVIEW --> REVISION_REQUESTED: Buyer pide corrección (Máx. 2 globales por orden)
-    REVISION_REQUESTED --> IN_REVIEW: Freelancer re-entrega trabajo ajustado\n[Inicia nuevo Reloj Revisión: 32 horas]
+    IN_REVIEW --> REVISION_REQUESTED: Corrección (máx. 2 globales)
+    REVISION_REQUESTED --> IN_REVIEW: Re-entrega (nuevo reloj 32h)
 
-    IN_REVIEW --> DISPUTED: Agotadas las 2 correcciones sin acuerdo\n[Fondos retenidos en Escrow -> Pasa al Administrador]
+    IN_REVIEW --> DISPUTED: Tras 2ª corrección Buyer pide mediación/reembolso
+    IN_REVIEW --> FINAL_CLAIM_WINDOW_30M: Aceptación expresa o automática (32h)
 
-    IN_REVIEW --> FINAL_CLAIM_WINDOW_30M: Buyer acepta entrega O pasan 32h sin respuesta (Aceptación Automática)\n[Inicia Ventana Final de Reclamaciones: 30 minutos]
+    FINAL_CLAIM_WINDOW_30M --> DISPUTED: Petición de disputa en 30m
+    FINAL_CLAIM_WINDOW_30M --> COMPLETED: 30m sin disputa\n[96% Freelancer + 4% wallet dueño]
 
-    FINAL_CLAIM_WINDOW_30M --> DISPUTED: Se presenta reclamación válida en los 30 min\n[Se suspende liberación automática -> Pasa al Administrador]
-    FINAL_CLAIM_WINDOW_30M --> COMPLETED: Pasan 30 minutos sin reclamación\n[Liberación definitiva: 96% Freelancer / 4% TaskStream]
-
-    DISPUTED --> REFUNDED: Decisión justificada del Admin a favor del Buyer (100% Reembolso)
-    DISPUTED --> COMPLETED: Decisión justificada del Admin a favor del Freelancer (96% / 4%)
+    DISPUTED --> REFUNDED: Admin a favor Buyer (actividad muere)
+    DISPUTED --> COMPLETED: Admin a favor Freelancer (96%/4% dueño)
 ```
 
 ---
@@ -251,12 +228,13 @@ Haki-Suave/ (TaskStream AI)
 El modelo de datos ha sido diseñado verificando la ausencia total de *God-Entities*, redundancias o estados contradictorios:
 
 1. **Separación de Responsabilidades (Sin *God-Entity* en `TaskOrder` ni en `User`):**
-   * `User` contiene únicamente la identidad base; el perfil profesional del trabajador vive en `SellerProfile` (1:1 opcional) y sus billeteras multimoneda en `UserWallet` (1:N).
-   * La oferta abierta del cliente (`ClientTaskPublication`), las negociaciones (`NegotiationProposal`), la orden activa (`TaskOrder`), el libro contable del escrow (`EscrowLedger`), las transacciones de Open Payments (`OpenPaymentsTransaction`), la solicitud única de extensión (`DeadlineExtensionRequest`), las entregas (`TaskDeliverable`), los informes consultivos de IA para imagen y texto (`AiAdvisorReport`), las disputas administrativas (`DisputeCase`) y los relojes de BullMQ (`ScheduledTimerJob`) están separados en tablas cohesivas.
+   * `User` contiene la identidad base; `SellerProfile` (1:1 opcional); **una sola wallet activa** en `UserWallet` (cardinalidad de negocio 1 activa por usuario; historial de wallets reemplazadas puede conservarse inactivas).
+   * Publicaciones, ofertas (`NegotiationProposal` como bandeja), órdenes, escrow, transacciones OP, extensión única, entregas, IA, disputas y timers viven en tablas separadas.
 2. **Cumplimiento Exacto de las Reglas de Plazos y Pagos en el Esquema:**
-   * **Plazo inicial de 7 días y extensión única de hasta 7 días adicionales (máximo 14 días):** `DeadlineExtensionRequest` tiene restricción `UNIQUE` sobre `taskOrderId` (garantizando a nivel de motor de base de datos que **jamás pueda existir una segunda extensión para la misma orden**) y valida que `requestedExtraDays` esté entre `1` y `7`, con `buyerDecisionDeadlineAt` a **24 horas**.
-   * **Revisión de 32 horas por entrega y máximo 2 correcciones globales:** `TaskOrder` mantiene el contador global `revisionsUsed` (`0..2`) que nunca se reinicia al aprobar una extensión, y cada nueva entrega (`TaskDeliverable`) programa un nuevo reloj de **32 horas** (`DELIVERY_REVIEW_32H`).
-   * **Ventana final de 30 minutos y suspensión por reclamación:** Al aceptarse una entrega (expresa o automáticamente tras las 32 horas), se programa `FINAL_CLAIM_WINDOW_30M` por **30 minutos**; si entra una reclamación o se agotan las 2 correcciones sin acuerdo, se crea el registro en `DisputeCase` con justificación obligatoria (`resolutionJustification`) y decisión binaria (`BUYER_FULL_REFUND_100` o `SELLER_RELEASE_96_4`).
+   * **Extensión única solo al vencer:** `DeadlineExtensionRequest` `UNIQUE(taskOrderId)`; `requestedExtraDays` ∈ `[1,7]`; respuesta Buyer **24h**. Sin extensión al vencer 7d → `AUTO_REFUNDED_INITIAL_EXPIRED`.
+   * **Revisión 32h / máx. 2 correcciones:** `revisionsUsed` `0..2` global; tras 2ª re-entrega el Buyer acepta o abre `DisputeCase` por mediación.
+   * **Ventana 30m:** sin petición de disputa → payout **96% + 4% a `platformOwnerWalletAddress`**; con petición → `DISPUTED`.
+   * **Reembolso termina la actividad:** no existe estado `REFUNDED_AND_REOPENED`; el Freelancer queda desligado.
 
 ---
 
@@ -265,7 +243,7 @@ El modelo de datos ha sido diseñado verificando la ausencia total de *God-Entit
 ```mermaid
 erDiagram
     User ||--o| SellerProfile : "1:1 optional"
-    User ||--o{ UserWallet : "1:N"
+    User ||--o{ UserWallet : "historial; 1 activa"
     UserWallet ||--o{ WalletVerificationChallenge : "1:N"
 
     User ||--o{ Gig : "1:N"
@@ -364,19 +342,19 @@ enum NegotiationProposalStatus {
 }
 
 enum TaskLifecycleStatus {
-  PENDING_ESCROW_FUNDING
-  ESCROW_LOCKED                  // Plazo inicial de 7 días activo
-  EXTENSION_REQUESTED            // Solicitud única de hasta +7 días; Buyer tiene 24h para responder
-  ESCROW_EXTENDED                // Extensión aprobada (hasta 14 días totales desde el inicio)
-  IN_REVIEW                      // Entrega realizada; Buyer tiene 32 horas para revisar
-  REVISION_REQUESTED             // Solicitud de corrección activa (Máximo 2 globales por orden)
-  FINAL_CLAIM_WINDOW_30M         // Aceptación expresa o automática (tras 32h); ventana final de 30 minutos
-  DISPUTED                       // Disputa administrativa (tras 2 correcciones sin acuerdo o reclamación en los 30m)
-  COMPLETED                      // Liberación definitiva: 96% Freelancer / 4% TaskStream
-  REFUNDED                       // Reembolso 100% al Buyer (por rechazo de extensión o fallo de disputa)
-  REFUNDED_AND_REOPENED          // Reembolso 100% al Buyer con reapertura limpia de la publicación
-  AUTO_REFUNDED_BY_TIMEOUT       // Reembolso automático 100% al Buyer por falta de respuesta en 24h a extensión
-  AUTO_REFUNDED_EXTENDED_EXPIRED // Reembolso automático 100% al Buyer por no entregar dentro de la extensión
+  PENDING_ESCROW_FUNDING         // Aceptación mutua; esperando fondeo
+  ESCROW_LOCKED                  // Plazo inicial 7 días
+  EXTENSION_REQUESTED            // Extensión pedida SOLO al vencer 7d; Buyer 24h
+  ESCROW_EXTENDED                // Extensión aprobada (máx. 14 días totales)
+  IN_REVIEW                      // Revisión 32h
+  REVISION_REQUESTED             // Corrección (máx. 2 globales)
+  FINAL_CLAIM_WINDOW_30M         // 30 min para pedir disputa
+  DISPUTED                       // Mediación (tras 2ª corrección o en 30m)
+  COMPLETED                      // 96% Freelancer + 4% wallet dueño
+  REFUNDED                       // 100% Buyer; actividad muere
+  AUTO_REFUNDED_INITIAL_EXPIRED  // 7d sin pedir extensión
+  AUTO_REFUNDED_BY_TIMEOUT       // Buyer no responde 24h a extensión
+  AUTO_REFUNDED_EXTENDED_EXPIRED // Sin entrega en extensión
 }
 
 enum ExtensionRequestStatus {
@@ -395,7 +373,8 @@ enum EscrowLedgerStatus {
 
 enum OpenPaymentsOperationType {
   ESCROW_LOCK
-  FREELANCER_PAYOUT_96_4
+  FREELANCER_PAYOUT_96      // OutgoingPayment 96% → wallet Freelancer
+  PLATFORM_FEE_PAYOUT_4     // OutgoingPayment 4% → wallet del dueño (distinta del escrow)
   BUYER_REFUND_100
 }
 
@@ -427,8 +406,8 @@ enum CriterionEvalStatus {
 }
 
 enum DisputeOriginType {
-  EXHAUSTED_2_REVISIONS_NO_AGREEMENT
-  FINAL_30M_CLAIM_WINDOW
+  BUYER_MEDIATION_AFTER_2ND_REVISION // Buyer pide mediación/reembolso tras 2ª corrección
+  FINAL_30M_CLAIM_WINDOW             // Petición de disputa en ventana de 30 min
 }
 
 enum AdminBinaryResolution {
@@ -515,7 +494,9 @@ model UserWallet {
   resourceServerUrl String    @map("resource_server_url")
   isVerified        Boolean   @default(false) @map("is_verified")
   verifiedAt        DateTime? @map("verified_at")
-  isPrimary         Boolean   @default(true) @map("is_primary")
+  /// Regla de negocio: como máximo UNA wallet con isActive=true por userId (enforce en servicio + índice parcial SQL).
+  /// Al verificar una nueva, la anterior pasa a isActive=false (reemplazo).
+  isActive          Boolean   @default(true) @map("is_active")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
@@ -524,7 +505,7 @@ model UserWallet {
   buyerOrders            TaskOrder[]                   @relation("BuyerOrderWallet")
   sellerOrders           TaskOrder[]                   @relation("SellerOrderWallet")
 
-  @@index([userId, isPrimary])
+  @@index([userId, isActive])
   @@map("user_wallets")
 }
 
@@ -659,10 +640,10 @@ model TaskOrder {
   aiAuditableModality         MvpAiAuditableModality? @map("ai_auditable_modality") // Presente solo si es IMAGE o TEXT en el MVP
   lifecycleStatus             TaskLifecycleStatus     @default(PENDING_ESCROW_FUNDING) @map("lifecycle_status")
 
-  // Distribución de Fondos (96% Freelancer / 4% TaskStream)
+  // Distribución: 96% Freelancer / 4% wallet del dueño (billetera distinta del escrow)
   totalAmountUSDInCents       Int                     @map("total_amount_usd_in_cents")       // 100%
   freelancerPayoutUSDInCents  Int                     @map("freelancer_payout_usd_in_cents")  // 96%
-  platformFeeUSDInCents       Int                     @map("platform_fee_usd_in_cents")       // 4%
+  platformFeeUSDInCents       Int                     @map("platform_fee_usd_in_cents")       // 4% → platformOwnerWallet
   buyerOriginCurrency         String                  @map("buyer_origin_currency") @db.VarChar(6)
   sellerTargetCurrency        String                  @map("seller_target_currency") @db.VarChar(6)
 
@@ -766,9 +747,10 @@ model EscrowLedger {
   id                         String             @id @default(uuid()) @db.Uuid
   taskOrderId                String             @unique @map("task_order_id") @db.Uuid
   escrowWalletAddress        String             @default("https://ilp.interledger-test.dev/taskstream-escrow") @map("escrow_wallet_address")
+  platformOwnerWalletAddress String             @map("platform_owner_wallet_address") // Wallet del dueño que recibe el 4%
   lockedAmountUSDInCents     Int                @default(0) @map("locked_amount_usd_in_cents")
   releasedToSellerUSDInCents Int                @default(0) @map("released_to_seller_usd_in_cents")
-  platformFeeRetainedInCents Int                @default(0) @map("platform_fee_retained_in_cents")
+  platformFeePaidOutInCents  Int                @default(0) @map("platform_fee_paid_out_in_cents") // 4% transferido (no “retenido” informal)
   refundedToBuyerUSDInCents  Int                @default(0) @map("refunded_to_buyer_usd_in_cents")
   status                     EscrowLedgerStatus @default(AWAITING_FUNDS)
   createdAt                  DateTime           @default(now()) @map("created_at")
