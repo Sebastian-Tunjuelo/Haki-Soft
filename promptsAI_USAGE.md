@@ -14,6 +14,7 @@ Este archivo contiene el **registro histórico, secuencial e íntegro (sin omisi
 | **Prompt #002** | `2026-10-16` | `Antigravity` | `Planeación`, `Gobernanza`, `Backend`, `Frontend`, `IA`, `Tests` | Generación de los 4 artefactos rectores de ingeniería (`architecture-overview.md` con modelo de datos 3NF libre de *God-Entities*, `taskboard.md` con tareas/prioridades/decisiones, `pbp-development.md` con desarrollo fase por fase sin bloqueos para los 5 developers y `sdd-process.md` integrando el flujo SDD + BDD y las *skills* del proyecto). | [`architecture-overview.md`](file:///c:/Users/maico/Desktop/Haki-Suave/architecture-overview.md), [`taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Suave/taskboard.md), [`pbp-development.md`](file:///c:/Users/maico/Desktop/Haki-Suave/pbp-development.md), [`sdd-process.md`](file:///c:/Users/maico/Desktop/Haki-Suave/sdd-process.md), [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/prompts/AI_USAGE.md) |
 | **Prompt #003** | `2026-10-16` | `Antigravity` | `Planeación`, `Gobernanza`, `Backend`, `Frontend`, `IA`, `Tests` | Refinamiento de `sdd-process.md` (sin *skills* ni ejemplos de specs, impacto de SDD en el aplicativo final MVP/Demo, mención de archivos sin rutas y catálogo de `SPEC-00` a `SPEC-12` Deploy), actualización de `CONTEXT.md` (IA limitada en el MVP solo a tareas de imagen y texto y contrato exacto `AiAdvisorInputContractSchema` para `AiAdvisorService`) y adaptación de `architecture-overview.md`, `taskboard.md` y `pbp-development.md` al flujo completo de pagos y plazos (`7d` inicial, `24h` respuesta a extensión, `hasta +7d` extensión única, `32h` revisión por entrega, máx. 2 correcciones y `30m` ventana final). | [`planning/sdd-process.md`](file:///c:/Users/maico/Desktop/Haki-Suave/planning/sdd-process.md), [`planning/architecture-overview.md`](file:///c:/Users/maico/Desktop/Haki-Suave/planning/architecture-overview.md), [`.agents/CONTEXT.md`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/CONTEXT.md), [`planning/taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Suave/planning/taskboard.md), [`planning/pbp-development.md`](file:///c:/Users/maico/Desktop/Haki-Suave/planning/pbp-development.md), [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/prompts/AI_USAGE.md) |
 | **Prompt #004** | `2026-10-16` | `Antigravity` | `Gobernanza`, `Planeación`, `Frontend`, `Backend`, `IA`, `Tests` | Investigación profunda mediante `find-skills` e instalación multi-agente (`.agents/skills`, `.kiro/skills` y `.claude/skills`) de las *skills* oficiales de valor real para el stack del proyecto, y creación/adaptación 100% a **TaskStream AI** de la skill `taskstream-spec` (`SKILL.md`, `references/guia-de-secciones.md`, `references/validacion.md` y `scripts/check-spec.mjs`) sin residuos externos. | [`.agents/skills/taskstream-spec/SKILL.md`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/skills/taskstream-spec/SKILL.md), [`.agents/skills/taskstream-spec/references/guia-de-secciones.md`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/skills/taskstream-spec/references/guia-de-secciones.md), [`.agents/skills/taskstream-spec/references/validacion.md`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/skills/taskstream-spec/references/validacion.md), [`.agents/skills/taskstream-spec/scripts/check-spec.mjs`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/skills/taskstream-spec/scripts/check-spec.mjs) *(más réplicas en `.kiro/skills/` y `.claude/skills/`)*, [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/prompts/AI_USAGE.md) |
+| **Prompt #005** | `2026-10-16` | `Antigravity` | `Gobernanza` | Creación del repositorio privado `Haki-Soft` en GitHub bajo la cuenta `Sebastian-Tunjuelo`, commit inicial con los 211 archivos del monorepo y adición de los 4 colaboradores del equipo con permiso `write`: `Samuel-Duque`, `GeorgeAMS`, `SaraMLopera` y `MaicolD0930`. | [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 
 ---
 
@@ -467,4 +468,27 @@ Termina siempre con:
 - `domain-modeling`: términos nuevos para el glosario (CONTEXT §17).
 - `code-review`: su eje Spec verifica el código contra los RF; busca la spec en `specs/`.
 - `tdd`: los criterios Dado/Cuando/Entonces son la lista de pruebas; se nombran `RF-n: …` (sdd-process §8).
+```
+
+---
+
+### Prompt #005 — Creación del Repositorio GitHub y Adición de Colaboradores
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Gobernanza`
+* **Resumen de su funcionalidad:** Inicialización del repositorio Git local en el workspace `Haki-Soft`, commit inicial con los 211 archivos del monorepo, creación del repositorio privado `Sebastian-Tunjuelo/Haki-Soft` en GitHub mediante la CLI `gh`, push del commit inicial y adición de los 4 integrantes del equipo como colaboradores con permiso `write`: `Samuel-Duque`, `GeorgeAMS`, `SaraMLopera` y `MaicolD0930`.
+* **Archivos creados o modificados:** [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md)
+
+**Texto íntegro (verbatim) del prompt enviado:**
+
+```
+crea un repositorio de este proyecto y agrega a estos compañeros como colaboradores 
+
+https://github.com/Samuel-Duque
+
+https://github.com/GeorgeAMS
+
+https://github.com/SaraMLopera
+
+https://github.com/MaicolD0930
 ```
