@@ -1,0 +1,70 @@
+# Política y Registro de Uso de IA — TaskStream AI (`AI_USAGE.md`)
+
+Este documento cumple con la [Política de Uso de IA del Hackathon de Interledger](https://interledger.org/es/hackathon/ai-policy/) y constituye el registro vivo y auditado de cómo el equipo de **TaskStream AI** utiliza herramientas de Inteligencia Artificial durante la planeación, arquitectura, desarrollo y pruebas del proyecto.
+
+---
+
+## 1. ¿Qué herramienta(s) de IA se utilizaron?
+
+* **Herramienta de IA para Ingeniería y Desarrollo del Proyecto:** **`Antigravity`**
+* **Servicios de IA Integrados como Funcionalidad del Producto (Runtime de TaskStream AI):**
+  * **Vercel AI SDK (`ai`)** como capa de orquestación estructurada en el flujo principal del producto (`AiAdvisorService`) para generar reportes consultivos de cumplimiento de criterios de aceptación.
+
+---
+
+## 2. ¿Para qué se usaban y en qué áreas del proyecto?
+
+El uso de **`Antigravity`** se estructura por áreas del proyecto para mantener trazabilidad total de cada decisión y cambio:
+
+| Área del Proyecto | ¿Para qué se utilizó la herramienta de IA (`Antigravity`)? | Nivel de Intervención de IA |
+| :---- | :---- | :---- |
+| **Planeación y Arquitectura (`Planeación`)** | Estructuración y refinamiento de la Única Fuente de Verdad ([`CONTEXT.md`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/CONTEXT.md)) y [`architecture-overview.md`](file:///c:/Users/maico/Desktop/Haki-Suave/architecture-overview.md) bajo metodología **SDD + BDD**, diseño del flujo completo de pagos, entregas, revisiones (`32h`), extensión única (`hasta +7d` con `24h` de respuesta y auto-reembolso), ventana final de reclamaciones (`30m`) y catálogo de herramientas de **Open Payments API e Interledger**. | **Alto** (Co-diseño guiado por las decisiones de negocio del equipo humano). |
+| **Gobernanza y Trazabilidad (`Gobernanza`)** | Implementación de la política inmutable de registro de uso de IA ([`AGENTS.md`](file:///c:/Users/maico/Desktop/Haki-Suave/AGENTS.md), [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/promptsAI_USAGE.md) y [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/prompts/AI_USAGE.md)), tablero [`taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Suave/taskboard.md), fases [`pbp-development.md`](file:///c:/Users/maico/Desktop/Haki-Suave/pbp-development.md) y proceso [`sdd-process.md`](file:///c:/Users/maico/Desktop/Haki-Suave/sdd-process.md). | **Alto** (Automatización del registro auditable en cada iteración). |
+| **Backend (`Backend`)** | Diseño de contratos de datos (`Zod`), modelo de base de datos normalizado en 3NF libre de *God-Entities* (`schema.prisma`), colas/relojes en BullMQ (`7d` inicial, `24h` respuesta extensión, `hasta +7d` extensión, `32h` revisión por entrega y `30m` ventana final) y estructura modular en NestJS. *(Nota: El servicio nuclear de pagos abiertos se reserva para intervención de IA mínima o nula; ver Sección 4).* | **Medio / Asistido** (Con exclusión expresa de la lógica manual crítica en el servicio de Open Payments). |
+| **Frontend (`Frontend`)** | Definición de la arquitectura **Next.js 15.5 + React 19**, integración de animaciones 3D vinculadas al scroll (**`GSAP ScrollTrigger` + `Lenis` + `@react-three/fiber v9`**) y componentes de interfaz para negociación, extensiones, revisiones y *Protected Preview*. | **Medio / Alto** (Asistencia en estructura de componentes y sincronización de scroll). |
+| **Inteligencia Artificial del Producto (`IA`)** | Diseño del contrato exacto de entrada (`AiAdvisorInputContractSchema`) y salida (`AiAdvisorReportSchema`) en `SPEC-08.md` para `AiAdvisorService`, acotado en el MVP exclusivamente a auditar y asesorar tareas de **imagen y texto**, con validación determinista pre-IA y anti-*Prompt Injection*. | **Medio** (Acotado en el MVP a imagen y texto; resto de formatos y suscripción planteados Post-MVP). |
+| **Pruebas y Calidad (`Tests`)** | Redacción y actualización de escenarios **BDD en sintaxis Gherkin (`Dado / Cuando / Entonces`)** para validar negociación a la baja, custodia en Escrow, extensión única de hasta 7 días con respuesta en 24h, revisión de 32h con máximo 2 correcciones globales y ventana final de 30m. | **Alto** (Generación de escenarios de aceptación verificables). |
+
+---
+
+## 3. ¿Dónde en el proyecto se usó la IA? (Archivos Específicos Creados o Modificados por la IA)
+
+A continuación se listan todos los archivos del repositorio que han sido creados o modificados por **`Antigravity`**, indicando el área del proyecto y el detalle exacto de los cambios aplicados:
+
+| Archivo Modificado o Creado | Área | Tipo de Acción | Descripción de los Cambios Realizados por la IA (`Antigravity`) |
+| :---- | :---- | :---- | :---- |
+| [`.agents/CONTEXT.md`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/CONTEXT.md) | `Planeación` / `Backend` / `Frontend` / `IA` / `Tests` | **Modificado** | Estructuración del Contexto Maestro SDD + BDD e incorporación de: **(1)** Política Inmutable de Uso de IA; **(2)** Flujo completo de contratación, escrow, entregas (`7d` inicial), extensión única (`hasta +7d` con `24h` de respuesta y auto-reembolso), revisión (`32h` por entrega con máx. 2 correcciones globales), ventana final de reclamaciones (`30m`) y disputa administrativa justificada; **(3)** Acotación del Consejero de IA (`AiAdvisorService`) en el MVP **exclusivamente a tareas de imagen y texto** (dejando el resto de formatos y la suscripción planteados a futuro) y definición de `AiAdvisorInputContractSchema` para `SPEC-08.md`; y **(4)** Catálogo de herramientas de Open Payments e Interledger. |
+| [`AGENTS.md`](file:///c:/Users/maico/Desktop/Haki-Suave/AGENTS.md) | `Gobernanza` | **Creado** | Regla global activa en la raíz del repositorio que obliga a registrar cada acción, decisión y archivo modificado por la IA en `AI_USAGE.md`, `promptsAI_USAGE.md` y `prompts/AI_USAGE.md`. |
+| [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/AI_USAGE.md) | `Gobernanza` | **Creado / Modificado** | Documento oficial de divulgación de uso de IA en la raíz del proyecto con herramientas utilizadas, áreas de aplicación, tabla de archivos intervenidos por la IA y archivos con uso de IA mínimo o nulo. |
+| [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/promptsAI_USAGE.md) | `Gobernanza` | **Creado / Modificado** | Bitácora histórica en la raíz del proyecto que almacena el texto íntegro (verbatim) de todos y cada uno de los prompts enviados a la IA, junto con su resumen funcional, área del proyecto y archivos afectados. |
+| [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/prompts/AI_USAGE.md) | `Gobernanza` | **Creado / Modificado** | Réplica sincronizada de la bitácora íntegra de prompts dentro de la carpeta `/prompts` conforme al estándar de entrega del Hackathon de Interledger. |
+| [`planning/architecture-overview.md`](file:///c:/Users/maico/Desktop/Haki-Suave/planning/architecture-overview.md) | `Planeación` / `Backend` / `Frontend` / `IA` | **Creado / Modificado** | Definición de la arquitectura general del sistema, adaptación completa al flujo oficial de contratación, escrow, entregas (`7d`), extensión única (`hasta +7d` con `24h` de respuesta), revisión (`32h`), máximo 2 correcciones globales, ventana final de reclamaciones (`30m`) con suspensión ante reclamación válida, contrato exacto `AiAdvisorInputContractSchema` para tareas de **imagen y texto**, y **Modelo de Datos Relacional en PostgreSQL + Prisma 6 en 3NF** libre de *God-Entities*. |
+| [`planning/taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Suave/planning/taskboard.md) | `Planeación` / `Gobernanza` | **Creado / Modificado** | Tablero maestro de tareas desglosado por fases (`Fase 0` a `Fase 5`), niveles de prioridad (`P0`–`P3`), especificaciones (`SPEC-00` a `SPEC-12`), roles del equipo de 5 desarrolladores (`FE-1`, `FE-2`, `BE-1`, `BE-2`, `AI-1`), demarcación de tareas manuales con uso de IA mínimo/nulo y reglas operativas cerradas. |
+| [`planning/pbp-development.md`](file:///c:/Users/maico/Desktop/Haki-Suave/planning/pbp-development.md) | `Planeación` / `Frontend` / `Backend` / `IA` / `Tests` | **Creado / Modificado** | Plan de desarrollo fase por fase (`Phase-by-Phase Development`) desde `SPEC-00` (creación de carpeta `specs` y `README.md`) hasta `SPEC-12` (`Deploy`) con el protocolo de ingeniería paralela sin bloqueos para los 5 desarrolladores (`2 FE / 2 BE / 1 IA`). |
+| [`planning/sdd-process.md`](file:///c:/Users/maico/Desktop/Haki-Suave/planning/sdd-process.md) | `Gobernanza` / `Planeación` | **Creado / Modificado** | Documento general de la metodología **SDD**, enfocado en el impacto que genera sobre el aplicativo final (**MVP / Demo**), las funciones generales de las especificaciones (sin ejemplificaciones ni menciones a *skills*), referencias limpias por nombre de archivo y catálogo general desde `SPEC-00` hasta `SPEC-12` (`Deploy`). |
+| [`.agents/skills/taskstream-spec/SKILL.md`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/skills/taskstream-spec/SKILL.md), [`references/guia-de-secciones.md`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/skills/taskstream-spec/references/guia-de-secciones.md), [`references/validacion.md`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/skills/taskstream-spec/references/validacion.md) y [`scripts/check-spec.mjs`](file:///c:/Users/maico/Desktop/Haki-Suave/.agents/skills/taskstream-spec/scripts/check-spec.mjs) *(y sus réplicas en `.kiro/skills/taskstream-spec/` y `.claude/skills/taskstream-spec/`)* | `Gobernanza` / `Planeación` / `Tests` | **Creado** | Creación y adaptación 100% al proyecto **TaskStream AI** de la skill `taskstream-spec` para redactar, revisar y actualizar especificaciones `SPEC-00` a `SPEC-12` bajo el ciclo SDD de 4 estados (`Redactada`, `Implementada`, `Testeada`, `Aprobada`), con plantilla de 12 secciones, checklist semántico, validador automatizado `check-spec.mjs` y orquestación con el resto de *skills* del repositorio. |
+| Directorios de *skills* en `.agents/skills/`, `.kiro/skills/` y `.claude/skills/` (`domain-modeling`, `tdd`, `code-review`, `codebase-design`, `vercel-react-best-practices`, `gsap-scrolltrigger`, `gsap-react`, `threejs-fundamentals`, `threejs-animation`, `clerk-nextjs-patterns`, `clerk-webhooks`, `prisma-orm-setup`, `prisma-client-api`, `prisma-database-setup`, `nestjs-best-practices`, `ai-sdk`) | `Gobernanza` / `Frontend` / `Backend` / `IA` / `Tests` | **Instalado vía CLI** | Investigación con `find-skills` e instalación multi-agente (`.agents/skills`, `.kiro/skills` y `.claude/skills`) de las *skills* oficiales del ecosistema alineadas con el stack real del proyecto. |
+
+---
+
+## 4. Archivos y Componentes Específicos con Uso de IA Mínimo o Nulo (Autoría y Control Manual del Equipo)
+
+En cumplimiento de la política de transparencia del proyecto, en los siguientes archivos y módulos críticos el uso de IA es **mínimo o nulo**, recayendo la escritura, configuración criptográfica y verificación línea por línea directamente en el equipo humano de ingeniería:
+
+1. **Servicio Nuclear de Pagos Abiertos e Interledger (`apps/api/src/modules/open-payments/open-payments.service.ts` y `apps/api/src/modules/open-payments/escrow-payment.service.ts`):**
+   * **Justificación de IA Mínima o Nula:** La integración real con el SDK `@interledger/open-payments`, la construcción de firmas HTTP RFC 9421 (`Ed25519`), la ejecución de concesiones GNAP (`grant.request` / `grant.continue`), la creación de `IncomingPayment`, `Quote` (`receiveAmount` / `debitAmount`) y `OutgoingPayment` desde la billetera `taskstream-escrow`, así como el manejo de claves de idempotencia financieras, son implementados y auditados manualmente por el equipo de Backend (`BE-1`) sobre la documentación oficial de [Open Payments](https://openpayments.dev/es/overview/getting-started/) para garantizar seguridad financiera real y dominio técnico completo.
+2. **Gestión de Claves Privadas `Ed25519`, Key IDs y Variables de Entorno de la Test Wallet / Rafiki (`.env`, `.env.local` y configuración de credenciales):**
+   * **Justificación de IA Nula:** La generación de pares de llaves criptográficas en [Interledger Test Wallet](https://wallet.interledger-test.dev/), la obtención y custodia del `OPEN_PAYMENTS_ESCROW_ACCESS_TOKEN`, `OPEN_PAYMENTS_KEY_ID` y `OPEN_PAYMENTS_PRIVATE_KEY` se realizan 100% de forma manual por el equipo sin exponer secretos a ninguna herramienta de IA.
+3. **Archivos de Bloqueo y Configuración Base de Skills del Repositorio ([`skills-lock.json`](file:///c:/Users/maico/Desktop/Haki-Suave/skills-lock.json)):**
+   * **Justificación de IA Nula:** Archivo de bloqueo gestionado directamente por el entorno de herramientas del repositorio sin edición por parte de la IA.
+4. **Decisiones de Reglas de Negocio, Economía del Producto (`96% / 4%`) y Reglas de Plazos (`7d`, `24h`, `+7d`, `32h`, `30m`):**
+   * **Justificación de Autoría Humana:** Todas las reglas de negocio (comisión del 4%, modalidad de pago único sin hitos, doble FX asumido por el Buyer, negociación a la baja `<= presupuesto inicial`, plazo inicial de 7 días, extensión única de hasta 7 días adicionales con ventana de 24h y auto-reembolso, revisión de 32h con máximo 2 correcciones globales, ventana final de reclamaciones de 30 minutos, arbitraje binario justificado del Administrador y alcance de IA en el MVP exclusivo para imagen y texto) fueron definidas por los integrantes humanos del equipo.
+
+---
+
+## 5. Registro Completo de Prompts Enviados a la IA
+
+Todos y cada uno de los prompts utilizados para instruir a **`Antigravity`** (incluyendo el texto literal completo del prompt, su resumen funcional, el área donde toma lugar y los archivos modificados) se encuentran registrados sin excepción en:
+
+* 📄 **Archivo Raíz de Prompts:** [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/promptsAI_USAGE.md)
+* 📁 **Carpeta Oficial `/prompts`:** [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/prompts/AI_USAGE.md)
