@@ -22,6 +22,7 @@ Este archivo contiene el **registro histórico, secuencial e íntegro (sin omisi
 | **Prompt #010** | `2026-10-16` | `Cursor` | `Planeación`, `Gobernanza`, `Backend` | Aplicar todas las aclaraciones en la documentación SSoT y planeación alineada. | [`.agents/CONTEXT.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/CONTEXT.md), [`planning/architecture-overview.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/architecture-overview.md), [`planning/taskboard.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/taskboard.md), [`planning/pbp-development.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/pbp-development.md), [`planning/sdd-process.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/sdd-process.md), [`validacion.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/skills/taskstream-spec/references/validacion.md) (+ réplicas), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 | **Prompt #011** | `2026-10-16` | `Cursor` | `Planeación`, `Gobernanza`, `Frontend`, `Backend`, `IA`, `Tests` | Redactar e implementar SPEC-00 y SPEC-01; redactar SPEC-02 y SPEC-03 sin implementar integraciones externas. | `specs/_template.md`, `specs/README.md`, `specs/SPEC-00.md`, `specs/SPEC-01.md`, `specs/SPEC-02.md`, `specs/SPEC-03.md`, `packages/shared-schemas/`, `apps/web/`, `apps/api/`, `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `pnpm-lock.yaml`, `.gitignore`, `.env.example`, `planning/taskboard.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md` |
 | **Prompt #012** | `2026-10-16` | `Antigravity` | `Herramientas / DX`, `Backend`, `Gobernanza` | Aprovisionamiento e integración en el proyecto `Haki-Soft` del CLI interactivo oficial de Open Payments (`tools/open-payments-cli`) y del servidor MCP (`tools/open-payments-mcp`) con compilación TypeScript, configuración `.env.example`, desacoplamiento Git y manual operativo `tools/README.md`. | [`tools/README.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/README.md), [`tools/open-payments-cli/.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/.env.example), [`tools/open-payments-cli/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli), [`tools/open-payments-mcp/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-mcp), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #013** | `2026-10-16` | `Cursor` | `Gobernanza`, `IA` | Registro local de `IA-JORGE` que estaba numerado como Prompt #006: reglas permanentes de AI-1 en `.cursor/rules/ai-only.mdc`. No sustituye al Prompt #006 del remoto. | [`.cursor/rules/ai-only.mdc`](.cursor/rules/ai-only.mdc), [`AI_USAGE.md`](AI_USAGE.md), [`promptsAI_USAGE.md`](promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](prompts/AI_USAGE.md) |
 
 ---
 
@@ -641,5 +642,86 @@ necesito que redactes y implementes la spec 0 y 1 y luego redactes las specs has
 
 ```text
 @[conversation:"Interledger CLI And MCP Tools"] pon el cli y mcp en este proyecto
+```
+
+---
+
+### Prompt #013 — Reglas permanentes de trabajo de AI-1
+
+Este registro conserva el texto que en la copia local de `IA-JORGE` estaba numerado como Prompt #006. No sustituye al Prompt #006 del remoto, que sigue siendo la lectura del contexto sin modificar archivos.
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Gobernanza`, `IA`
+* **Resumen de su funcionalidad:** Crea la regla permanente `.cursor/rules/ai-only.mdc` para que `AI-1` trabaje solo en los componentes de IA, lea backend y frontend sin modificarlos, use commits cortos en español (uno por archivo, sin coautor de Cursor), respete `.agents/CONTEXT.md` y limite la implementación a la SPEC autorizada. No descarga ni implementa ninguna SPEC. Graphify no está configurado en el repositorio, así que el grafo no se actualizó.
+* **Archivos creados o modificados:** [`.cursor/rules/ai-only.mdc`](.cursor/rules/ai-only.mdc) *(Creado)*, [`AI_USAGE.md`](AI_USAGE.md) *(Modificado)*, [`promptsAI_USAGE.md`](promptsAI_USAGE.md) *(Modificado)*, [`prompts/AI_USAGE.md`](prompts/AI_USAGE.md) *(Modificado)*
+
+**Texto íntegro (verbatim) del prompt enviado:**
+
+```text
+# Prompt inicial — Reglas de trabajo AI-1
+
+Configura las reglas permanentes de Cursor para este repositorio.
+
+**Repositorio:** `D:\jorge\Projects\Hackaton\Haki-Soft`  
+**Rama:** `master`  
+**Rol:** AI-1 — Desarrollo de inteligencia artificial de TaskStream AI.
+
+## 1. Primera tarea
+
+1. Inspecciona la estructura existente y las reglas actuales de Cursor, si las hay.
+2. Crea o actualiza `.cursor/rules/ai-only.mdc` para establecer las reglas descritas a continuación.
+3. No descargues ninguna SPEC de GitHub todavía.
+4. No implementes funcionalidades de negocio en esta primera tarea.
+5. No modifiques archivos fuera de los estrictamente necesarios para configurar estas reglas.
+
+## 2. Alcance exclusivo de IA
+
+- Trabaja únicamente en los componentes de inteligencia artificial asignados a AI-1.
+- Las carpetas de backend y frontend se pueden leer para comprender contratos, modelos, servicios e integraciones.
+- No modifiques archivos de backend ni frontend, aunque detectes oportunidades de mejora.
+- Si una integración requiere cambios en esas áreas, documenta la necesidad y solicita autorización.
+- No implementes funcionalidades que no estén incluidas en la SPEC autorizada.
+- Respeta el `CONTEXT.md` y las decisiones vigentes del proyecto. Si existe una contradicción, detente y señala el conflicto antes de decidir por cuenta propia.
+- No adelantes trabajo de otras SPEC ni incorpores funcionalidades futuras al MVP.
+
+## 3. Reglas de Git
+
+- Los mensajes de commit deben estar escritos en español.
+- Los commits deben ser cortos y describir concretamente el cambio.
+- Realiza un commit independiente por cada archivo modificado.
+- No incluyas el coautor de Cursor ni líneas como `Co-authored-by: Cursor`.
+- No incluyas cambios ajenos a tu tarea en los commits.
+- Antes de modificar archivos, revisa `git status` para preservar el trabajo existente.
+- No hagas `push`, no cambies de rama ni reescribas el historial sin autorización explícita.
+- No crees commits vacíos ni afirmes que un commit fue creado si Git no lo confirmó.
+
+## 4. Graphify y contexto
+
+- Inspecciona cómo está configurado Graphify en el repositorio y utiliza su flujo existente.
+- Después de cada cambio relevante, actualiza el grafo de conocimiento mediante Graphify, siguiendo las instrucciones del proyecto.
+- Guarda o actualiza el contexto del proyecto utilizando el mecanismo existente; no inventes comandos ni archivos de contexto nuevos si ya existe un procedimiento establecido.
+- Mantén el contexto sincronizado con las decisiones y los cambios reales.
+- Si Graphify o el mecanismo de contexto no están disponibles, informa del bloqueo. No simules haberlos actualizado.
+
+## 5. Forma de trabajar
+
+- Antes de implementar una SPEC, identifica su alcance, criterios de aceptación, contratos y archivos afectados.
+- Prioriza cambios pequeños, verificables y compatibles con la arquitectura existente.
+- Ejecuta las pruebas pertinentes para los archivos modificados y reporta los resultados reales.
+- No ocultes errores, pruebas fallidas ni limitaciones.
+- Si falta información que pueda cambiar la arquitectura o el contrato de IA, formula una pregunta concreta antes de asumir una decisión.
+- No refactorices ni limpies código fuera del alcance solicitado.
+
+## 6. Primera ejecución
+
+En esta primera ejecución, limita el trabajo a crear o actualizar la regla de Cursor. Después:
+
+1. Muestra el archivo de reglas creado.
+2. Resume los cambios realizados.
+3. Indica el resultado de Graphify y la actualización del contexto.
+4. Presenta el estado de Git y los commits realizados, si corresponde.
+5. No descargues ni implementes ninguna SPEC hasta recibir autorización explícita.
+
+**Principio rector:** AI-1 trabaja exclusivamente en IA, respeta los límites entre componentes y ejecuta únicamente el trabajo autorizado.
 ```
 
