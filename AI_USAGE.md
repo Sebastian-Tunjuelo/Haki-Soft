@@ -69,6 +69,7 @@ A continuación se listan todos los archivos del repositorio que han sido creado
 | [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md) | `Gobernanza` | **Modificado (`Antigravity`)** | Documento oficial de divulgación de uso de IA en la raíz del proyecto. Actualizado con la trazabilidad del Prompt #012 (aprovisionamiento, instalación y compilación de CLI y servidor MCP en `tools/`). |
 | [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md) | `Gobernanza` | **Modificado (`Antigravity`)** | Bitácora histórica en la raíz del proyecto. Actualizado con el registro íntegro verbatim del Prompt #012 y su resumen funcional. |
 | [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) | `Gobernanza` | **Modificado (`Antigravity`)** | Réplica sincronizada de la bitácora íntegra de prompts dentro de la carpeta `/prompts`. Actualizado con el registro de Prompt #012. |
+| [`.cursor/rules/ai-only.mdc`](.cursor/rules/ai-only.mdc) | `Gobernanza` / `IA` | **Creado (`Cursor`)** | Regla permanente de `AI-1`. El registro local de `IA-JORGE` lo numeraba como Prompt #006; tras el merge queda como Prompt #013 porque el remoto ya tenía otro Prompt #006. |
 
 ---
 
