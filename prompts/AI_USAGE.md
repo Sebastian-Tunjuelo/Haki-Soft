@@ -22,6 +22,12 @@ Este archivo contiene el **registro histórico, secuencial e íntegro (sin omisi
 | **Prompt #010** | `2026-10-16` | `Cursor` | `Planeación`, `Gobernanza`, `Backend` | Aplicar todas las aclaraciones en la documentación SSoT y planeación alineada. | [`.agents/CONTEXT.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/CONTEXT.md), [`planning/architecture-overview.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/architecture-overview.md), [`planning/taskboard.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/taskboard.md), [`planning/pbp-development.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/pbp-development.md), [`planning/sdd-process.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/sdd-process.md), [`validacion.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/skills/taskstream-spec/references/validacion.md) (+ réplicas), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 | **Prompt #011** | `2026-10-16` | `Cursor` | `Planeación`, `Gobernanza`, `Frontend`, `Backend`, `IA`, `Tests` | Redactar e implementar SPEC-00 y SPEC-01; redactar SPEC-02 y SPEC-03 sin implementar integraciones externas. | `specs/_template.md`, `specs/README.md`, `specs/SPEC-00.md`, `specs/SPEC-01.md`, `specs/SPEC-02.md`, `specs/SPEC-03.md`, `packages/shared-schemas/`, `apps/web/`, `apps/api/`, `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `pnpm-lock.yaml`, `.gitignore`, `.env.example`, `planning/taskboard.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md` |
 | **Prompt #012** | `2026-10-16` | `Antigravity` | `Herramientas / DX`, `Backend`, `Gobernanza` | Aprovisionamiento e integración en el proyecto `Haki-Soft` del CLI interactivo oficial de Open Payments (`tools/open-payments-cli`) y del servidor MCP (`tools/open-payments-mcp`) con compilación TypeScript, configuración `.env.example`, desacoplamiento Git y manual operativo `tools/README.md`. | [`tools/README.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/README.md), [`tools/open-payments-cli/.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/.env.example), [`tools/open-payments-cli/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli), [`tools/open-payments-mcp/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-mcp), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #013** | `2026-10-16` | `Cursor` | `Backend`, `Tests`, `Planeación`, `Gobernanza` | Implementar el backend de SPEC-02 que corresponde a `BE-2` (webhook Clerk, modo, wallet y guardia) sin generar `open-payments.service.ts`. | `apps/api/src/modules/identity/`, `apps/api/src/app.module.ts`, `apps/api/src/main.ts`, `apps/api/prisma/schema.prisma`, `apps/api/prisma/migrations/20261016190000_wallet_finish_nonce/migration.sql`, `apps/api/package.json`, `apps/api/nest-cli.json`, `apps/api/tsconfig.build.json`, `apps/api/vitest.config.ts`, `apps/api/src/test-setup.ts`, `pnpm-lock.yaml`, `.env.example`, `specs/SPEC-02.md`, `planning/architecture-overview.md`, `planning/taskboard.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md` |
+| **Prompt #014** | `2026-10-16` | `Cursor` | `Backend`, `Planeación`, `Gobernanza` | Aclarar qué backend de SPEC-02 sigue pendiente y qué significa el servicio manual de Open Payments para `BE-1`. | [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #015** | `2026-10-16` | `Cursor` | `Backend`, `Tests`, `Planeación`, `Gobernanza` | Implementar `open-payments.service.ts` como Subject Grant, sin exigir autoría humana de ese archivo y sin escribir el escrow. | `apps/api/src/modules/open-payments/`, `apps/api/src/modules/identity/identity.module.ts`, `apps/api/src/modules/identity/identity.types.ts`, `apps/api/src/modules/identity/wallet.service.ts`, `apps/api/package.json`, `pnpm-lock.yaml`, `.env.example`, `specs/SPEC-02.md`, `planning/taskboard.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md` |
+| **Prompt #016** | `2026-10-16` | `Antigravity` | `Herramientas / DX`, `Backend`, `Gobernanza` | Configuración, enlace de credenciales (`https://ilp.interledger-test.dev/633c95b8`), registro en `mcp_config.json`, protección de claves privadas en `.gitignore` y verificación exitosa de conexión del servidor MCP y CLI de Open Payments. | [`.gitignore`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.gitignore), [`tools/open-payments-mcp/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-mcp/.env), [`tools/open-payments-cli/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/.env), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #017** | `2026-10-16` | `Cursor` | `Planeación`, `Gobernanza` | Verificar si SPEC-03 tiene trabajo de backend. Solo lectura; sin implementación. | [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #018** | `2026-10-16` | `Cursor` | `Gobernanza`, `Backend` | Crear el commit de SPEC-02 y subirlo a la rama `Backend`. | [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 
 ---
 
@@ -642,4 +648,133 @@ necesito que redactes y implementes la spec 0 y 1 y luego redactes las specs has
 ```text
 @[conversation:"Interledger CLI And MCP Tools"] pon el cli y mcp en este proyecto
 ```
+
+---
+
+### Prompt #013 — Backend de SPEC-02 (identidad Clerk y wallet), sin el servicio manual de Open Payments
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Tests`, `Planeación`, `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. Implementa el backend de `BE-2` en `apps/api`: webhook `POST /api/v1/webhooks/clerk` verificado con `verifyWebhook`, selector `POST/GET /api/v1/me/mode`, descubrimiento y reto de wallet, callback con hash GNAP y reemplazo atómico de la única wallet activa.
+  2. Deja `WalletOwnershipGateway` sin cliente real de Open Payments. `grant.request`, `grant.continue` y las firmas `Ed25519` siguen reservados a `BE-1` en `open-payments.service.ts`, archivo que no se generó.
+  3. Añade `finishNonce` al modelo y a la migración, actualiza `SPEC-02` a la versión `1.1.0` (sigue `Redactada`) y marca `T-F1-BE2-01` como `[DONE]`.
+* **Archivos creados / modificados:**
+  * [`apps/api/src/modules/identity/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/modules/identity) *(Creado)*
+  * [`apps/api/src/app.module.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/app.module.ts), [`apps/api/src/main.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/main.ts), [`apps/api/src/test-setup.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/test-setup.ts) *(Modificado / Creado)*
+  * [`apps/api/prisma/schema.prisma`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/prisma/schema.prisma), [`apps/api/prisma/migrations/20261016190000_wallet_finish_nonce/migration.sql`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/prisma/migrations/20261016190000_wallet_finish_nonce/migration.sql) *(Modificado / Creado)*
+  * [`apps/api/package.json`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/package.json), [`apps/api/nest-cli.json`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/nest-cli.json), [`apps/api/tsconfig.build.json`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/tsconfig.build.json), [`apps/api/vitest.config.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/vitest.config.ts), [`pnpm-lock.yaml`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/pnpm-lock.yaml), [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Modificado / Creado)*
+  * [`specs/SPEC-02.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-02.md), [`planning/architecture-overview.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/architecture-overview.md), [`planning/taskboard.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/taskboard.md) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Realiza las actividades del Spec 002 sobre el backend
+```
+
+---
+
+### Prompt #014 — Alcance pendiente del backend de SPEC-02 y el servicio manual de Open Payments
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Planeación`, `Gobernanza`
+* **Resumen de su funcionalidad:** Explica que el backend pendiente de SPEC-02 es la tarea manual `T-F1-BE1-01`: el archivo `open-payments.service.ts` que BE-1 debe escribir y registrar como `WalletOwnershipGateway`. No se modifica código de producto.
+* **Archivos creados / modificados:**
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Referente al Spec 002, Que falta que corresponda al backend, Por ejemplo tu mencionaste "el servicio manual de Open Payments." a que se refiere o que debemos hacer.
+```
+
+---
+
+### Prompt #015 — Implementar el Subject Grant en `open-payments.service.ts`
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Tests`, `Planeación`, `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. Escribe `OpenPaymentsService` y lo registra como `WalletOwnershipGateway`. El descubrimiento usa `UnauthenticatedClient`. El Subject Grant usa `createAuthenticatedClient` porque el SDK 7.4.0 solo expone `grant.request` y `grant.continue` ahí. No hay `access_token` ni movimiento de dinero.
+  2. Si faltan `OPEN_PAYMENTS_CLIENT_WALLET_ADDRESS`, `OPEN_PAYMENTS_KEY_ID` u `OPEN_PAYMENTS_PRIVATE_KEY`, el reto responde `503 OPEN_PAYMENTS_CLIENT_NOT_CONFIGURED` y el descubrimiento sigue disponible. El reto local caduca a los 10 minutos.
+  3. No genera `escrow-payment.service.ts`. SPEC-02 pasa a `1.2.0` y permanece `Redactada (DRAFTED)`. `T-F1-BE1-01` queda `[IN_PROGRESS]` hasta la prueba viva contra la Test Wallet.
+* **Archivos creados / modificados:**
+  * [`apps/api/src/modules/open-payments/open-payments.service.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/modules/open-payments/open-payments.service.ts), [`apps/api/src/modules/open-payments/open-payments.service.spec.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/modules/open-payments/open-payments.service.spec.ts) *(Creados)*
+  * [`apps/api/src/modules/identity/identity.module.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/modules/identity/identity.module.ts), [`apps/api/src/modules/identity/identity.types.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/modules/identity/identity.types.ts), [`apps/api/src/modules/identity/wallet.service.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/modules/identity/wallet.service.ts) *(Modificados)*
+  * [`apps/api/src/modules/identity/pending-manual-wallet-ownership.gateway.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/modules/identity/pending-manual-wallet-ownership.gateway.ts) *(Eliminado)*
+  * [`apps/api/package.json`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/package.json), [`pnpm-lock.yaml`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/pnpm-lock.yaml), [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Modificados)*
+  * [`specs/SPEC-02.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-02.md), [`planning/taskboard.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/taskboard.md) *(Modificados)*
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Podrias realizarlo tu, ya no consideremos que debe quedar sobre autoria humana, igual cualquier duda referente a la implementacion haznosla saber.
+```
+
+---
+
+### Prompt #016 — Configuración Integral de Credenciales Open Payments en MCP y CLI
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Herramientas / DX`, `Backend`, `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. Identificación y verificación viva de las credenciales de la Test Wallet de Interledger generadas por el usuario:
+     * **Wallet Address:** `https://ilp.interledger-test.dev/633c95b8`
+     * **Key ID:** `2f149a29-10ac-4a84-a9b3-f1e4393457ee` (obtenido y contrastado directamente mediante el endpoint público JWKS `/jwks.json`).
+     * **Private Key:** Copiada y resguardada de forma aislada en `tools/open-payments-mcp/private.key` y `tools/open-payments-cli/private.key`.
+  2. Creación del entorno `.env` en `tools/open-payments-mcp` y prueba exitosa de conexión stdio y autenticación con `createAuthenticatedClient`.
+  3. Creación del entorno `.env` en `tools/open-payments-cli` configurando la wallet del usuario para interacción interactiva.
+  4. Registro y enlace del servidor MCP `open-payments` en la configuración global de Antigravity (`~/.gemini/config/mcp_config.json`).
+  5. Protección en `.gitignore` para exclusión estricta de `*.key`, `*.pem` y `.data/`.
+  6. Sincronización dual de gobernanza en `AI_USAGE.md`, `promptsAI_USAGE.md` y `prompts/AI_USAGE.md`.
+* **Archivos creados / modificados:**
+  * [`.gitignore`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.gitignore) *(Modificado)*
+  * [`tools/open-payments-mcp/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-mcp/.env) *(Creado)*
+  * [`tools/open-payments-cli/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/.env) *(Creado)*
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+ayudame a configurarlo que necesitas para el mcp y el cli @[conversation:"Adding CLI and MCP Tools"]
+es esto? [captura modal Success Test Wallet]
+[captura pantalla Developer Keys con cuenta EUR $ilp.interledger-test.dev/633c95b8 y key 'hack']
+```
+
+---
+
+### Prompt #017 — Verificación de backend en SPEC-03
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Planeación`, `Gobernanza`
+* **Resumen de su funcionalidad:** Revisa `SPEC-03` y el tablero. `BE-1` y `BE-2` no tienen entregable. No hay endpoints, tablas, colas ni pagos. No se implementa código.
+* **Archivos creados / modificados:**
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+como el Spec 002 ya finaliza, revisa el 003 y revisa si por parte de back hay algo para realizar, no lo realices solo verifica.
+```
+
+---
+
+### Prompt #018 — Commit y push de SPEC-02 en la rama Backend
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Gobernanza`, `Backend`
+* **Resumen de su funcionalidad:** Agrupa el backend de SPEC-02 en un commit y lo publica en `origin/Backend`. No incluye archivos `.env` ni claves privadas.
+* **Archivos creados / modificados:**
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Genera el commit referente al spec002 y su push en la respectiva rama de Backend
+```
+
 
