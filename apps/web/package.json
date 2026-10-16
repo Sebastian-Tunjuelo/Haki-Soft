@@ -9,7 +9,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.9.17",
     "@taskstream/shared-schemas": "workspace:*",
+    "lucide-react": "^1.58.0",
     "msw": "2.6.8",
     "next": "15.5.4",
     "react": "19.0.0",

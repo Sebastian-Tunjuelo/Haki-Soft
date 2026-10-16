@@ -22,6 +22,7 @@ Este archivo contiene el **registro histórico, secuencial e íntegro (sin omisi
 | **Prompt #010** | `2026-10-16` | `Cursor` | `Planeación`, `Gobernanza`, `Backend` | Aplicar todas las aclaraciones en la documentación SSoT y planeación alineada. | [`.agents/CONTEXT.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/CONTEXT.md), [`planning/architecture-overview.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/architecture-overview.md), [`planning/taskboard.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/taskboard.md), [`planning/pbp-development.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/pbp-development.md), [`planning/sdd-process.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/sdd-process.md), [`validacion.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/skills/taskstream-spec/references/validacion.md) (+ réplicas), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 | **Prompt #011** | `2026-10-16` | `Cursor` | `Planeación`, `Gobernanza`, `Frontend`, `Backend`, `IA`, `Tests` | Redactar e implementar SPEC-00 y SPEC-01; redactar SPEC-02 y SPEC-03 sin implementar integraciones externas. | `specs/_template.md`, `specs/README.md`, `specs/SPEC-00.md`, `specs/SPEC-01.md`, `specs/SPEC-02.md`, `specs/SPEC-03.md`, `packages/shared-schemas/`, `apps/web/`, `apps/api/`, `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `pnpm-lock.yaml`, `.gitignore`, `.env.example`, `planning/taskboard.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md` |
 | **Prompt #012** | `2026-10-16` | `Antigravity` | `Herramientas / DX`, `Backend`, `Gobernanza` | Aprovisionamiento e integración en el proyecto `Haki-Soft` del CLI interactivo oficial de Open Payments (`tools/open-payments-cli`) y del servidor MCP (`tools/open-payments-mcp`) con compilación TypeScript, configuración `.env.example`, desacoplamiento Git y manual operativo `tools/README.md`. | [`tools/README.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/README.md), [`tools/open-payments-cli/.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/.env.example), [`tools/open-payments-cli/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli), [`tools/open-payments-mcp/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-mcp), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #013** | `2026-10-16` | `Antigravity` | `Gobernanza`, `Frontend`, `Backend`, `Planeación` | Incorporación e instalación multi-agente (`.agents`, `.kiro`, `.claude`) de 6 skills de alta adopción para potenciar el soporte de Zod (`zod-validation-utilities`, `zod-schema-validation`), redacción y síntesis de specs (`to-spec`) y diseño frontend (`frontend-design`, `shadcn-ui`, `tailwind-css-patterns`), más su articulación con `taskstream-spec`. | Directorios de *skills* en `.agents/skills/`, `.kiro/skills/`, `.claude/skills/`, [`taskstream-spec/SKILL.md`](file:///c:/Users/maico/Desktop/Haki-Soft/.agents/skills/taskstream-spec/SKILL.md), [`skills-lock.json`](file:///c:/Users/maico/Desktop/Haki-Soft/skills-lock.json), [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 
 ---
 
@@ -642,4 +643,84 @@ necesito que redactes y implementes la spec 0 y 1 y luego redactes las specs has
 ```text
 @[conversation:"Interledger CLI And MCP Tools"] pon el cli y mcp en este proyecto
 ```
+
+---
+
+### Prompt #013 — Instalación Multi-Agente de Skills Adicionales para Zod, Redacción de Specs y Frontend Design
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Gobernanza`, `Frontend`, `Backend`, `Planeación`
+* **Resumen de su funcionalidad:**
+  1. Realiza búsqueda e instala vía `npx skills add` con soporte multi-agente (`.agents/skills`, `.kiro/skills` y `.claude/skills`) de 6 skills de alta adopción comunitaria:
+     * **Soporte de Zod:** `zod-validation-utilities` (`giuseppe-trisciuoglio/developer-kit`) y `zod-schema-validation` (`mindrally/skills`) para estructuración de contratos Zod, inferencia de tipos estricta (`z.infer`), validación en capas API (DTOs de NestJS), transformaciones seguras y validación de formularios con React Hook Form.
+     * **Redacción de Specs:** `to-spec` (`mattpocock/skills`) para sintetizar ágilmente discusiones técnicas hacia borradores de especificaciones estructuradas, trabajando en sinergia con la skill rectora `taskstream-spec` (`SPEC-00` a `SPEC-12`).
+     * **Frontend Design:** `frontend-design` (`anthropics/skills`), `shadcn-ui` y `tailwind-css-patterns` (`giuseppe-trisciuoglio/developer-kit`) para dirección visual distintiva e intencional, componentes accesibles basados en Radix UI (`shadcn/ui`), sistemas utility-first de espaciado, layout y temas oscuros coordinados con Next.js 15.5, React 19 y las escenas 3D de Canvas.
+  2. Actualiza la tabla de interoperabilidad y orquestación documental en `taskstream-spec/SKILL.md` (y réplicas en `.kiro` y `.claude`) integrando formalmente las nuevas skills especializadas.
+  3. Mantiene la trazabilidad inmutable y sincronización dual de gobernanza en `skills-lock.json`, `AI_USAGE.md`, `promptsAI_USAGE.md` y `prompts/AI_USAGE.md`.
+* **Archivos creados / modificados:**
+  * `.agents/skills/frontend-design/` *(Instalado)*
+  * `.agents/skills/shadcn-ui/` *(Instalado)*
+  * `.agents/skills/tailwind-css-patterns/` *(Instalado)*
+  * `.agents/skills/to-spec/` *(Instalado)*
+  * `.agents/skills/zod-schema-validation/` *(Instalado)*
+  * `.agents/skills/zod-validation-utilities/` *(Instalado)*
+  * `.kiro/skills/` y `.claude/skills/` *(Réplicas sincronizadas)*
+  * [`.agents/skills/taskstream-spec/SKILL.md`](file:///c:/Users/maico/Desktop/Haki-Soft/.agents/skills/taskstream-spec/SKILL.md) *(Modificado y sincronizado)*
+  * [`skills-lock.json`](file:///c:/Users/maico/Desktop/Haki-Soft/skills-lock.json) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Añade skills adicionales para apoyar a zod, redactar specs y frontend design
+```
+
+---
+
+### Prompt #014 — Implementación de SPEC-02 ejerciendo los roles FE-1 y FE-2 (Clerk v6, Selector de Modo y Verificación de Billetera Multimoneda)
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`, `Backend`, `Planeación`
+* **Resumen de su funcionalidad:**
+  1. Ejerce los dos roles de frontend (`FE-1` y `FE-2`) para implementar las vistas y contratos de `SPEC-02`:
+     - **FE-1 (Arquitectura y Funcionalidad Core):** Configuración de Clerk v6 con middleware mínimo `clerkMiddleware()` en Next.js 15.5 (`apps/web/middleware.ts`), protección de rutas con verificación en servidor `await auth()`, vistas de autenticación `/sign-in` y `/sign-up`, endpoints REST para `activeMode` y descubrimiento/retos GNAP, y adaptadores MSW en `apps/web/src/mocks/handlers.ts`.
+     - **FE-2 (Diseño Interactivo y Experiencia de Usuario):** Diseño de tokens visuales slate obsidian en `apps/web/app/globals.css` (conforme a `frontend-design`), componente táctil interactivo `ModeSwitcher` (`/settings/mode`) para alternar entre `Buyer Mode` y `Seller Mode` con feedback visual de invariantes, y flujo interactivo completo de verificación de billetera `WalletVerification` (`/onboarding/wallet`) con máquina de 6 estados (`EMPTY`, `DISCOVERING`, `PENDING_REDIRECT`, `VERIFIED`, `FAILED_HASH`, `EXPIRED`), presets de billeteras panamericanas (USD, COP, CAD, BRL, MXN), inspector criptográfico de hash SHA-256 (`gnapInteractHash`) e historial atómico de reemplazo de billetera anterior.
+  2. Resuelve la compatibilidad universal del módulo `idempotency.ts` (`packages/shared-schemas`) para bundlers de cliente y servidor, añade alias `@/*` en TypeScript y configura fallbacks webpack en `apps/web/next.config.ts`.
+  3. Actualiza el tablero operativo `planning/taskboard.md` marcando `T-F1-FE1-01` como `[DONE]`, añade la versión `1.1.0` en el historial de `specs/SPEC-02.md`, y mantiene la trazabilidad estricta y sincronizada en `AI_USAGE.md`, `promptsAI_USAGE.md` y `prompts/AI_USAGE.md`.
+* **Archivos creados / modificados:**
+  * [`apps/web/middleware.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/middleware.ts) *(Creado)*
+  * [`apps/web/app/globals.css`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/globals.css) *(Creado)*
+  * [`apps/web/app/layout.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/layout.tsx) *(Modificado)*
+  * [`apps/web/app/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/page.tsx) *(Modificado)*
+  * [`apps/web/app/sign-in/[[...sign-in]]/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/sign-in/[[...sign-in]]/page.tsx) *(Creado)*
+  * [`apps/web/app/sign-up/[[...sign-up]]/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/sign-up/[[...sign-up]]/page.tsx) *(Creado)*
+  * [`apps/web/app/settings/mode/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/settings/mode/page.tsx) *(Creado)*
+  * [`apps/web/app/onboarding/wallet/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/onboarding/wallet/page.tsx) *(Creado)*
+  * [`apps/web/app/api/v1/me/mode/route.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/api/v1/me/mode/route.ts) *(Creado)*
+  * [`apps/web/app/api/v1/me/wallet/discovery/route.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/api/v1/me/wallet/discovery/route.ts) *(Creado)*
+  * [`apps/web/app/api/v1/me/wallet/challenges/route.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/api/v1/me/wallet/challenges/route.ts) *(Creado)*
+  * [`apps/web/app/api/v1/me/wallet/route.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/api/v1/me/wallet/route.ts) *(Creado)*
+  * [`apps/web/src/lib/wallet-mock-store.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/lib/wallet-mock-store.ts) *(Creado)*
+  * [`apps/web/src/components/navbar.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/components/navbar.tsx) *(Creado)*
+  * [`apps/web/src/components/mode-switcher.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/components/mode-switcher.tsx) *(Creado)*
+  * [`apps/web/src/components/wallet-verification.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/components/wallet-verification.tsx) *(Creado)*
+  * [`apps/web/src/mocks/handlers.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/mocks/handlers.ts) *(Modificado)*
+  * [`apps/web/next.config.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/next.config.ts) *(Modificado)*
+  * [`apps/web/tsconfig.json`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/tsconfig.json) *(Modificado)*
+  * [`apps/web/package.json`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/package.json) *(Modificado)*
+  * [`packages/shared-schemas/src/idempotency.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/packages/shared-schemas/src/idempotency.ts) *(Modificado)*
+  * [`planning/taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Soft/planning/taskboard.md) *(Modificado)*
+  * [`specs/SPEC-02.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/SPEC-02.md) *(Modificado)*
+  * [`.env.example`](file:///c:/Users/maico/Desktop/Haki-Soft/.env.example) *(Modificado)*
+  * [`apps/web/.env.local`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/.env.local) *(Creado)*
+  * [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Implementa la spec 02 ejerciendo los dos roles de frontend. Guiate a través de los diferentes documentos de planeación y apoyandote de las skills de diseño. Recuerda delimitarte a unicamente la spec, no implementar caracteristicas extra. Mantén lo que es seguridad, buenas prácticas de programación y en general realiza una implementación óptima y eficaz de las vistas, recuerda hacerlo interactivo, en caso de requerir animación 3D o utilización de la tecnología scroll trigger, añadelo al proyecto sin errores de compilación ni de ningun tipo
+```
+
 

@@ -279,3 +279,4 @@ Decisiones operativas:
 | Versión | Fecha | Estado | Autor / Herramienta | Resumen de Cambios |
 | :--- | :--- | :--- | :--- | :--- |
 | `1.0.0` | `2026-10-16` | `Redactada (DRAFTED)` | `Cursor` + equipo | Contrato de Clerk, selector de modo, descubrimiento GNAP, hash de callback y webhook. Sin implementación. |
+| `1.1.0` | `2026-10-16` | `En Implementación` | `Antigravity` + equipo | Implementación frontend FE-1 y FE-2 (T-F1-FE1-01): Clerk v6 (/sign-in, /sign-up), middleware, selector interactivo Buyer/Seller (/settings/mode), ciclo de vida 6 estados y verificación GNAP (/onboarding/wallet) con adaptadores mock. |

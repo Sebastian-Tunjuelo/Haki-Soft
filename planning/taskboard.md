@@ -46,7 +46,7 @@
 
 | ID Tarea | Rol | Prioridad | Spec Asociada | Descripción de la Tarea | Dependencias | Estado |
 | :---- | :---- | :---- | :---- | :---- | :---- | :---- |
-| **`T-F1-FE1-01`** | `FE-1` | 🔴 `P0` | `SPEC-02` | Implementar autenticación con Clerk v6, selector `Buyer Mode / Seller Mode` y formulario de vinculación de `walletAddress` americana (usando adaptador Mock mientras `BE-1` finaliza el endpoint). | `T-F0-05` | `[READY_UNBLOCKED]` |
+| **`T-F1-FE1-01`** | `FE-1` | 🔴 `P0` | `SPEC-02` | Implementar autenticación con Clerk v6, selector `Buyer Mode / Seller Mode` y formulario de vinculación de `walletAddress` americana (usando adaptador Mock mientras `BE-1` finaliza el endpoint). | `T-F0-05` | `[DONE]` |
 | **`T-F1-FE2-01`** | `FE-2` | 🔴 `P0` | `SPEC-03` | Configurar el proveedor global de Smooth Scroll (`Lenis`) sincronizado con `GSAP ScrollTrigger` y el contenedor `<Canvas>` de `@react-three/fiber v9` + `@react-three/drei v10` aislado en cliente. | `T-F0-06` | `[READY_UNBLOCKED]` |
 | **`T-F1-FE2-02`** | `FE-2` | 🟠 `P1` | `SPEC-03` | Construir la Hero Scene 3D de la Landing Page impulsada por `ScrollTrigger` a 60–120 FPS sin provocar re-renders en React. | `T-F1-FE2-01` | `[READY_UNBLOCKED]` |
 | **`T-F1-BE1-01`** | `BE-1` | 🔴 `P0` | `SPEC-02` | 🛡️ **`[MANUAL / IA MÍNIMA-NULA]`** Configurar credenciales `Ed25519` de la Test Wallet / Rafiki e implementar manualmente en `open-payments.service.ts` el descubrimiento con `UnauthenticatedClient` y la verificación de titularidad `Subject Grant` + verificación de hash `SHA-256`. | `T-F0-05` | `[READY_UNBLOCKED]` |
