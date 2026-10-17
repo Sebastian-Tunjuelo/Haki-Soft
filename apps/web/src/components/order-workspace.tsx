@@ -2,27 +2,21 @@
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import Link from 'next/link';
-import { OrderWorkspaceViewSchema, type OrderWorkspaceView } from '@taskstream/shared-schemas';
+import {
+  OrderClockViewSchema,
+  OrderWorkspaceViewSchema,
+  type OrderClockView,
+  type OrderWorkspaceView,
+} from '@taskstream/shared-schemas';
 import { api, formatUsd, humanError } from '@/src/lib/api-client';
-
-function formatCountdown(deadlineIso: string | null, nowMs: number): string {
-  if (!deadlineIso) return 'Plazo pendiente de inicio';
-  const ms = new Date(deadlineIso).getTime() - nowMs;
-  if (ms <= 0) return 'Plazo vencido';
-  const totalSec = Math.floor(ms / 1000);
-  const d = Math.floor(totalSec / 86400);
-  const h = Math.floor((totalSec % 86400) / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  if (d > 0) return `${d}d ${h}h ${m}m ${s}s`;
-  return `${h}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
-}
+import { formatCountdown } from '@/src/lib/format-countdown';
 
 /**
  * Espacio de trabajo tras aceptar: chat, anexos, contador 7d y contexto de la solicitud.
  */
 export function OrderWorkspace({ taskId }: { taskId: string }) {
   const [view, setView] = useState<OrderWorkspaceView | null>(null);
+  const [clock, setClock] = useState<OrderClockView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [body, setBody] = useState('');
   const [fileName, setFileName] = useState<string | null>(null);
@@ -32,7 +26,10 @@ export function OrderWorkspace({ taskId }: { taskId: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
-    const result = await api(`/api/v1/orders/${taskId}/workspace`);
+    const [result, clockResult] = await Promise.all([
+      api(`/api/v1/orders/${taskId}/workspace`),
+      api(`/api/v1/orders/${taskId}/clock`),
+    ]);
     if (result.status !== 200) {
       setError(humanError(result.status, result.body));
       setView(null);
@@ -44,6 +41,12 @@ export function OrderWorkspace({ taskId }: { taskId: string }) {
       return;
     }
     setView(parsed.data);
+    if (clockResult.status === 200) {
+      const c = OrderClockViewSchema.safeParse(clockResult.body);
+      setClock(c.success ? c.data : null);
+    } else {
+      setClock(null);
+    }
     setError(null);
   }, [taskId]);
 
@@ -101,6 +104,9 @@ export function OrderWorkspace({ taskId }: { taskId: string }) {
         <Link href={`/orders/${taskId}/escrow`} style={{ color: 'var(--brand-blue)', fontSize: 14 }}>
           Custodia
         </Link>
+        <Link href={`/orders/${taskId}/deliverables`} style={{ color: 'var(--brand-blue)', fontSize: 14 }}>
+          Entregables
+        </Link>
       </div>
 
       <header style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
@@ -115,10 +121,19 @@ export function OrderWorkspace({ taskId }: { taskId: string }) {
         </div>
         <div style={timerCard}>
           <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>
-            Entrega ({view?.initialDeliveryDays ?? 7} días)
+            {clock?.activeClockKind === 'DELIVERY_REVIEW_32H'
+              ? 'Revisión 72h'
+              : clock?.activeClockKind === 'INITIAL_DELIVERY_7D'
+                ? `Entrega (${view?.initialDeliveryDays ?? 7} días)`
+                : clock?.activeClockKind === 'FINAL_CLAIM_WINDOW_30M'
+                  ? 'Ventana final 30m'
+                  : `Entrega (${view?.initialDeliveryDays ?? 7} días)`}
           </p>
           <p style={{ margin: '4px 0 0', fontSize: '1.2rem', fontWeight: 700, color: 'var(--status-pending)' }}>
-            {formatCountdown(view?.deliveryDeadlineAt ?? null, nowMs)}
+            {formatCountdown(
+              clock?.activeDeadlineAt ?? view?.deliveryDeadlineAt ?? null,
+              nowMs,
+            )}
           </p>
         </div>
       </header>
@@ -205,7 +220,7 @@ export function OrderWorkspace({ taskId }: { taskId: string }) {
                 <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{fileName}</span>
               ) : (
                 <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  (Metadato de entrega; subida R2 real en SPEC-07)
+                  (Nombre del anexo; la entrega formal va en Entregables)
                 </span>
               )}
               <button
