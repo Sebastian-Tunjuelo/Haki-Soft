@@ -176,8 +176,8 @@ export function WalletVerification({
         <div
           className="card"
           style={{
-            background: 'rgba(16, 185, 129, 0.05)',
-            borderColor: 'rgba(16, 185, 129, 0.3)',
+            background: 'rgba(46, 196, 182, 0.06)',
+            borderColor: 'rgba(46, 196, 182, 0.35)',
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -197,10 +197,10 @@ export function WalletVerification({
                 <ShieldCheck size={20} />
               </div>
               <div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div style={{ fontSize: 11, color: 'var(--mist)' }}>
                   Billetera activa
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: '#ffffff' }}>
+                <div style={{ fontSize: 15, fontWeight: 600, fontFamily: 'var(--font-display)' }}>
                   {activeWallet.assetCode} (escala {activeWallet.assetScale})
                 </div>
               </div>

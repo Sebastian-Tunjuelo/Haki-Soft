@@ -1,4 +1,5 @@
 import { WalletVerification } from '@/src/components/wallet-verification';
+import { PageReveal } from '@/src/components/page-reveal';
 import { readActiveWallet, readApiCode } from '@/src/lib/identity-contract';
 import { hasLocalSession, readMyJson } from '@/src/lib/identity-proxy';
 import { Wallet, UserCheck, ShieldCheck, ShieldAlert } from 'lucide-react';
@@ -25,48 +26,35 @@ export default async function WalletOnboardingPage({
   }
 
   return (
-    <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--brand-blue)', fontSize: 13, marginBottom: 6 }}>
+    <PageReveal className="ts-page ts-page__narrow">
+      <header className="ts-reveal" style={{ borderBottom: '1px solid rgba(236, 235, 230, 0.1)', paddingBottom: 20 }}>
+        <p className="ts-eyebrow">
           <Wallet size={16} />
-          <span>Onboarding financiero · SPEC-02</span>
-        </div>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: '#ffffff', marginBottom: 8 }}>
-          Vinculación y verificación de billetera multimoneda
+          <span>Onboarding · billetera Open Payments</span>
+        </p>
+        <h1 className="ts-title" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 1.9rem)' }}>
+          Vincula y verifica tu billetera
         </h1>
-        <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+        <p className="ts-lead">
           Puedes pegar la URL <code>https://ilp.interledger-test.dev/…</code> o el Payment Pointer{' '}
           <code>$ilp.interledger-test.dev/…</code> (el de la izquierda de Edit en la Test Wallet). Nunca compartas tu
-          llave privada.
+          llave privada. La prueba de posesión la confirma el callback de la API.
         </p>
 
         {isAuthenticated ? (
-          <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--status-verified)' }}>
+          <p className="ts-session-ok">
             <UserCheck size={14} />
             <span>Sesión activa</span>
-          </div>
+          </p>
         ) : (
-          <div
-            style={{
-              marginTop: 12,
-              padding: '10px 14px',
-              borderRadius: 'var(--radius-sm)',
-              background: 'var(--bg-subtle)',
-              border: '1px solid var(--border)',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              fontSize: 12,
-              color: 'var(--text-muted)',
-            }}
-          >
+          <div className="ts-callout">
             <span>Sin sesión no se muestra el formulario de billetera.</span>
-            <Link href="/sign-in" className="btn btn-primary btn-sm" style={{ fontSize: 11, padding: '4px 10px' }}>
+            <Link href="/sign-in" className="btn btn-primary btn-sm">
               Iniciar sesión
             </Link>
           </div>
         )}
-      </div>
+      </header>
 
       {status === 'verified' ? (
         <div
@@ -118,9 +106,11 @@ export default async function WalletOnboardingPage({
       ) : null}
 
       {isAuthenticated ? (
-        <WalletVerification initialWallet={initialWallet} serverCode={serverCode} />
+        <div className="ts-reveal">
+          <WalletVerification initialWallet={initialWallet} serverCode={serverCode} />
+        </div>
       ) : null}
-    </div>
+    </PageReveal>
   );
 }
 

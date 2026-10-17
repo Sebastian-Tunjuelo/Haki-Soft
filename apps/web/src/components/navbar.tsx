@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ShieldCheck, Wallet, ArrowLeftRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { readActiveMode, readActiveWallet, readSessionUser } from '@/src/lib/identity-contract';
+import { ThemeToggle } from '@/src/components/theme-toggle';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -72,19 +73,7 @@ export function Navbar() {
             <div className="logo-mark">TS</div>
             <div className="logo-title">
               <span>TaskStream</span>
-              <span style={{ color: 'var(--brand-blue)', fontWeight: 700 }}>AI</span>
-              <span
-                style={{
-                  fontSize: 10,
-                  background: 'var(--bg-subtle)',
-                  padding: '2px 6px',
-                  borderRadius: 4,
-                  border: '1px solid var(--border)',
-                  color: 'var(--text-muted)',
-                }}
-              >
-                Fase 1 · SPEC-02
-              </span>
+              <span className="logo-title__ai">AI</span>
             </div>
           </Link>
 
@@ -143,6 +132,7 @@ export function Navbar() {
           </nav>
 
           <div className="header-actions">
+            <ThemeToggle />
             {!sessionLoaded ? (
               <div style={{ width: 80, height: 32, background: 'var(--surface)', borderRadius: 'var(--radius-sm)' }} />
             ) : sessionEmail ? (

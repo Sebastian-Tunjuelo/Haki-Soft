@@ -48,7 +48,7 @@ export function ModeSwitcher({ initialMode = 'BUYER', serverCode = null }: ModeS
 
       setActiveMode(nextMode);
       setNotification({
-        message: `Modo cambiado exitosamente a ${targetMode === 'BUYER' ? 'Buyer (Contratante)' : 'Seller (Freelancer)'}.`,
+        message: `Modo cambiado a ${targetMode === 'BUYER' ? 'Buyer (contratante)' : 'Seller (quien entrega)'}`,
         type: 'success',
       });
     } catch (err) {
@@ -63,7 +63,7 @@ export function ModeSwitcher({ initialMode = 'BUYER', serverCode = null }: ModeS
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {notification && (
+      {notification ? (
         <div
           style={{
             padding: '12px 16px',
@@ -74,74 +74,68 @@ export function ModeSwitcher({ initialMode = 'BUYER', serverCode = null }: ModeS
             gap: 8,
             background: notification.type === 'success' ? 'var(--status-verified-bg)' : 'var(--status-failed-bg)',
             color: notification.type === 'success' ? 'var(--status-verified)' : 'var(--status-failed)',
-            border: `1px solid ${notification.type === 'success' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+            border: `1px solid ${
+              notification.type === 'success' ? 'rgba(46, 196, 182, 0.35)' : 'rgba(255, 143, 128, 0.35)'
+            }`,
           }}
         >
           {notification.type === 'success' ? <CheckCircle2 size={16} /> : <ShieldAlert size={16} />}
           <span>{notification.message}</span>
         </div>
-      )}
+      ) : null}
 
-      {/* Grid de Modos (FE-2 Interactive Cards) */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: 16,
-        }}
-      >
-        {/* Buyer Mode Card */}
+      <div className="ts-mode-grid">
         <div
-          onClick={() => !isLoading && handleSwitchMode('BUYER')}
-          style={{
-            background: activeMode === 'BUYER' ? 'rgba(99, 102, 241, 0.08)' : 'var(--surface)',
-            border: `2px solid ${activeMode === 'BUYER' ? 'var(--brand-buyer)' : 'var(--border)'}`,
-            borderRadius: 'var(--radius-lg)',
-            padding: 24,
-            cursor: isLoading ? 'wait' : 'pointer',
-            transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-            position: 'relative',
-            boxShadow: activeMode === 'BUYER' ? '0 0 24px -4px rgba(99, 102, 241, 0.25)' : 'none',
+          role="button"
+          tabIndex={0}
+          onClick={() => !isLoading && void handleSwitchMode('BUYER')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (!isLoading) void handleSwitchMode('BUYER');
+            }
           }}
+          className={`ts-mode-card ts-mode-card--buyer${activeMode === 'BUYER' ? ' is-active' : ''}`}
+          style={{ cursor: isLoading ? 'wait' : 'pointer' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 'var(--radius-md)',
-                background: 'rgba(99, 102, 241, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#a5b4fc',
-              }}
-            >
+            <div className="ts-mode-card__icon ts-mode-card__icon--buyer">
               <ShoppingBag size={22} />
             </div>
-            {activeMode === 'BUYER' && (
+            {activeMode === 'BUYER' ? (
               <span className="badge badge-buyer">
-                <span className="pulse-dot" /> Modo Activo
+                <span className="pulse-dot" /> Activo
               </span>
-            )}
+            ) : null}
           </div>
 
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: '#ffffff' }}>
-            Buyer Mode
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, fontFamily: 'var(--font-display)' }}>
+            Buyer
           </h3>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
-            Actúa como contratante en América. Publica encargos con presupuesto tope, deposita fondos en el escrow de Open Payments y evalúa entregas con asistencia de IA para imagen y texto.
+          <p style={{ fontSize: 13, color: 'var(--mist)', lineHeight: 1.6, marginBottom: 16 }}>
+            Publica encargos, deposita en escrow y revisa entregas con asistencia de IA.
           </p>
 
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+          <ul
+            style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              fontSize: 12,
+              color: 'var(--text-muted)',
+            }}
+          >
             <li style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <CheckCircle2 size={13} style={{ color: '#818cf8' }} /> Publicar convocatorias con plazo inicial de 7d
+              <CheckCircle2 size={13} style={{ color: 'var(--volt)' }} /> Plazo inicial 7 días
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <CheckCircle2 size={13} style={{ color: '#818cf8' }} /> Fondeo único 100% en escrow protegido
+              <CheckCircle2 size={13} style={{ color: 'var(--volt)' }} /> Fondeo 100% en custodia
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <CheckCircle2 size={13} style={{ color: '#818cf8' }} /> Ventana de 32h para revisar o solicitar corrección
+              <CheckCircle2 size={13} style={{ color: 'var(--volt)' }} /> Ventana de revisión 32h
             </li>
           </ul>
 
@@ -149,71 +143,65 @@ export function ModeSwitcher({ initialMode = 'BUYER', serverCode = null }: ModeS
             <button
               type="button"
               disabled={isLoading || activeMode === 'BUYER'}
-              className="btn btn-sm"
-              style={{
-                width: '100%',
-                background: activeMode === 'BUYER' ? 'var(--brand-buyer)' : 'var(--surface-hover)',
-                color: '#ffffff',
-                border: 'none',
-              }}
+              className={`btn btn-sm ${activeMode === 'BUYER' ? 'btn-primary' : 'btn-outline'}`}
+              style={{ width: '100%' }}
             >
-              {activeMode === 'BUYER' ? 'Modo Seleccionado' : 'Activar Buyer Mode'}
+              {activeMode === 'BUYER' ? 'Modo seleccionado' : 'Activar Buyer'}
             </button>
           </div>
         </div>
 
-        {/* Seller Mode Card */}
         <div
-          onClick={() => !isLoading && handleSwitchMode('SELLER')}
-          style={{
-            background: activeMode === 'SELLER' ? 'rgba(14, 165, 233, 0.08)' : 'var(--surface)',
-            border: `2px solid ${activeMode === 'SELLER' ? 'var(--brand-seller)' : 'var(--border)'}`,
-            borderRadius: 'var(--radius-lg)',
-            padding: 24,
-            cursor: isLoading ? 'wait' : 'pointer',
-            transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-            position: 'relative',
-            boxShadow: activeMode === 'SELLER' ? '0 0 24px -4px rgba(14, 165, 233, 0.25)' : 'none',
+          role="button"
+          tabIndex={0}
+          onClick={() => !isLoading && void handleSwitchMode('SELLER')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (!isLoading) void handleSwitchMode('SELLER');
+            }
           }}
+          className={`ts-mode-card ts-mode-card--seller${activeMode === 'SELLER' ? ' is-active' : ''}`}
+          style={{ cursor: isLoading ? 'wait' : 'pointer' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-            <div
-              style={{
-                width: 44,
-                height: 44,
-                borderRadius: 'var(--radius-md)',
-                background: 'rgba(14, 165, 233, 0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#7dd3fc',
-              }}
-            >
+            <div className="ts-mode-card__icon ts-mode-card__icon--seller">
               <Briefcase size={22} />
             </div>
-            {activeMode === 'SELLER' && (
+            {activeMode === 'SELLER' ? (
               <span className="badge badge-seller">
-                <span className="pulse-dot" /> Modo Activo
+                <span className="pulse-dot" /> Activo
               </span>
-            )}
+            ) : null}
           </div>
 
-          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: '#ffffff' }}>
-            Seller Mode
+          <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, fontFamily: 'var(--font-display)' }}>
+            Seller
           </h3>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>
-            Ofrece tus servicios profesionales como freelancer. Explora oportunidades, envía propuestas competitivas (≤ presupuesto inicial) y cobra el 96% garantizado directo a tu billetera verificada.
+          <p style={{ fontSize: 13, color: 'var(--mist)', lineHeight: 1.6, marginBottom: 16 }}>
+            Entrega el trabajo y cobra el 96% directo a tu billetera verificada.
           </p>
 
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+          <ul
+            style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+              fontSize: 12,
+              color: 'var(--text-muted)',
+            }}
+          >
             <li style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <CheckCircle2 size={13} style={{ color: '#38bdf8' }} /> Publicar Gigs a precio fijo o negociar encargos
+              <CheckCircle2 size={13} style={{ color: 'var(--tide)' }} /> Gigs o propuestas ≤ presupuesto
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <CheckCircle2 size={13} style={{ color: '#38bdf8' }} /> Cobro de 96% en USD, COP, CAD o moneda local
+              <CheckCircle2 size={13} style={{ color: 'var(--tide)' }} /> Cobro 96% multimoneda
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <CheckCircle2 size={13} style={{ color: '#38bdf8' }} /> Solicitud única de extensión (+7d) al vencer
+              <CheckCircle2 size={13} style={{ color: 'var(--tide)' }} /> Extensión única (+7d) al vencer
             </li>
           </ul>
 
@@ -221,38 +209,23 @@ export function ModeSwitcher({ initialMode = 'BUYER', serverCode = null }: ModeS
             <button
               type="button"
               disabled={isLoading || activeMode === 'SELLER'}
-              className="btn btn-sm"
-              style={{
-                width: '100%',
-                background: activeMode === 'SELLER' ? 'var(--brand-seller)' : 'var(--surface-hover)',
-                color: '#ffffff',
-                border: 'none',
-              }}
+              className={`btn btn-sm ${activeMode === 'SELLER' ? 'btn-secondary' : 'btn-outline'}`}
+              style={{ width: '100%' }}
             >
-              {activeMode === 'SELLER' ? 'Modo Seleccionado' : 'Activar Seller Mode'}
+              {activeMode === 'SELLER' ? 'Modo seleccionado' : 'Activar Seller'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Caja de Invariantes del Dominio (SPEC-02 §2) */}
-      <div
-        className="card"
-        style={{
-          background: 'var(--bg-subtle)',
-          borderColor: 'var(--border)',
-          display: 'flex',
-          gap: 16,
-          alignItems: 'flex-start',
-        }}
-      >
-        <Sparkles size={20} style={{ color: 'var(--brand-blue)', flexShrink: 0, marginTop: 2 }} />
+      <div className="card" style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+        <Sparkles size={20} style={{ color: 'var(--volt)', flexShrink: 0, marginTop: 2 }} />
         <div>
-          <h4 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
-            Invariante de Identidad Unificada (SPEC-02 §2)
+          <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 4, fontFamily: 'var(--font-display)' }}>
+            Una cuenta, dos modos
           </h4>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            Una misma cuenta mantiene un solo usuario en PostgreSQL. Alternar entre Buyer y Seller no altera ni transfiere la titularidad de órdenes que ya se encuentren en ejecución o con fondos depositados en el escrow.
+          <p style={{ fontSize: 13, color: 'var(--mist)', lineHeight: 1.5, margin: 0 }}>
+            Alternar Buyer/Seller no cambia la titularidad de órdenes con fondos ya en escrow.
           </p>
         </div>
       </div>

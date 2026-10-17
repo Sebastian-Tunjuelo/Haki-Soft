@@ -42,6 +42,7 @@ Este archivo contiene el **registro histÃ³rico, secuencial e Ã­ntegro (sin o
 | **Prompt #032** | `2026-10-17` | `Cursor` | `Backend`, `Gobernanza` | Desbloquear migración Prisma fallida (seed antes de FK) y aplicar storefront; cerrar plan. | `20261017000000_decouple_task_order/migration.sql`, AI_USAGE, prompts |
 | **Prompt #033** | `2026-10-17` | `Cursor` | `Backend`, `Frontend`, `Tests`, `Gobernanza` | Validar SPEC-04; implementar SPEC-05 backend + harness mínimo (misma estructura que 04). | `negotiations.ts`, `apps/api/.../negotiations/*`, harness FE, SPEC-05, taskboard |
 | **Prompt #034** | `2026-10-17` | `Cursor` | `Frontend`, `Backend`, `Gobernanza` | UX storefront SPEC-04: portada horizontal full-bleed, overlays, categoría/presupuesto editables, plazo 7d fijo. | `cover-banner.tsx`, `storefront-page.tsx`, marketplace update publication |
+| **Prompt #044** | `2026-10-17` | `Cursor` | `Frontend`, `Gobernanza` | Pull `origin/main` → `frontend` con marketplace/escrow/activity; conserva UI login/home/tema. | `apps/web/*`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md` |
 
 ---
 
@@ -1447,6 +1448,17 @@ Aceptar: "Aceptaste el encargo. El pago del contratador quedó en custodia y que
 IDEA 3: La idea al aceptar se genera una pestaña en la cual se tendra un chat en vivo entre el emprendedor y el contratador, con un campo de anexar, para añadir las entregas, tambien el contador de 7 dias, para que el siempre tenga presente cuando tiempo tiene, tambien un apartado con el contexto de la solicitud.
 
 Refererente a la idea 3 implementa para tener este flujo listo, si en algun spec futuro se menciona simplemente se adelanto dicho trabajo.
+```
+
+### Prompt #044 — Merge origin/main en frontend + UI local
+
+* **Resumen de funcionalidad:** Integra en `frontend` lo nuevo de `main` (marketplace, negociaciones, escrow, activity, WelcomeWallet, WorkRequestAlert). Resuelve conflictos conservando el design system local (AuthShell, tema claro/oscuro, hero wallet, tokens Headshotly + amarillo).
+* **Área:** `Frontend` / `Gobernanza`.
+* **Archivos:** `apps/web/app/layout.tsx`, `apps/web/app/sign-up/page.tsx`, `apps/web/app/onboarding/wallet/page.tsx`, `apps/web/src/components/auth-form.tsx`, `apps/web/app/globals.css`, componentes login/home/theme, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`.
+* **Texto literal del prompt enviado:**
+
+```
+Hay nuevo push a main, traigamos pull de main a la rama front. Con todo lo nuevo
 ```
 
 
