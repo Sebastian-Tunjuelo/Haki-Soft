@@ -2,49 +2,54 @@
 
 import { useGSAP } from '@gsap/react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   ShieldCheck,
   Zap,
   Sparkles,
   TimerReset,
   Bot,
-  Wallet,
 } from 'lucide-react';
 import { useRef } from 'react';
+import { MeridiaPrismLogo } from '@/src/components/brand/meridia-prism-logo';
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(useGSAP, ScrollTrigger);
+}
 
 const FEATURES = [
   {
     id: 'secure',
-    title: 'Custodia segura',
-    detail: 'Fondos bloqueados con GNAP hasta liberar',
+    title: 'Custodia 100% en bloque',
+    detail: 'El Cliente deposita una vez; GNAP protege los fondos',
     icon: ShieldCheck,
     tone: 'volt' as const,
   },
   {
     id: 'fast',
-    title: 'Pago en minutos',
-    detail: 'Sin esperar 14 días de clearing',
+    title: 'Liquidación en segundos',
+    detail: '96% directo al Freelancer sin esperas de 14 días',
     icon: Zap,
     tone: 'tide' as const,
   },
   {
     id: 'auto',
-    title: 'Liberación automática',
-    detail: 'Tras aprobación o timeout, split 96/4',
+    title: 'Relojes deterministas',
+    detail: 'Plazos claros: 7d entrega · 32h revisión · 30m final',
     icon: TimerReset,
     tone: 'volt' as const,
   },
   {
     id: 'ai',
-    title: 'Revisión con IA',
-    detail: 'Chequeo de entrega en imagen y texto',
+    title: 'Consejero IA (Imagen/Texto)',
+    detail: 'Auditoría consultiva antes de liberar la custodia',
     icon: Bot,
     tone: 'tide' as const,
   },
 ];
 
 /**
- * Hero: billetera con inclinación L↔R (rotateY); features arriba, sin tapar la card.
+ * Hero Stage: Prisma Meridiano + Billetera de Custodia 96/4 con inclinación 3D y ScrollTrigger scrub.
  */
 export function HeroWalletStage() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -62,7 +67,6 @@ export function HeroWalletStage() {
 
       gsap.set([wallet, ...features, ...chips], { opacity: 0 });
       gsap.set(features, { y: 10 });
-      // Inclinación inicial (no traslación horizontal)
       gsap.set(wallet, { x: 0, y: 12, rotateY: -16, rotateX: 8, transformPerspective: 900 });
 
       if (reduce) {
@@ -84,12 +88,11 @@ export function HeroWalletStage() {
         .to(wallet, { opacity: 1, y: 0, duration: 0.55 }, 0.12)
         .to(chips, { opacity: 1, stagger: 0.06, duration: 0.3 }, 0.3);
 
-      // Giro = inclinación L ↔ R (rotateY), sin mover de lado a lado
       gsap.fromTo(
         wallet,
-        { rotateY: -18, rotateX: 7 },
+        { rotateY: -16, rotateX: 7 },
         {
-          rotateY: 18,
+          rotateY: 16,
           rotateX: 3,
           duration: 3.6,
           yoyo: true,
@@ -109,8 +112,8 @@ export function HeroWalletStage() {
       });
 
       gsap.to(glow, {
-        opacity: 0.75,
-        scale: 1.06,
+        opacity: 0.78,
+        scale: 1.08,
         duration: 2.8,
         yoyo: true,
         repeat: -1,
@@ -137,13 +140,13 @@ export function HeroWalletStage() {
   );
 
   return (
-    <div ref={rootRef} className="hw-stage" aria-label="Billetera de custodia en movimiento">
+    <div ref={rootRef} className="hw-stage" aria-label="Prisma Meridiano y Billetera de custodia en movimiento">
       <div className="hw-glow" aria-hidden="true" />
       <div className="hw-grid" aria-hidden="true" />
 
       <div className="hw-badge">
         <span className="hw-badge__dot" />
-        Open Payments · en vivo
+        MERIDIA · Custodia Open Payments en vivo
       </div>
 
       <div className="hw-features">
@@ -165,45 +168,45 @@ export function HeroWalletStage() {
 
       <div className="hw-track">
         <span className="hw-float hw-float--a" aria-hidden="true">
-          IA
+          96% FREELANCER
         </span>
         <span className="hw-float hw-float--b" aria-hidden="true">
-          GNAP
+          4% MERIDIA
         </span>
         <span className="hw-float hw-float--c" aria-hidden="true">
-          ILP
+          GNAP · ILP
         </span>
 
-        <div className="hw-wallet" role="img" aria-label="Billetera TaskStream con fondos en custodia">
+        <div className="hw-wallet" role="img" aria-label="Billetera MERIDIA con fondos en custodia">
           <div className="hw-wallet__shine" aria-hidden="true" />
           <div className="hw-wallet__top">
-            <span className="hw-wallet__mark">
-              <Wallet size={16} />
+            <span className="hw-wallet__mark" style={{ background: 'transparent' }}>
+              <MeridiaPrismLogo size={32} />
             </span>
-            <span className="hw-wallet__chip">ESCROW</span>
+            <span className="hw-wallet__chip">CUSTODIA 96/4</span>
           </div>
-          <p className="hw-wallet__label">En custodia</p>
-          <p className="hw-wallet__amount">
-            $12<span>.40</span>k
+          <p className="hw-wallet__label">Bloque Único en Custodia</p>
+          <p className="hw-wallet__amount tabular-num">
+            $450<span>.00 USD</span>
           </p>
-          <div className="hw-wallet__row">
-            <span>Seller 96%</span>
-            <span className="hw-wallet__volt">Fee 4%</span>
+          <div className="hw-wallet__row tabular-num">
+            <span>Freelancer 96% ($432)</span>
+            <span className="hw-wallet__volt">Meridia 4% ($18)</span>
           </div>
           <div className="hw-wallet__bar" aria-hidden="true">
             <i style={{ width: '96%' }} />
           </div>
           <div className="hw-wallet__footer">
             <Sparkles size={12} />
-            Liberación al aprobar entrega
+            Liquidación atómica al aprobar entrega
           </div>
         </div>
       </div>
 
       <div className="hw-chips" aria-hidden="true">
-        <span className="hw-chip">Seguridad criptográfica</span>
-        <span className="hw-chip hw-chip--tide">Pagos automáticos</span>
-        <span className="hw-chip">Sin 14 días</span>
+        <span className="hw-chip">USD · COP · MXN · BRL · CAD</span>
+        <span className="hw-chip hw-chip--tide">Reembolso 100% garantizado</span>
+        <span className="hw-chip">Visor Protegido</span>
       </div>
     </div>
   );

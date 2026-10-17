@@ -67,7 +67,6 @@ describe('SPEC-02: contrato público entre el front y la API', () => {
 
   it('las rutas de Next reenvían a Nest y no usan el almacén mock', () => {
     for (const route of [
-      'app/api/v1/me/mode/route.ts',
       'app/api/v1/me/wallet/route.ts',
       'app/api/v1/me/wallet/discovery/route.ts',
       'app/api/v1/me/wallet/challenges/route.ts',

@@ -2,10 +2,14 @@
 
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
+import { ArrowLeft, ImagePlus, Trash2 } from 'lucide-react';
 import type { GalleryItem } from './storefront-types';
 
+const DEFAULT_COVER_URL =
+  'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1600&q=80';
+
 /**
- * Portada horizontal full-bleed desde debajo del navbar (rompe el padding de `main`).
+ * Portada horizontal full-bleed desde debajo del navbar con estética MERIDIA.
  */
 export function CoverBanner({
   cover,
@@ -30,39 +34,31 @@ export function CoverBanner({
         style={{
           position: 'relative',
           width: '100%',
-          height: 'clamp(220px, 38vw, 420px)',
-          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #334155 100%)',
+          height: 'clamp(220px, 34vw, 380px)',
+          background: 'linear-gradient(135deg, #0b0f17 0%, #111827 55%, #1e293b 100%)',
           overflow: 'hidden',
+          borderBottom: '1px solid var(--border-hi)',
         }}
       >
-        {cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={cover.url}
-            alt="Portada del servicio"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-          />
-        ) : (
-          <div
-            style={{
-              height: '100%',
-              display: 'grid',
-              placeItems: 'center',
-              color: 'rgba(255,255,255,0.72)',
-              fontSize: 14,
-              padding: 24,
-              textAlign: 'center',
-            }}
-          >
-            {editable ? 'Sube una imagen de portada horizontal' : 'Sin imagen de portada'}
-          </div>
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={cover?.url ?? DEFAULT_COVER_URL}
+          alt="Portada del servicio"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            display: 'block',
+            opacity: cover ? 1 : 0.72,
+          }}
+        />
 
         <div style={overlayBar}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             {topLeft ?? (
-              <Link href="/marketplace" className="btn btn-secondary" style={overlayBtn}>
-                ← Marketplace
+              <Link href="/marketplace" className="btn btn-outline btn-sm" style={overlayBtn}>
+                <ArrowLeft size={14} />
+                <span>Marketplace</span>
               </Link>
             )}
           </div>
@@ -82,9 +78,10 @@ export function CoverBanner({
       </div>
 
       {editable ? (
-        <div style={{ maxWidth: 960, margin: '12px auto 0', padding: '0 16px', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <label className="btn btn-secondary" style={{ cursor: uploading ? 'not-allowed' : 'pointer' }}>
-            {uploading ? 'Subiendo…' : cover ? 'Cambiar portada' : 'Subir portada'}
+        <div style={{ maxWidth: 960, margin: '14px auto 0', padding: '0 16px', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <label className="btn btn-outline btn-sm" style={{ cursor: uploading ? 'not-allowed' : 'pointer' }}>
+            <ImagePlus size={15} />
+            <span>{uploading ? 'Subiendo…' : cover ? 'Cambiar portada' : 'Subir portada'}</span>
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -98,8 +95,9 @@ export function CoverBanner({
             />
           </label>
           {cover && onRemove ? (
-            <button type="button" className="btn btn-secondary" onClick={() => void onRemove(cover.mediaId)}>
-              Quitar portada
+            <button type="button" className="btn btn-outline btn-sm" onClick={() => void onRemove(cover.mediaId)}>
+              <Trash2 size={14} />
+              <span>Quitar portada</span>
             </button>
           ) : null}
         </div>
@@ -125,12 +123,16 @@ const overlayBar: CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'flex-start',
   gap: 12,
-  padding: '14px 16px',
+  padding: '16px 20px',
   pointerEvents: 'none',
-  background: 'linear-gradient(180deg, rgba(15,23,42,0.55) 0%, rgba(15,23,42,0) 100%)',
+  background: 'linear-gradient(180deg, rgba(11,15,23,0.68) 0%, rgba(11,15,23,0) 100%)',
 };
 
 const overlayBtn: CSSProperties = {
   pointerEvents: 'auto',
-  boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+  background: 'rgba(15, 23, 42, 0.78)',
+  color: '#f8fafc',
+  borderColor: 'rgba(255,255,255,0.22)',
+  backdropFilter: 'blur(8px)',
 };
+

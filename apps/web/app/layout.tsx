@@ -1,14 +1,37 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { Space_Grotesk, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import { Navbar } from '@/src/components/navbar';
 import { WorkRequestAlert } from '@/src/components/work-request-alert';
 import { SmoothScrollProvider } from '@/app/providers/smooth-scroll';
+import { MeridiaPrismLogo } from '@/src/components/brand/meridia-prism-logo';
 import './globals.css';
 
+const fontDisplay = Space_Grotesk({
+  subsets: ['latin'],
+  weight: ['600', '700'],
+  variable: '--font-display-loaded',
+  display: 'swap',
+});
+
+const fontSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-sans-loaded',
+  display: 'swap',
+});
+
+const fontMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+  variable: '--font-mono-loaded',
+  display: 'swap',
+});
+
 export const metadata = {
-  title: 'TaskStream AI · Custodia Open Payments',
+  title: 'MERIDIA · Custodia Open Payments 96/4',
   description:
-    'Publica, negocia y libera pagos con escrow Open Payments. Identidad local, billetera GNAP y flujo de custodia 96/4.',
+    'MERIDIA — Plataforma Panamericana para Clientes y Freelancers con custodia en bloque único Open Payments (96% Freelancer / 4% Protocolo) e identidad GNAP.',
 };
 
 /** Evita flash de tema incorrecto antes de hidratar. */
@@ -28,7 +51,11 @@ const themeBootScript = `
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html
+      lang="es"
+      suppressHydrationWarning
+      className={`${fontDisplay.variable} ${fontSans.variable} ${fontMono.variable}`}
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
@@ -44,34 +71,34 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <div className="app-container">
                 <div className="app-footer__cols">
                   <div>
-                    <Link href="/" className="app-footer__brand">
-                      TaskStream<span> AI</span>
+                    <Link href="/" className="app-footer__brand" style={{ display: 'inline-flex', alignItems: 'center' }}>
+                      <MeridiaPrismLogo size={36} showWordmark />
                     </Link>
-                    <p className="ld-muted" style={{ marginTop: 8, fontSize: '0.9rem' }}>
-                      Marketplace con escrow Open Payments para Buyer y Seller.
+                    <p className="ld-muted" style={{ marginTop: 10, fontSize: '0.95rem', lineHeight: 1.6 }}>
+                      Marketplace panamericano con custodia en bloque único Open Payments. Una sola cuenta unificada para actuar como Cliente y Freelancer.
                     </p>
                   </div>
                   <div>
-                    <h4>Producto</h4>
+                    <h4>Plataforma</h4>
                     <Link href="/marketplace">Marketplace</Link>
-                    <Link href="/#how">Cómo funciona</Link>
-                    <Link href="/#pricing">Precios 96/4</Link>
+                    <Link href="/#how">Cómo funciona MERIDIA</Link>
+                    <Link href="/#pricing">Liquidación 96/4</Link>
                   </div>
                   <div>
-                    <h4>Cuenta</h4>
+                    <h4>Cuenta Unificada</h4>
+                    <Link href="/onboarding/wallet">Billetera Open Payments</Link>
                     <Link href="/sign-in">Iniciar sesión</Link>
-                    <Link href="/onboarding/wallet">Billetera</Link>
-                    <Link href="/settings/mode">Modo Buyer/Seller</Link>
+                    <Link href="/sign-up">Crear cuenta</Link>
                   </div>
                   <div>
-                    <h4>Recursos</h4>
-                    <Link href="/#faq">FAQ</Link>
-                    <Link href="/#reviews">Flujo</Link>
-                    <Link href="/activity">Actividad</Link>
+                    <h4>Ecosistema</h4>
+                    <Link href="/#faq">Preguntas frecuentes</Link>
+                    <Link href="/#reviews">Flujo de custodia</Link>
+                    <Link href="/activity">Actividad en vivo</Link>
                   </div>
                 </div>
                 <p className="app-footer__copy">
-                  © 2026 TaskStream AI · 96% seller · 4% plataforma · GNAP · WebGL
+                  © 2026 MERIDIA · 96% Freelancer · 4% Protocolo · GNAP · Open Payments · WebGL
                 </p>
               </div>
             </footer>

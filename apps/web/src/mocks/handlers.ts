@@ -3,14 +3,11 @@ import {
   mockClientTaskPublication,
   mockTaskOrderCard,
   WalletLinkRequestSchema,
-  ActiveModeSwitchSchema,
 } from '@taskstream/shared-schemas';
 import {
   discoverMockWallet,
   createMockChallenge,
   getMockActiveWallet,
-  getMockUserMode,
-  setMockUserMode,
 } from '../lib/wallet-mock-store';
 
 const api = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -26,23 +23,6 @@ export const handlers = [
   }),
   http.get(`${api}/api/v1/contracts/sample-order`, () => {
     return HttpResponse.json(mockTaskOrderCard());
-  }),
-
-  // Fase 1 (SPEC-02): Modo Activo
-  http.get(`${api}/api/v1/me/mode`, () => {
-    return HttpResponse.json({ activeMode: getMockUserMode() });
-  }),
-  http.post(`${api}/api/v1/me/mode`, async ({ request }) => {
-    const body = await request.json();
-    const parsed = ActiveModeSwitchSchema.safeParse(body);
-    if (!parsed.success) {
-      return HttpResponse.json(
-        { code: 'ACTIVE_MODE_INVALID', errors: parsed.error.flatten() },
-        { status: 400 },
-      );
-    }
-    const updated = setMockUserMode(parsed.data.activeMode);
-    return HttpResponse.json({ activeMode: updated });
   }),
 
   // Fase 1 (SPEC-02): Descubrimiento GNAP de Wallet

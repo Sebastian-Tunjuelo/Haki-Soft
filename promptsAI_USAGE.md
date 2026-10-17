@@ -1,4 +1,4 @@
-﻿# Registro Ãntegro de Prompts de IA â€” TaskStream AI (`promptsAI_USAGE.md`)
+# Registro Ãntegro de Prompts de IA â€” TaskStream AI (`promptsAI_USAGE.md`)
 
 Este archivo contiene el **registro histÃ³rico, secuencial e Ã­ntegro (sin omisiones)** de todos y cada uno de los prompts enviados por el equipo de **TaskStream AI** a la herramienta de IA (**`Antigravity`**), en cumplimiento de la PolÃ­tica Inmutable de Uso de IA del proyecto y la [PolÃ­tica de Uso de IA del Hackathon de Interledger](https://interledger.org/es/hackathon/ai-policy/).
 
@@ -1479,4 +1479,109 @@ Seguido de:
 ```
 Todo lo que esta en html, traelo a mi front, es todo
 ```
+
+### Prompt #046 — Arquitectura de diseño UI/UX de MERIDIA y generación de bocetos JPG (Modo Claro y Modo Oscuro)
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Planeación`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Planteamiento de la arquitectura de diseño UI/UX unificada para **MERIDIA** (tipografía, escala tipográfica, tipos de botones, animaciones, ScrollTrigger, paleta modo claro/oscuro) y generación de los 11 bocetos visuales en formato `.jpg` (Inicio, Marketplace, Billetera y Modo en modo claro y oscuro + 3 páginas recomendadas en modo claro) sin modificar el código del proyecto.
+* **Archivos creados o modificados:** Bocetos `.jpg` y documento de arquitectura en el directorio de artefactos de la sesión.
+* **Texto literal del prompt enviado:**
+
+```
+Teniendo en cuenta el diseño actual del proyecto plantea una arquitectura de diseño que se aplique en cada page (que incluya tipos de botones, animaciones posibles, scroll trigger, tipografia, tamaño de tipografia), después genera un boceto (un jpg por cada page):
+
+-El area del marketplace donde el cliente podrá agregar tareas o trabajos en caso de requerir un servicio. Agrega botones interactivos como "agregar servicio". Además podrá ver una serie de trabajos en los cuales puede prestar sus servicios. Es decir realiza los trabajos como paneles con imagenes hardcodeadas que hagan referencia a los trabajos ofrecidos por diferentes clientes con una breve descripción, el presupuesto inicial propuesto por el cliente y un bóton de aplicar al trabajo. Tiene que ser interactiva, muy visual, las imagenes deben ser lo principal y no tanto el texto, sin embargo escoge una buena tipografía coherente.
+
+-En el inicio cambia los botones a un léxico que pueda comprender el cliente, es decir, modo buyer/seller, ponlo como cliente/freelancer. Agrega más imagenes e interactividad en la UI de esta página. Escoge una tipografía coherente. Que los íconos no sean genéricos, hazlos más originales y coherentes con la aplicación.
+
+-La page de billetera debe tener una imagén de una billetera, dale un diseño más interactivo, que no solo sea un input para agregar la billetera, dale vida al UI. Escogiendo también una buena tipografía coherente. Agrega además como "queremos reconocerte con tu wallet de openpayments" (parafrasea) para que sea algo llamativo para el cliente.
+
+-En la page de modo coloca dos paneles verticales u horizontales (a conveniencia), uno con cliente y otro como freelancer. Cada panel debe tener una breve descripción del usuario, reseñas en caso del freelancer y ultima tarea completada, y en el cliente numero de tareas publicadas. Hardcodea toda esta información. Escoge una tipografía coherente, además dale vida al UI y vuelvelo interactivo, en caso de haber logos hazlos no genéricos y originales.
+
+-Añadele animación al boton de cambio de modo oscuro y modo claro.
+
+-Toda la Navbar necesita más vida y presencia, la tipografía un poco (no mucho) más grande, las opciones posibles en las navbar dales una breve iluminación al usuario poner su mouse sobre estos.
+
+-En el inicio además agrega también un panel general del usuario como una breve descripción, combinación de reseñas, ultimo trabajo completado y numero de publicaciones hechas
+
+-En el marketplace además de los paneles agrega un área de filtros donde se puedan seleccionar las categorías de las actividades/tareas publicadas por clientes.
+
+-En el inicio pon un resumen de toda la página como paneles como "trabajos/actividades que te pueden interesar"(parafrasea como lo veas conveniente), necesitas un servicio publica ya tu actividad o tarea y un botón de "publica ya tu actividad" (parafrasea como lo veas conveniente). Un resumen general de la aplicación llamativo para el usuario para que se interese en el aplicativo.
+
+Ten en cuenta la meridia landing page y aplica su paleta de colores, logo y nombre del proyecto en cada page que veas necesaria. No implementes ni modifiques nada dentro del proyecto, solo genera los bocetos. Apoyate de todas las skills de diseño que veas convenientes para poder generar los jpg's de las pages. Recuerda generar dos jpg's por cada page (uno en modo claro y otro en modo oscuro). Aplica la misma arquitectura para cada jpg, cada tipografia y tamaño de letra. Aparte añade recomendaciones de pages, un jpg por cada page en modo claro. Recuerda no implementes ni modifiques nada, solo genera estos bocetos de las pages
+```
+
+### Prompt #047 — Especificación técnica de arquitectura de diseño, paleta, tipografía, botones, ScrollTrigger y herramientas UI
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Planeación`, `Frontend`
+* **Resumen de su funcionalidad:** Definición exhaustiva de la arquitectura UI/UX de **MERIDIA**, incluyendo matriz de tokens CSS para Modo Oscuro (`#0B0F17`) y Modo Claro (`#F8FAFC`), familia tipográfica (`Space Grotesk`, `Plus Jakarta Sans`, `JetBrains Mono`), catálogo de 6 tipos de botones interactivos, mapa de animaciones GSAP + `ScrollTrigger` + `Lenis` y stack de herramientas del frontend.
+* **Archivos creados o modificados:** Artefacto técnico de arquitectura de diseño UI.
+* **Texto literal del prompt enviado:**
+
+```
+Ahora plantea la arquitectura, la paleta de colores, tipografia usada, tipo de botones, donde se aplica scroll trigger, animaciones y en general todas las herramientas que se utilizaron para el diseño para poderlo aplicar al diseño UI del frontend
+```
+
+### Prompt #048 — Plan maestro de implementación en `.md` con logo Prisma Meridiano y contrato estricto de cero incongruencias
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Planeación`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Creación del documento `planning/meridia-ui-implementation-plan.md` detallando el plan de implementación para Inicio, Marketplace, Billetera, Modo y Navbar, el reacondicionamiento exclusivo de Login y Register (paleta, logo, tipografía, tamaño de letra y nombre `MERIDIA` sin alterar estructura), el diseño del logo `<MeridiaPrismLogo />` como un prisma piramidal meridiano basado en `meridia-rec-custodia-light.jpg` y la cláusula estricta de cero incongruencias entre páginas.
+* **Archivos creados o modificados:** `planning/meridia-ui-implementation-plan.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`.
+* **Texto literal del prompt enviado:**
+
+```
+Genera un .md con un plan de implementación. Plantea en este la implementación de la arquitectura y en sí todo el diseño propuesto a las pantallas marketplace, billetera, inicio. Plantea la implementación de las animaciones, el suavizado del scroll, el scroll trigger, etc. El login y el register solo se le harán reacondicionamientos de paleta de colores, logo, tipografía, tamaño de letra y nombre del proyecto, su estructura actual no cambiará. El logo hazlo como un prisma meridiano como el que se encuentra en meridia-rec-custodia-light.jpg, teniendo en cuenta el modo oscuro y el modo claro en cada page. El nombre del aplicativo es MERIDIA. Por ultimo redacta de forma estricta de que no puede existir incongruencias entre pantallas, todo debe ser implementado igual, mismo logo en cada page, misma tipografía, paleta de colores, etc. Nada puede ser distinto entre las pages.
+```
+
+### Prompt #049 — Implementación integral de la arquitectura y diseño de MERIDIA en `apps/web`
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Frontend`, `Tests`, `Gobernanza`
+* **Resumen de su funcionalidad:** Implementación completa del plan `planning/meridia-ui-implementation-plan.md` en `apps/web`: componente `<MeridiaPrismLogo />` (prisma piramidal cristalino con refracción `96%` Esmeralda / `4%` Ámbar adaptable a modo claro/oscuro) e íconos originales; sistema tipográfico (`Space Grotesk`, `Plus Jakarta Sans`, `JetBrains Mono`) y paleta dual en `layout.tsx` y `globals.css`; Navbar con `15.5px` e iluminación spotlight; botón animado orbital de tema Sol/Luna con GSAP; rediseño interactivo de **Inicio** (léxico `Cliente / Freelancer`, Panel General del Usuario y Resumen General de actividades), **Modo** (dos paneles interactivos Cliente y Freelancer con métricas y reseñas hardcodeadas), **Billetera** (tarjeta 3D interactiva, frase *"Queremos reconocerte con tu billetera de Open Payments"* y stepper GNAP) y **Marketplace** (botones `"+ Agregar servicio"` / `"+ Publicar tarea / trabajo"`, filtros de categoría y 6 paneles visuales image-first con botón `"Aplicar al trabajo"`); y reacondicionamiento exclusivo de marca/paleta/tipografía en **Login** y **Register**.
+* **Archivos creados o modificados:** `apps/web/src/components/brand/meridia-prism-logo.tsx`, `apps/web/app/layout.tsx`, `apps/web/app/globals.css`, `apps/web/src/components/theme-toggle.tsx`, `apps/web/src/components/navbar.tsx`, `apps/web/src/components/login/auth-shell.tsx`, `apps/web/app/sign-in/page.tsx`, `apps/web/app/sign-up/page.tsx`, `apps/web/src/components/auth-gate-modal.tsx`, `apps/web/src/components/welcome-wallet-modal.tsx`, `apps/web/src/components/home/hero-wallet-stage.tsx`, `apps/web/app/page.tsx`, `apps/web/src/components/home/landing-modules.tsx`, `apps/web/app/settings/mode/page.tsx`, `apps/web/src/components/mode-switcher.tsx`, `apps/web/app/onboarding/wallet/page.tsx`, `apps/web/src/components/wallet-verification.tsx`, `apps/web/app/marketplace/page.tsx`, `apps/web/src/components/marketplace-harness.tsx`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`.
+* **Texto literal del prompt enviado:**
+
+```
+Implementalo
+```
+
+### Prompt #050 — Plan de implementación para corregir el frontend (fidelidad a JPGs de Billetera y Marketplace con paneles horizontales, eliminación de Modo, fotos reales de personas y más ScrollTrigger en Inicio)
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Planeación`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Actualización del documento `planning/meridia-ui-implementation-plan.md` definiendo el plan paso a paso para: **(1)** mantener la regla de oro de 0 incongruencias y conservar la tipografía actual intacta (`Space Grotesk`, `Plus Jakarta Sans`, `JetBrains Mono`); **(2)** eliminar por completo la página de `Modo` (`/settings/mode`), el componente `mode-switcher.tsx`, el endpoint `/api/v1/me/mode` y todas sus referencias, dejando un único tipo de usuario que actúa como Freelancer y Cliente; **(3)** implementar la vista de `Billetera` fiel al boceto JPG (`meridia-billetera-light/dark.jpg`) con la tarjeta 3D inclinada + anillo orbital de 5 divisas a la izquierda, y las dos tarjetas derechas (`ILP Pointer` + stepper horizontal `1 — 2 — 3` y `Test presets cards` con banderas circulares en 2 columnas); **(4)** implementar la vista de `Marketplace` fiel al boceto JPG (`meridia-marketplace-light/dark.jpg`) con una lista de paneles horizontales y posibilidad de filtrar tanto por presupuesto como por categoría de trabajo/actividad; **(5)** ajustar `Navbar`, `Footer` y demás componentes a los bocetos JPG (tamaño de fuente e interactividad, sin `Modo`); y **(6)** enriquecer `Inicio` con más animaciones `GSAP ScrollTrigger`, fotografías reales de personas en lugar de iconos/círculos vacíos en "Cómo funciona MERIDIA" y avatares, y crecimiento interactivo de botones y tipografía.
+* **Archivos creados o modificados:** `planning/meridia-ui-implementation-plan.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`.
+* **Texto literal del prompt enviado:**
+
+```
+Realiza un plan de implementación para corregir los cambios hechos en el frontend y las pages. En las page de marketplace y wallet trata de implementar el diseño UI como se planteó en los jpg's de meridia-billetera y meridia-marketplace. En la billetera trata de ser lo más fiel al diseño del jpg y en el marketplace lo mismo, hazlo fiel al jpg con una lista de paneles horizontales con posibilidad de filtrar por presupuesto o categoria de trabajo/actividad. Toma en cuenta el plan de implementación anterior sobre la regla de oro que es 0 incongruencias. Borra por completo la page de modo y todas sus funcionalidades ya que solo se usará un tipo de usuario que pude actuar como freelancer y cliente. Realiza la navbar, footer y demás componentes más fiel a los jpg's con los bocetos de meridia(no las recomendaciones) respecto a su interactividad y tamaño de fuente. No cambies la tipografía que está actualmente. Agrega un poco más de animación de scroll trigger en la page de inicio, y además en donde se presentan los iconos de usuario como en "como funciona meridia" y demás partes, agrega imagenes de personas. Y en el inicio en general vuelvelo más interactivo, los botones y la tipografía debe de crecer y en general dale vida a la UI de esa page.
+```
+
+### Prompt #051 — Ejecución de las correcciones de UI en Billetera, Marketplace (paneles horizontales + filtro presupuesto/categoría), eliminación de Modo, Navbar/Footer e Inicio interactivo con fotos de personas y ScrollTrigger
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Frontend`, `Tests`, `Gobernanza`
+* **Resumen de su funcionalidad:** Implementación completa de las correcciones definidas en `planning/meridia-ui-implementation-plan.md`: **(1)** eliminación definitiva de `/settings/mode`, `mode-switcher.tsx` y `/api/v1/me/mode/route.ts` para dejar un único tipo de usuario unificado (Cliente y Freelancer); **(2)** rediseño de `Billetera` (`/onboarding/wallet`) fiel a `meridia-billetera-light/dark.jpg` con tarjeta 3D inclinada `-14deg`, chip EMV, chip fotónico central, emblema `M` grabado, anillo orbital con 5 divisas y columna derecha dividida en `ILP Pointer` + stepper horizontal `1 — 2 — 3` y `Test presets cards` en 2 columnas con banderas circulares; **(3)** rediseño de `Marketplace` (`/marketplace`) fiel a `meridia-marketplace-light/dark.jpg` con lista de paneles horizontales (`.mp-horizontal-panel`) y filtrado interactivo tanto por presupuesto (`$100 - $1,500 USD` + slider) como por categoría de actividad; **(4)** actualización de `Navbar` y `Footer` fiel a los bocetos JPG (sin enlace `Modo`, fuente mayor `16.6px` con crecimiento hover, badge `Activa` en `Billetera` y retrato real en la píldora de `Sara M.`); y **(5)** enriquecimiento de `Inicio` (`/`) con el split de 2 columnas del boceto JPG, fotografías reales de personas en "Cómo funciona MERIDIA", avatares y reseñas, crecimiento cinético de botones y tipografía, y animaciones `GSAP ScrollTrigger` adicionales sin alterar la tipografía actual.
+* **Archivos creados o modificados:** `apps/web/app/settings/mode/page.tsx` (eliminado), `apps/web/src/components/mode-switcher.tsx` (eliminado), `apps/web/app/api/v1/me/mode/route.ts` (eliminado), `apps/web/src/mocks/handlers.ts`, `apps/web/src/tests/spec-02-identity-client.test.ts`, `apps/web/src/components/navbar.tsx`, `apps/web/app/layout.tsx`, `apps/web/app/globals.css`, `apps/web/src/components/page-reveal.tsx`, `apps/web/app/onboarding/wallet/page.tsx`, `apps/web/src/components/wallet-verification.tsx`, `apps/web/src/components/marketplace-harness.tsx`, `apps/web/app/page.tsx`, `apps/web/src/components/home/landing-modules.tsx`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`.
+* **Texto literal del prompt enviado:**
+
+```
+Implementa
+```
+
+### Prompt #052 — Aplicación del diseño unificado de MERIDIA a todas las páginas restantes del aplicativo (`/activity`, `/marketplace/negotiations`, `/orders/escrow`, `/orders/[taskId]/escrow`, `/orders/[taskId]/workspace`, `/marketplace/gigs/[gigId]` y `/marketplace/publications/[publicationId]`)
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Actualización integral de **todas las páginas y vistas restantes** de `apps/web` que aún conservaban estilos previos para unificarlas al 100% con el sistema de diseño **MERIDIA** recién implementado (`<PageReveal />` con `GSAP ScrollTrigger`, logo `<MeridiaPrismLogo />`, tipografía cinética `.kinetic-heading`, superficies glassmórficas `.card` y `.meridia-user-stat`, stepper horizontal `1 — 2 — 3`, fotografías reales de personas y botones `.btn-amber`, `.btn-emerald` y `.btn-outline`): **(1)** `/orders/escrow` (`orders/escrow/page.tsx`); **(2)** `/orders/[taskId]/escrow` (`escrow-checkout.tsx`); **(3)** `/activity` (`activity-inbox.tsx`); **(4)** `/orders/[taskId]/workspace` (`order-workspace.tsx`); **(5)** `/marketplace/negotiations` (`negotiations-workspace.tsx`); **(6)** `/marketplace/gigs/[gigId]` y `/marketplace/publications/[publicationId]` (`storefront-loader.tsx`, `storefront-page.tsx`, `cover-banner.tsx`, `reviews-section.tsx`); y **(7)** los modales globales `hire-confirm-modal.tsx` y `work-request-alert.tsx`.
+* **Archivos creados o modificados:** `apps/web/app/orders/escrow/page.tsx`, `apps/web/src/components/escrow-checkout.tsx`, `apps/web/src/components/activity-inbox.tsx`, `apps/web/src/components/order-workspace.tsx`, `apps/web/src/components/negotiations-workspace.tsx`, `apps/web/src/components/hire-confirm-modal.tsx`, `apps/web/src/components/work-request-alert.tsx`, `apps/web/src/features/marketplace/storefront-loader.tsx`, `apps/web/src/features/marketplace/storefront-page.tsx`, `apps/web/src/features/marketplace/cover-banner.tsx`, `apps/web/src/features/marketplace/reviews-section.tsx`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`.
+* **Texto literal del prompt enviado:**
+
+```
+Por último, a TODAS las pages restantes que no tengan diseño actualizado al que se está utilizando en las pages modificadas, implementa este diseño que acabaste de agregar
+```
+
 
