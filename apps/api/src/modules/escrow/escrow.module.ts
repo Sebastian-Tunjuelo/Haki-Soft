@@ -6,6 +6,7 @@ import { EscrowService } from './escrow.service';
 import { ESCROW_PAYMENT_GATEWAY, ESCROW_REPOSITORY } from './escrow.tokens';
 import { MemoryEscrowRepository } from './memory-escrow.repository';
 import { PrismaEscrowRepository } from './prisma-escrow.repository';
+import { EscrowPaymentService } from '../open-payments/escrow-payment.service';
 import { SimulatedEscrowPaymentGateway } from './simulated-escrow-payment.gateway';
 import { OrderWorkspaceService } from './order-workspace.service';
 import { SellerConfirmationTimeoutJob } from './seller-confirmation-timeout.job';
@@ -16,6 +17,7 @@ import { SellerNotificationHub } from './seller-notification.hub';
   controllers: [EscrowController],
   providers: [
     EscrowService,
+    EscrowPaymentService,
     OrderWorkspaceService,
     SellerConfirmationTimeoutJob,
     SellerNotificationHub,
