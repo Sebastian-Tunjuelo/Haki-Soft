@@ -46,15 +46,16 @@ export class PrismaEscrowRepository implements EscrowRepository {
     return tx ? this.toTx(tx, taskId) : null;
   }
 
-  async listSellerActivity(sellerId: string): Promise<SellerActivityItemStored[]> {
+  async listSellerActivity(userId: string): Promise<SellerActivityItemStored[]> {
     const rows = await this.db().taskOrder.findMany({
-      where: { sellerId, lifecycleStatus: { not: 'CANCELLED' } },
+      where: { OR: [{ sellerId: userId }, { buyerId: userId }] },
       include: {
         escrowLedger: true,
         buyer: { select: { displayName: true } },
+        seller: { select: { displayName: true } },
       },
       orderBy: { createdAt: 'desc' },
-      take: 50,
+      take: 80,
     });
     return rows
       .filter((row) => row.escrowLedger)
@@ -65,7 +66,9 @@ export class PrismaEscrowRepository implements EscrowRepository {
         lifecycleStatus: row.lifecycleStatus as EscrowLifecycle,
         sellerConfirmed: Boolean(row.sellerConfirmedAt),
         createdAt: row.createdAt,
+        viewerRole: row.sellerId === userId ? ('seller' as const) : ('buyer' as const),
         buyerDisplayName: row.buyer.displayName,
+        sellerDisplayName: row.seller.displayName,
         projectBrief: extractProjectBrief(row.scopeDescription),
       }));
   }
@@ -128,6 +131,14 @@ export class PrismaEscrowRepository implements EscrowRepository {
     idempotencyKey: string;
     interactRedirectUri: string;
     incomingPaymentUrl: string;
+    quoteUrl?: string | null;
+    grantContinueUri?: string | null;
+    grantContinueToken?: string | null;
+    clientNonce?: string | null;
+    metadataJson?: Record<string, unknown> | null;
+    receiveAssetCode?: string;
+    receiveAssetScale?: number;
+    receiveAmountValue?: string;
   }): Promise<
     StoredOpTx | 'ALREADY_LOCKED' | 'ORDER_NOT_FOUND' | 'DUPLICATE_KEY' | 'SELLER_NOT_CONFIRMED'
   > {
@@ -159,9 +170,15 @@ export class PrismaEscrowRepository implements EscrowRepository {
           status: 'PENDING_INTERACTION',
           interactRedirectUri: input.interactRedirectUri,
           incomingPaymentUrl: input.incomingPaymentUrl,
-          receiveAmountValue: String(order.escrowLedger.totalAmountUSDInCents),
-          receiveAssetCode: 'USD',
-          receiveAssetScale: 2,
+          quoteUrl: input.quoteUrl ?? null,
+          grantContinueUri: input.grantContinueUri ?? null,
+          grantContinueToken: input.grantContinueToken ?? null,
+          clientNonce: input.clientNonce ?? null,
+          metadataJson: (input.metadataJson as Prisma.InputJsonValue) ?? undefined,
+          receiveAmountValue:
+            input.receiveAmountValue ?? String(order.escrowLedger.totalAmountUSDInCents),
+          receiveAssetCode: input.receiveAssetCode ?? 'USD',
+          receiveAssetScale: input.receiveAssetScale ?? 2,
         },
       });
       return this.toTx(created, input.taskId);
@@ -259,7 +276,8 @@ export class PrismaEscrowRepository implements EscrowRepository {
       if (order.lifecycleStatus === 'COMPLETED' || order.lifecycleStatus === 'REFUNDED') {
         return 'ALREADY_TERMINAL' as const;
       }
-      if (order.lifecycleStatus !== 'ESCROW_LOCKED') return 'NOT_LOCKED' as const;
+      if (order.escrowLedger.status !== 'FUNDS_LOCKED') return 'NOT_LOCKED' as const;
+      if (!isSettlementEligibleLifecycle(order.lifecycleStatus)) return 'NOT_LOCKED' as const;
 
       await tx.openPaymentsTransaction.createMany({
         data: [
@@ -313,7 +331,8 @@ export class PrismaEscrowRepository implements EscrowRepository {
       if (order.lifecycleStatus === 'COMPLETED' || order.lifecycleStatus === 'REFUNDED') {
         return 'ALREADY_TERMINAL' as const;
       }
-      if (order.lifecycleStatus !== 'ESCROW_LOCKED') return 'NOT_LOCKED' as const;
+      if (order.escrowLedger.status !== 'FUNDS_LOCKED') return 'NOT_LOCKED' as const;
+      if (!isSettlementEligibleLifecycle(order.lifecycleStatus)) return 'NOT_LOCKED' as const;
 
       await tx.openPaymentsTransaction.create({
         data: {
@@ -396,6 +415,11 @@ export class PrismaEscrowRepository implements EscrowRepository {
       interactRedirectUri: string | null;
       incomingPaymentUrl: string | null;
       outgoingPaymentUrl: string | null;
+      quoteUrl?: string | null;
+      grantContinueUri?: string | null;
+      grantContinueToken?: string | null;
+      clientNonce?: string | null;
+      metadataJson?: unknown;
       completedAt: Date | null;
     },
     taskId: string,
@@ -411,7 +435,27 @@ export class PrismaEscrowRepository implements EscrowRepository {
       interactRedirectUri: row.interactRedirectUri,
       incomingPaymentUrl: row.incomingPaymentUrl,
       outgoingPaymentUrl: row.outgoingPaymentUrl,
+      quoteUrl: row.quoteUrl ?? null,
+      grantContinueUri: row.grantContinueUri ?? null,
+      grantContinueToken: row.grantContinueToken ?? null,
+      clientNonce: row.clientNonce ?? null,
+      metadataJson:
+        row.metadataJson && typeof row.metadataJson === 'object' && !Array.isArray(row.metadataJson)
+          ? (row.metadataJson as Record<string, unknown>)
+          : null,
       completedAt: row.completedAt,
     };
   }
+}
+
+function isSettlementEligibleLifecycle(status: string): boolean {
+  return (
+    status === 'ESCROW_LOCKED' ||
+    status === 'EXTENSION_REQUESTED' ||
+    status === 'ESCROW_EXTENDED' ||
+    status === 'IN_REVIEW' ||
+    status === 'REVISION_REQUESTED' ||
+    status === 'FINAL_CLAIM_WINDOW_30M' ||
+    status === 'DISPUTED'
+  );
 }
