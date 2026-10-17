@@ -8,8 +8,9 @@
 | **Roles Propietarios** | `FE-1`, `BE-1`, `AI-1` |
 | **Tareas Asociadas (`taskboard.md`)** | `T-F2-FE1-02`, `T-F2-BE1-01`, `T-F2-AI1-01` |
 | **Dependencias Previas** | `SPEC-00`, `SPEC-01`, `SPEC-02`, `SPEC-03`, `SPEC-04` |
-| **Estado del Ciclo SDD** | `Implementada (IMPLEMENTED)` — backend Negotiations + harness FE mínimo |
-| **Última Actualización** | `2026-10-17` (v0.4.0) |
+| **Estado del Ciclo SDD** | `Implementada (IMPLEMENTED)` |
+| **Notas de implementación** | Backend de negociación y clasificador listos. `T-F2-FE1-02` sigue abierta. No pasa a `Testeada` hasta esa tarea. |
+| **Última Actualización** | `2026-10-17` (v0.4.1) |
 | **Aprobada por / fecha** | `—` |
 
 ---
@@ -42,7 +43,7 @@ Especificar el motor transaccional de **contratación y negociación precontract
 | **`INV-05-03`** | `CONTEXT.md` §5.2, `taskboard.md` §3 Regla 4 | **Arranque Exclusivo tras Aceptación Mutua y Separación entre Acuerdo y Fondeo:** La actividad nunca arranca de forma unilateral. Tras el acuerdo mutuo (Camino 1 o confirmación de Gig fijo), la orden nace en `PENDING_ESCROW_FUNDING` sin ningún `ScheduledTimerJob` (los plazos solo existen como relojes). Los relojes de ejecución solo se activan cuando el Buyer fondea el escrow en `SPEC-06`. | `SPEC-05` crea `TaskOrder` en `PENDING_ESCROW_FUNDING` y `EscrowLedger` en `AWAITING_FUNDS` sin encolar jobs `INITIAL_DELIVERY_7D` todavía. |
 | **`INV-05-04`** | `CONTEXT.md` §5.2.A, §5.2.B | **Bifurcación Camino 1 vs. Camino 2:** En Camino 1 (`AGREED_PATH_1`), la publicación pasa a `AGREED_AND_LOCKED` y todas las demás propuestas abiertas de esa publicación se cierran automáticamente. En Camino 2 (`DISCREPANCY_CLOSED_PATH_2`), solo se cierra esa propuesta individual y la publicación continúa en `OPEN_FOR_PROPOSALS`. | Transacción ACID con `SELECT ... FOR UPDATE` sobre `client_task_publications` al aceptar una propuesta en Camino 1. |
 | **`INV-05-05`** | `CONTEXT.md` §3.1, `taskboard.md` §3 Regla 8 | **Reparto Exacto `96 % / 4 %` y Separación de 4 Wallets (`chk_escrow_exact_96_4_split`):** `platformFeeUSDInCents = Math.floor((total * 4) / 100)` y `freelancerPayoutUSDInCents = total - platformFeeUSDInCents`, con total en `[100, 50_000_000]`. Las cuatro wallets son FK de `EscrowLedger`: buyer y seller (`user_wallets`, distintas entre sí), custodia y fee del dueño (`platform_wallets`, distintas entre sí). | El cálculo financiero se ejecuta exclusivamente en servidor mediante `splitSingleBlockEscrow(totalAmountUSDInCents)` al instanciar `TaskOrder` + `EscrowLedger`. |
-| **`INV-05-06`** | `CONTEXT.md` §4.1, §6.1, `taskboard.md` §3 Regla 10 | **Clasificación Determinista de Modalidad IA (`resolveMvpAiAuditableModality`):** `aiAuditableModality` es `'IMAGE'` si y solo si `expectedMediaType === 'IMAGE_RASTER_VECTOR'`, `'TEXT'` si y solo si `expectedMediaType === 'DOCUMENT_TEXT'`, y `null` para los otros 4 medios. | `aiAuditableModality` no se almacena: es un valor derivado de `task_orders.expected_media_type` que el clasificador de `AI-1` calcula al construir la `TaskOrderCard`. El trigger `trg_ai_report_mvp_modality` impide crear reportes de IA para otros medios. |
+| **`INV-05-06`** | `CONTEXT.md` §6.1, §7.2, `taskboard.md` §3 Regla 10 | **Clasificación Determinista de Modalidad IA (`resolveMvpAiAuditableModality`):** `aiAuditableModality` es `'IMAGE'` si y solo si `expectedMediaType === 'IMAGE_RASTER_VECTOR'`, `'TEXT'` si y solo si `expectedMediaType === 'DOCUMENT_TEXT'`, y `null` para los otros 4 medios. La categoría no decide la modalidad: un encargo de `DIGITAL_MARKETING` es `IMAGE`, `TEXT` o `null` según el medio que fijó `SPEC-04`. | `aiAuditableModality` no se almacena: es un valor derivado de `task_orders.expected_media_type` que el clasificador de `AI-1` calcula al construir la `TaskOrderCard`. El trigger `trg_ai_report_mvp_modality` impide crear reportes de IA para otros medios. |
 | **`INV-05-07`** | `CONTEXT.md` §1.2, §2.3, §8.1 | **Prohibición de Auto-Contratación (*Anti Self-Dealing*):** Aunque una cuenta puede alternar entre `Buyer Mode` y `Seller Mode`, un usuario jamás puede postular a su propia publicación ni contratar su propio Gig, ni usar la misma `walletAddressUrl` como Buyer y Seller en una orden. | Validación obligatoria `buyerId !== sellerId` y `buyerWallet.walletAddressUrl !== sellerWallet.walletAddressUrl` (`403 SELF_DEALING_FORBIDDEN`), respaldada en SQL por `chk_proposal_no_self_dealing`, `chk_task_order_no_self_dealing` y `chk_escrow_distinct_party_wallets`. |
 
 ---
@@ -309,7 +310,7 @@ La autenticación es la de `SPEC-02` v1.5.0: sesión HMAC local, no Clerk. El BF
 - **Escenario 1 (Camino Feliz — Asignación exacta en las 6 categorías del MVP):**
   - **Dado** el conjunto de los 6 `DeliverableMediaType` del MVP al instanciar órdenes en `OrderCreationService`,
   - **Cuando** se ejecuta `resolveMvpAiAuditableModality(expectedMediaType)`,
-  - **Entonces** asigna `aiAuditableModality = "IMAGE"` para `IMAGE_RASTER_VECTOR`, `"TEXT"` para `DOCUMENT_TEXT`, y `null` para `CODE_ARCHIVE`, `DATA_CAMPAIGN`, `VIDEO_STREAM` y `AUDIO_TRACK`, como valor derivado de `expectedMediaType` (no se almacena en `task_orders`).
+  - **Entonces** asigna `aiAuditableModality = "IMAGE"` para `IMAGE_RASTER_VECTOR`, `"TEXT"` para `DOCUMENT_TEXT`, y `null` para `CODE_ARCHIVE`, `DATA_CAMPAIGN`, `VIDEO_STREAM` y `AUDIO_TRACK`, como valor derivado de `expectedMediaType` (no se almacena en `task_orders`). Un encargo de marketing con `.png` queda en `IMAGE`; el mismo encargo con `.csv` queda en `null`.
 - **Escenario 2 (Error de Validación o Violación de Regla — Rechazo de manipulación manual de `aiAuditableModality`):**
   - **Dado** un payload o contrato donde se intente forzar `aiAuditableModality = "TEXT"` en una orden cuyo `expectedMediaType` es `VIDEO_STREAM`,
   - **Cuando** `TaskOrderCardSchema` evalúa la tarjeta, o se intenta insertar un `AiAdvisorReport` para una entrega de esa orden (`trg_ai_report_mvp_modality`),
@@ -375,3 +376,4 @@ La autenticación es la de `SPEC-02` v1.5.0: sesión HMAC local, no Clerk. El BF
 | `0.3.0` | `2026-10-16` | `Cursor` | Se retira Clerk. Las rutas de negociación usan `SessionAuthGuard` y comparan propiedad con `req.userId`. El código de sesión ausente es `401 UNAUTHENTICATED`, igual que `SPEC-02`. |
 | `0.3.1` | `2026-10-16` | `Cursor` | El clasificador de `AI-1` queda en `packages/shared-schemas`. No se crea un servicio en `apps/api`. `BE-1` llama a `resolveMvpAiAuditableModality` al crear la orden. |
 | `0.4.0` | `2026-10-17` | `Cursor` | Backend `NegotiationsModule` (propuestas, mensajes, Camino 1/2, hire Gig fijo, TaskOrder+EscrowLedger en memoria/Prisma), contratos Zod, tests HTTP RF-01..RF-04, harness FE `/marketplace/negotiations`. |
+| `0.4.1` | `2026-10-17` | `Cursor` | Estado en celda exacta. La modalidad sigue al medio de `SPEC-04` v0.6.0, así que marketing puede ser `IMAGE`, `TEXT` o `null`. `T-F2-FE1-02` sigue abierta. |
