@@ -141,7 +141,7 @@ export function ModeSwitcher({ initialMode = 'BUYER', serverCode = null }: ModeS
               <CheckCircle2 size={13} style={{ color: '#818cf8' }} /> Fondeo único 100% en escrow protegido
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <CheckCircle2 size={13} style={{ color: '#818cf8' }} /> Ventana de 32h para revisar o solicitar corrección
+              <CheckCircle2 size={13} style={{ color: '#818cf8' }} /> Ventana de 72h (3 días) para revisar o solicitar corrección
             </li>
           </ul>
 
@@ -249,7 +249,7 @@ export function ModeSwitcher({ initialMode = 'BUYER', serverCode = null }: ModeS
         <Sparkles size={20} style={{ color: 'var(--brand-blue)', flexShrink: 0, marginTop: 2 }} />
         <div>
           <h4 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
-            Invariante de Identidad Unificada (SPEC-02 §2)
+            Identidad unificada Buyer / Seller
           </h4>
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             Una misma cuenta mantiene un solo usuario en PostgreSQL. Alternar entre Buyer y Seller no altera ni transfiere la titularidad de órdenes que ya se encuentren en ejecución o con fondos depositados en el escrow.
