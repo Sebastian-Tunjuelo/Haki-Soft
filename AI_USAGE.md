@@ -184,6 +184,8 @@ A continuación se listan todos los archivos del repositorio que han sido creado
 | `review.ts`, `deliverables.service.ts`, harness, `seller-acceptance-alert.tsx`, tests HTTP | `Backend` / `Frontend` / `Gobernanza` / `Tests` | **Modificado (`Cursor`)** | Prompt #064: demo flujo de dinero — al aceptar se libera 96/4 de inmediato (sin ventana 30 m); aviso seller con monto liberado. |
 | `UserWallet.demoBalanceUSDInCents`, identity/escrow, navbar, wallet UI, migración | `Backend` / `Frontend` / `Gobernanza` | **Creado / Modificado (`Cursor`)** | Prompt #065: saldo demo visible — débito al fondear, crédito 96 % al liberar (Open Payments real sigue pendiente BE-1). |
 | `escrow-payment.service.ts`, EscrowService/controller/module, checkout FE, `.env.example` | `Backend` / `Frontend` / `Gobernanza` | **Creado / Modificado (`Cursor`)** | Prompt #066: Open Payments real (`OPEN_PAYMENTS_REAL=1`) — fondeo buyer→escrow con GNAP + release 96/4 con token escrow; asset de la Test Wallet (p. ej. EGG). |
+| [`apps/api/src/modules/escrow/memory-escrow.repository.ts`](apps/api/src/modules/escrow/memory-escrow.repository.ts) | `Backend` / `Gobernanza` | **Modificado (`Cursor`)** | Prompt #067: fix TS `StoredOpTx` en settle release/refund (campos OP nulos) para poder arrancar Nest en la prueba E2E. |
+| `escrow-payment.service.ts`, `api-client.ts` | `Backend` / `Frontend` / `Gobernanza` | **Modificado (`Cursor`)** | Prompt #068: fix liberación OP — `receiveAmount` + asset del receptor, conversión centavos→scale, omitir 4% si platform=escrow, errores token/upstream legibles en «Es lo que quería». |
 
 ---
 
