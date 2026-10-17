@@ -923,5 +923,62 @@ configura el .env ademas de que para comprobar todo el proyecto crea el docker q
 completa lo que te falte antes de hacer push
 ```
 
+---
+
+### Prompt #023 — Completar los archivos .env
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Herramientas / DX`, `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. Alinea `.env`, `apps/api/.env` y `apps/web/.env.local` con las variables que leen Nest, Next y Prisma. Las tres claves de Clerk quedan vacías: no existen en el entorno ni en el escritorio, y no se inventan.
+  2. Las herramientas de Open Payments pasan de la clave "hack" a hack2 y a `secrets/hack2.key`. El CLI lee esa ruta en lugar de exigir el PEM dentro del `.env`.
+* **Archivos creados / modificados:**
+  * [`.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env), [`apps/api/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/.env), [`apps/web/.env.local`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/.env.local) *(Modificados, gitignored)*
+  * [`tools/open-payments-mcp/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-mcp/.env), [`tools/open-payments-cli/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/.env) *(Modificados, gitignored)*
+  * [`tools/open-payments-cli/index.js`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/index.js) *(Modificado)*
+  * [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+configura al completo los .env
+```
+
+---
+
+### Prompt #024 — Cómo obtener las claves de Clerk
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Backend`, `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. Explica cómo crear la aplicación en el dashboard de Clerk, copiar la publishable key y la secret key, y pegarlas en los `.env` locales.
+  2. Indica el webhook `POST /api/v1/webhooks/clerk` con `user.created` y `user.updated`. No se escriben secretos.
+* **Archivos creados / modificados:**
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+y como hago eso del clerk
+```
+
+---
+
+### Prompt #025 — Push de la plantilla de entorno y del CLI
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Gobernanza`, `Herramientas / DX`
+* **Resumen de su funcionalidad:**
+  1. Sube a `main` la plantilla `.env.example`, el CLI que lee la clave desde un archivo y la bitácora de los prompts #023 a #025.
+  2. Los `.env` locales y `secrets/hack2.key` siguen fuera del repositorio.
+* **Archivos creados / modificados:**
+  * [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Modificado)*
+  * [`tools/open-payments-cli/index.js`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/index.js) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+has push al repo
+```
+
 
 
