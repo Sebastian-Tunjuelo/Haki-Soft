@@ -8,6 +8,7 @@ import type {
   StoredUser,
   StoredWallet,
 } from './identity.types';
+import { DEMO_WALLET_STARTING_BALANCE_USD_IN_CENTS } from './identity.types';
 
 interface MemoryState {
   users: StoredUser[];
@@ -40,6 +41,7 @@ export class MemoryIdentityRepository implements IdentityRepository {
       avatarUrl: null,
       countryCode: input.countryCode,
       activeMode: 'BUYER',
+      platformRole: 'USER',
     };
     this.state.users.push(user);
     this.state.passwords.set(user.id, input.passwordHash);
@@ -62,6 +64,12 @@ export class MemoryIdentityRepository implements IdentityRepository {
     if (!user) return null;
     user.activeMode = activeMode;
     return { ...user };
+  }
+
+  /** Solo tests / seed en memoria: promover a ADMIN. */
+  setPlatformRole(userId: string, platformRole: 'USER' | 'ADMIN'): void {
+    const user = this.state.users.find((item) => item.id === userId);
+    if (user) user.platformRole = platformRole;
   }
 
   async findActiveWallet(userId: string): Promise<StoredWallet | null> {
@@ -103,6 +111,7 @@ export class MemoryIdentityRepository implements IdentityRepository {
       isVerified: false,
       isActive: false,
       verifiedAt: null,
+      demoBalanceUSDInCents: DEMO_WALLET_STARTING_BALANCE_USD_IN_CENTS,
     };
     this.state.wallets.push(wallet);
     return { ok: true, wallet: { ...wallet } };
@@ -210,6 +219,9 @@ export class MemoryIdentityRepository implements IdentityRepository {
       next.isActive = true;
       next.isVerified = true;
       next.verifiedAt = input.verifiedAt;
+      if (typeof next.demoBalanceUSDInCents !== 'number') {
+        next.demoBalanceUSDInCents = DEMO_WALLET_STARTING_BALANCE_USD_IN_CENTS;
+      }
       challenge.status = 'VERIFIED';
       challenge.interactRef = input.interactRef;
       challenge.receivedHash = input.receivedHash;
@@ -218,5 +230,18 @@ export class MemoryIdentityRepository implements IdentityRepository {
       if (error instanceof DomainError) throw error;
       throw new DomainError(500, 'ACTIVE_WALLET_REPLACEMENT_ABORTED');
     }
+  }
+
+  async adjustDemoBalance(
+    userId: string,
+    deltaCents: number,
+  ): Promise<'OK' | 'INSUFFICIENT' | 'NO_WALLET'> {
+    if (!Number.isInteger(deltaCents) || deltaCents === 0) return 'OK';
+    const wallet = this.state.wallets.find((item) => item.userId === userId && item.isActive && item.isVerified);
+    if (!wallet) return 'NO_WALLET';
+    const next = wallet.demoBalanceUSDInCents + deltaCents;
+    if (next < 0) return 'INSUFFICIENT';
+    wallet.demoBalanceUSDInCents = next;
+    return 'OK';
   }
 }
