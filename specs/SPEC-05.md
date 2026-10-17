@@ -9,7 +9,7 @@
 | **Tareas Asociadas (`taskboard.md`)** | `T-F2-FE1-02`, `T-F2-BE1-01`, `T-F2-AI1-01` |
 | **Dependencias Previas** | `SPEC-00`, `SPEC-01`, `SPEC-02`, `SPEC-03`, `SPEC-04` |
 | **Estado del Ciclo SDD** | `Redactada (DRAFTED)` |
-| **Última Actualización** | `2026-10-16` (v0.3.0) |
+| **Última Actualización** | `2026-10-16` (v0.3.1) |
 | **Aprobada por / fecha** | `—` |
 
 ---
@@ -57,13 +57,13 @@ Especificar el motor transaccional de **contratación y negociación precontract
 | **`FE-2`** | *(Sin tarea directa en `SPEC-05`)* | `apps/web/src/canvas/`, `apps/web/src/animations/` | Sin intervención requerida en la bandeja de negociación transaccional. | Sin modificación de archivos en `SPEC-05`. |
 | **`BE-1`** | `T-F2-BE1-01` | `apps/api/src/modules/negotiations/`, `packages/shared-schemas/src/` (contratos de negociación y creación de orden) | Implementación de `NegotiationsModule`, `ProposalsService`, `OrderCreationService`: postulación de freelancers, contraofertas a la baja, bloqueo pesimista `FOR UPDATE` en Camino 1, cierre individual en Camino 2, contratación de Gig fijo con aceptación bilateral y creación atómica de `TaskOrder` + `TaskAcceptanceCriterion` + `TaskTechnicalConstraint` + `EscrowLedger`. | Endpoints `/api/v1/negotiations/*` y suite de integración de concurrencia y seguridad en Vitest + Supertest. |
 | **`BE-2`** | *(Sin tarea directa; provee lecturas de `MarketplaceModule`)* | `apps/api/src/modules/marketplace/` | Proveer métodos de lectura de `Gig` y `ClientTaskPublication` consumidos por `NegotiationsModule`. | Interfaces estables de `SPEC-04`. |
-| **`AI-1`** | `T-F2-AI1-01` | `packages/shared-schemas/src/modality.ts`, `apps/api/src/modules/ai-advisor/modality-classifier.service.ts` | Clasificador determinista de modalidad auditable (`IMAGE`, `TEXT` o `null`) según categoría y `DeliverableMediaType`, más generador de metadatos de capacidades de auditoría para la `TaskOrderCard`. | Servicio y funciones puras cubiertos al 100 % por tests unitarios en Vitest. |
+| **`AI-1`** | `T-F2-AI1-01` | `packages/shared-schemas/src/modality.ts` | Función pura `resolveMvpAiAuditableModality` (`IMAGE`, `TEXT` o `null`). `BE-1` la llama al armar la `TaskOrderCard`. `AI-1` no crea archivos en `apps/api`. | La función pura cubierta al 100 % por tests unitarios en Vitest. |
 
 ### 3.2. Orden de Congelación de Contratos y Mocks
 1. **Día 1 (Congelación de Contratos):** `BE-1`, `FE-1` y `AI-1` congelan en `packages/shared-schemas` los esquemas `CreateNegotiationProposalInputSchema`, `SendNegotiationMessageInputSchema`, `AcceptProposalPath1InputSchema`, `CloseProposalPath2InputSchema`, `RequestFixedGigOrderInputSchema` y `NegotiationThreadViewSchema`, junto con sus mocks en `packages/shared-schemas/src/mocks.ts`.
 2. **Trabajo Simultáneo sin Bloqueo:**
    - `FE-1` construye la bandeja de ofertas del Buyer y la sala de negociación consumiendo los mocks de `@taskstream/shared-schemas`.
-   - `AI-1` implementa y prueba `ModalityClassifierService` apoyándose en `resolveMvpAiAuditableModality`.
+   - `AI-1` implementa y prueba `resolveMvpAiAuditableModality` en `packages/shared-schemas`. `BE-1` la invoca desde `OrderCreationService`.
    - `BE-1` implementa las transacciones ACID en `apps/api/src/modules/negotiations/` con Prisma y PostgreSQL.
 
 ---
@@ -308,7 +308,7 @@ La autenticación es la de `SPEC-02` v1.5.0: sesión HMAC local, no Clerk. El BF
 - **Descripción:** Al crearse cualquier `TaskOrder` (tanto por Gig fijo como por Camino 1 de publicación), el clasificador de `AI-1` debe determinar de forma inmutable si la orden tendrá auditoría del Consejero de IA (`IMAGE` o `TEXT`) o validación determinista + revisión humana (`null`).
 - **Escenario 1 (Camino Feliz — Asignación exacta en las 6 categorías del MVP):**
   - **Dado** el conjunto de los 6 `DeliverableMediaType` del MVP al instanciar órdenes en `OrderCreationService`,
-  - **Cuando** se ejecuta `ModalityClassifierService.resolveForOrder(category, expectedMediaType)`,
+  - **Cuando** se ejecuta `resolveMvpAiAuditableModality(expectedMediaType)`,
   - **Entonces** asigna `aiAuditableModality = "IMAGE"` para `IMAGE_RASTER_VECTOR`, `"TEXT"` para `DOCUMENT_TEXT`, y `null` para `CODE_ARCHIVE`, `DATA_CAMPAIGN`, `VIDEO_STREAM` y `AUDIO_TRACK`, como valor derivado de `expectedMediaType` (no se almacena en `task_orders`).
 - **Escenario 2 (Error de Validación o Violación de Regla — Rechazo de manipulación manual de `aiAuditableModality`):**
   - **Dado** un payload o contrato donde se intente forzar `aiAuditableModality = "TEXT"` en una orden cuyo `expectedMediaType` es `VIDEO_STREAM`,
@@ -320,11 +320,11 @@ La autenticación es la de `SPEC-02` v1.5.0: sesión HMAC local, no Clerk. El BF
 ## 9. Plan de Pruebas y Criterios de Verificación (`SPEC TESTEADA`)
 
 ### 9.1. Pruebas Unitarias (Vitest)
-- **Archivo objetivo:** `packages/shared-schemas/src/__tests__/negotiations-schemas.spec.ts` y `apps/api/src/modules/ai-advisor/__tests__/modality-classifier.service.spec.ts`.
+- **Archivo objetivo:** `packages/shared-schemas/src/__tests__/negotiations-schemas.spec.ts` y las pruebas de `resolveMvpAiAuditableModality` en `packages/shared-schemas`.
 - **Casos mínimos requeridos:**
   - Verificación de `RF-01`: rechazo en `FreelancerNegotiationProposalSchema` y `SendNegotiationMessageInputSchema` cuando el monto propuesto supera `initialBudgetUSDInCents` o es `< 100` centavos.
   - Verificación de `RF-02` y `RF-04`: validación de `splitSingleBlockEscrow` (`Math.floor((total * 4) / 100)` y `total - fee`) para montos exactos e impares (ej. `101`, `9999`, `15000` centavos) y exclusión mutua `Boolean(gigId) !== Boolean(proposalId)` en `TaskOrderCardSchema`.
-  - Verificación de `RF-05`: pruebas exhaustivas sobre los 6 `DeliverableMediaType` en `resolveMvpAiAuditableModality` y `ModalityClassifierService`.
+  - Verificación de `RF-05`: pruebas exhaustivas sobre los 6 `DeliverableMediaType` en `resolveMvpAiAuditableModality`.
 
 ### 9.2. Pruebas de Integración de API y Base de Datos (Supertest + Prisma)
 - **Archivo objetivo:** `apps/api/test/negotiations.e2e-spec.ts`.
@@ -373,3 +373,4 @@ La autenticación es la de `SPEC-02` v1.5.0: sesión HMAC local, no Clerk. El BF
 | `0.1.0` | `2026-10-16` | `Cursor` + Equipo Humano | Redacción inicial completa de `SPEC-05` (12 secciones, motor de negociación a la baja, bifurcación Camino 1 / Camino 2, contratación de Gig fijo, blindaje anti-Self-Dealing/anti-TOCTOU/FOR UPDATE, clasificador determinista `resolveMvpAiAuditableModality` y 5 RF con escenarios BDD). |
 | `0.2.0` | `2026-10-16` | `Cursor` | Alineación con el modelo de datos v2: origen `gigId` XOR `proposalId` sin `publication_id` en la orden, montos y wallets en `EscrowLedger` (incluidas las `PlatformWallet`), ausencia de relojes en lugar de `initialDeadlineAt`, modalidad IA derivada, `scheduled_timer_jobs`, FK compuesta e índices parciales en propuestas, y nombres de `CHECK` y triggers reales de `domain_checks.sql`. |
 | `0.3.0` | `2026-10-16` | `Cursor` | Se retira Clerk. Las rutas de negociación usan `SessionAuthGuard` y comparan propiedad con `req.userId`. El código de sesión ausente es `401 UNAUTHENTICATED`, igual que `SPEC-02`. |
+| `0.3.1` | `2026-10-16` | `Cursor` | El clasificador de `AI-1` queda en `packages/shared-schemas`. No se crea un servicio en `apps/api`. `BE-1` llama a `resolveMvpAiAuditableModality` al crear la orden. |
