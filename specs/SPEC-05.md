@@ -9,7 +9,7 @@
 | **Tareas Asociadas (`taskboard.md`)** | `T-F2-FE1-02`, `T-F2-BE1-01`, `T-F2-AI1-01` |
 | **Dependencias Previas** | `SPEC-00`, `SPEC-01`, `SPEC-02`, `SPEC-03`, `SPEC-04` |
 | **Estado del Ciclo SDD** | `Redactada (DRAFTED)` |
-| **Última Actualización** | `2026-10-16` |
+| **Última Actualización** | `2026-10-16` (v0.3.0) |
 | **Aprobada por / fecha** | `—` |
 
 ---
@@ -179,15 +179,17 @@ export const NegotiationMessageViewSchema = z.object({
 
 ### 5.1. Endpoints REST (`apps/api`)
 
+La autenticación es la de `SPEC-02` v1.5.0: sesión HMAC local, no Clerk. El BFF reenvía la cookie httpOnly `taskstream_session` como `Authorization: Bearer`. `SessionAuthGuard` fija `req.userId` = `User.id`. Sin sesión válida la respuesta es `401 UNAUTHENTICATED`. No hay webhook de Clerk ni columna `clerk_id`.
+
 | Método y Ruta | Guardas de Seguridad | Request (Params / Query / Body) | Response `200/201` | Códigos de Error Esperados |
 | :--- | :--- | :--- | :--- | :--- |
-| `POST /api/v1/negotiations/proposals` | `ClerkAuthGuard`, `WalletVerifiedGuard` | Body: `CreateNegotiationProposalInputSchema` + Header `Idempotency-Key` | `201 Created` → `FreelancerNegotiationProposal` en `IN_NEGOTIATION` + primer `NegotiationMessage`. | `400 OFFER_EXCEEDS_INITIAL_BUDGET`, `403 SELF_DEALING_FORBIDDEN`, `403 WALLET_NOT_VERIFIED`, `409 ACTIVE_PROPOSAL_ALREADY_EXISTS`, `409 PUBLICATION_NOT_OPEN` |
-| `GET /api/v1/negotiations/publications/:publicationId/proposals` | `ClerkAuthGuard` (Solo Buyer titular de la publicación) | Param: `publicationId` | Bandeja de ofertas recibidas con resumen del perfil y wallet verificada de cada Freelancer postulante. | `403 FORBIDDEN_PUBLICATION_INBOX`, `404 PUBLICATION_NOT_FOUND` |
-| `GET /api/v1/negotiations/proposals/:proposalId` | `ClerkAuthGuard` (Solo `buyerId` o `freelancerId` de esa propuesta) | Param: `proposalId` | Detalle de `NegotiationProposal` + historial cronológico de `NegotiationMessage`. | `403 PROPOSAL_ACCESS_FORBIDDEN`, `404 PROPOSAL_NOT_FOUND` |
-| `POST /api/v1/negotiations/proposals/:proposalId/messages` | `ClerkAuthGuard`, `WalletVerifiedGuard` | Param: `proposalId`, Body: `SendNegotiationMessageInputSchema` + Header `Idempotency-Key` | `201 Created` → `NegotiationMessageView` (si incluye `offeredAmountUSDInCents`, actualiza `proposedBudgetUSDInCents` siempre que sea `<= initialBudgetUSDInCents`). | `400 OFFER_EXCEEDS_INITIAL_BUDGET`, `403 PROPOSAL_ACCESS_FORBIDDEN`, `409 PROPOSAL_NOT_IN_NEGOTIATION` |
-| `POST /api/v1/negotiations/proposals/:proposalId/accept` | `ClerkAuthGuard`, `WalletVerifiedGuard` | Param: `proposalId`, Body: `AcceptProposalPath1InputSchema` + Header `Idempotency-Key` | `201 Created` → `{ proposalStatus: 'AGREED_PATH_1', publicationStatus: 'AGREED_AND_LOCKED', taskOrder: TaskOrderCard }` (en `PENDING_ESCROW_FUNDING`). | `403 FORBIDDEN_PROPOSAL_ACCEPTANCE`, `409 OFFER_TERMS_CHANGED_CONFLICT`, `409 PUBLICATION_ALREADY_LOCKED`, `422 WALLET_COLLISION_DETECTED` |
-| `POST /api/v1/negotiations/proposals/:proposalId/close` | `ClerkAuthGuard` (Buyer o Freelancer de la propuesta) | Param: `proposalId`, Body: `CloseProposalPath2InputSchema` | `200 OK` → `{ proposalStatus: 'DISCREPANCY_CLOSED_PATH_2', publicationStatus: 'OPEN_FOR_PROPOSALS' }`. | `403 PROPOSAL_ACCESS_FORBIDDEN`, `409 PROPOSAL_ALREADY_RESOLVED` |
-| `POST /api/v1/negotiations/gigs/:gigId/hire` | `ClerkAuthGuard`, `WalletVerifiedGuard` | Param: `gigId`, Body: `HireFixedGigInputSchema` + Header `Idempotency-Key` | `201 Created` → `{ taskOrder: TaskOrderCard }` en `PENDING_ESCROW_FUNDING` tras validación de Gig activo y acuerdo bilateral al precio fijo. | `400 GIG_PRICE_NOT_NEGOTIABLE`, `403 SELF_DEALING_FORBIDDEN`, `409 GIG_PRICE_CHANGED_OR_INACTIVE` |
+| `POST /api/v1/negotiations/proposals` | `SessionAuthGuard`, `WalletVerifiedGuard` | Body: `CreateNegotiationProposalInputSchema` + Header `Idempotency-Key` | `201 Created` → `FreelancerNegotiationProposal` en `IN_NEGOTIATION` + primer `NegotiationMessage`. | `401 UNAUTHENTICATED`, `400 OFFER_EXCEEDS_INITIAL_BUDGET`, `403 SELF_DEALING_FORBIDDEN`, `403 WALLET_NOT_VERIFIED`, `409 ACTIVE_PROPOSAL_ALREADY_EXISTS`, `409 PUBLICATION_NOT_OPEN` |
+| `GET /api/v1/negotiations/publications/:publicationId/proposals` | `SessionAuthGuard` (Solo Buyer titular de la publicación) | Param: `publicationId` | Bandeja de ofertas recibidas con resumen del perfil y wallet verificada de cada Freelancer postulante. | `401 UNAUTHENTICATED`, `403 FORBIDDEN_PUBLICATION_INBOX`, `404 PUBLICATION_NOT_FOUND` |
+| `GET /api/v1/negotiations/proposals/:proposalId` | `SessionAuthGuard` (Solo `buyerId` o `freelancerId` de esa propuesta) | Param: `proposalId` | Detalle de `NegotiationProposal` + historial cronológico de `NegotiationMessage`. | `401 UNAUTHENTICATED`, `403 PROPOSAL_ACCESS_FORBIDDEN`, `404 PROPOSAL_NOT_FOUND` |
+| `POST /api/v1/negotiations/proposals/:proposalId/messages` | `SessionAuthGuard`, `WalletVerifiedGuard` | Param: `proposalId`, Body: `SendNegotiationMessageInputSchema` + Header `Idempotency-Key` | `201 Created` → `NegotiationMessageView` (si incluye `offeredAmountUSDInCents`, actualiza `proposedBudgetUSDInCents` siempre que sea `<= initialBudgetUSDInCents`). | `401 UNAUTHENTICATED`, `400 OFFER_EXCEEDS_INITIAL_BUDGET`, `403 PROPOSAL_ACCESS_FORBIDDEN`, `409 PROPOSAL_NOT_IN_NEGOTIATION` |
+| `POST /api/v1/negotiations/proposals/:proposalId/accept` | `SessionAuthGuard`, `WalletVerifiedGuard` | Param: `proposalId`, Body: `AcceptProposalPath1InputSchema` + Header `Idempotency-Key` | `201 Created` → `{ proposalStatus: 'AGREED_PATH_1', publicationStatus: 'AGREED_AND_LOCKED', taskOrder: TaskOrderCard }` (en `PENDING_ESCROW_FUNDING`). | `401 UNAUTHENTICATED`, `403 FORBIDDEN_PROPOSAL_ACCEPTANCE`, `409 OFFER_TERMS_CHANGED_CONFLICT`, `409 PUBLICATION_ALREADY_LOCKED`, `422 WALLET_COLLISION_DETECTED` |
+| `POST /api/v1/negotiations/proposals/:proposalId/close` | `SessionAuthGuard` (Buyer o Freelancer de la propuesta) | Param: `proposalId`, Body: `CloseProposalPath2InputSchema` | `200 OK` → `{ proposalStatus: 'DISCREPANCY_CLOSED_PATH_2', publicationStatus: 'OPEN_FOR_PROPOSALS' }`. | `401 UNAUTHENTICATED`, `403 PROPOSAL_ACCESS_FORBIDDEN`, `409 PROPOSAL_ALREADY_RESOLVED` |
+| `POST /api/v1/negotiations/gigs/:gigId/hire` | `SessionAuthGuard`, `WalletVerifiedGuard` | Param: `gigId`, Body: `HireFixedGigInputSchema` + Header `Idempotency-Key` | `201 Created` → `{ taskOrder: TaskOrderCard }` en `PENDING_ESCROW_FUNDING` tras validación de Gig activo y acuerdo bilateral al precio fijo. | `401 UNAUTHENTICATED`, `400 GIG_PRICE_NOT_NEGOTIABLE`, `403 SELF_DEALING_FORBIDDEN`, `409 GIG_PRICE_CHANGED_OR_INACTIVE` |
 
 ### 5.2. Jobs y Colas en BullMQ (`apps/api/src/modules/timers`)
 - Conforme a `CONTEXT.md` §5.2 (`INV-05-03`), la aceptación mutua en `SPEC-05` deja la `TaskOrder` en `PENDING_ESCROW_FUNDING` y el `EscrowLedger` en `AWAITING_FUNDS`. **Los temporizadores contractuales (`INITIAL_DELIVERY_7D`, `DELIVERY_REVIEW_32H`, `FINAL_CLAIM_WINDOW_30M`) no se encolan en `SPEC-05`**, sino exclusivamente cuando `SPEC-06` confirma la captura del depósito en Rafiki (`ESCROW_LOCKED`).
@@ -225,7 +227,7 @@ export const NegotiationMessageViewSchema = z.object({
 
 ### 7.1. Validación de Frontera y Autorización por Rol / Modo
 1. **Aislamiento Estricto entre Freelancers Competidores (Anti-Bid Sniping):**
-   - Un Freelancer autenticado solo puede consultar o enviar mensajes en una `NegotiationProposal` donde `proposal.freelancerId === req.user.id`. Si intenta acceder al `proposalId` de otro Freelancer o al endpoint `/publications/:publicationId/proposals` reservado al Buyer titular, el backend rechaza con `403 PROPOSAL_ACCESS_FORBIDDEN` o `403 FORBIDDEN_PUBLICATION_INBOX`.
+   - Un Freelancer con sesión local solo puede consultar o enviar mensajes en una `NegotiationProposal` donde `proposal.freelancerId === req.userId`. Si intenta acceder al `proposalId` de otro Freelancer o al endpoint `/publications/:publicationId/proposals` reservado al Buyer titular, el backend rechaza con `403 PROPOSAL_ACCESS_FORBIDDEN` o `403 FORBIDDEN_PUBLICATION_INBOX`. `req.userId` es el `User.id` resuelto por `SessionAuthGuard`.
 2. **Prohibición Absoluta de Auto-Contratación (*Anti Self-Dealing & Wash Trading*):**
    - En `POST /api/v1/negotiations/proposals` y `POST /api/v1/negotiations/gigs/:gigId/hire`, el servidor verifica que:
      - `buyerUserId !== sellerUserId` (un mismo usuario no puede contratarse a sí mismo cambiando de modo `BUYER` a `SELLER`).
@@ -357,6 +359,7 @@ export const NegotiationMessageViewSchema = z.object({
 1. **Protección Anti-TOCTOU mediante confirmación explícita de términos (`expectedAmountUSDInCents` y `expectedDeliveryDays`):** Ninguna aceptación en Camino 1 ni contratación de Gig fijo se procesa a ciegas; el cliente debe firmar en el payload el monto y plazo exactos que está aceptando.
 2. **Aislamiento total entre propuestas competidoras:** Los Freelancers postulantes no conocen ni las identidades ni los montos ofertados por otros Freelancers en la misma publicación (subasta ciega a la baja controlada por el Buyer).
 3. **Congelamiento inmutable de criterios y restricciones al nacer la `TaskOrder`:** Al pasar a `PENDING_ESCROW_FUNDING`, los criterios de aceptación se copian a `task_acceptance_criteria` y no pueden ser editados posteriormente.
+4. **Sesión local, sin Clerk:** Ofertar, negociar, aceptar, cerrar y contratar un Gig exigen `SessionAuthGuard` de `SPEC-02`. La identidad es `req.userId` (`User.id`). Sin sesión la respuesta es `401 UNAUTHENTICATED`. No se acepta un JWT de Clerk ni un `clerk_id`.
 
 ### 11.2. Preguntas Abiertas (Si las hubiera)
 - Las decisiones estratégicas pendientes sobre el **TTL máximo para que el Buyer fondee una orden en `PENDING_ESCROW_FUNDING`** (evitando bloqueo indefinido del Freelancer sin fondos en escrow) y la **confirmación explícita de disponibilidad del Seller en Gigs fijos** se plantean detalladamente en la sección final de `planning/taskboard.md`.
@@ -369,3 +372,4 @@ export const NegotiationMessageViewSchema = z.object({
 | :--- | :--- | :--- | :--- |
 | `0.1.0` | `2026-10-16` | `Cursor` + Equipo Humano | Redacción inicial completa de `SPEC-05` (12 secciones, motor de negociación a la baja, bifurcación Camino 1 / Camino 2, contratación de Gig fijo, blindaje anti-Self-Dealing/anti-TOCTOU/FOR UPDATE, clasificador determinista `resolveMvpAiAuditableModality` y 5 RF con escenarios BDD). |
 | `0.2.0` | `2026-10-16` | `Cursor` | Alineación con el modelo de datos v2: origen `gigId` XOR `proposalId` sin `publication_id` en la orden, montos y wallets en `EscrowLedger` (incluidas las `PlatformWallet`), ausencia de relojes en lugar de `initialDeadlineAt`, modalidad IA derivada, `scheduled_timer_jobs`, FK compuesta e índices parciales en propuestas, y nombres de `CHECK` y triggers reales de `domain_checks.sql`. |
+| `0.3.0` | `2026-10-16` | `Cursor` | Se retira Clerk. Las rutas de negociación usan `SessionAuthGuard` y comparan propiedad con `req.userId`. El código de sesión ausente es `401 UNAUTHENTICATED`, igual que `SPEC-02`. |
