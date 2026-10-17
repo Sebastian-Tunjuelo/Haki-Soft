@@ -1462,3 +1462,21 @@ Hay nuevo push a main, traigamos pull de main a la rama front. Con todo lo nuevo
 ```
 
 
+### Prompt #045 — Landing Headshotly → TaskStream
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Porta todos los módulos del HTML de referencia Headshotly a la home local de TaskStream (hero enriquecido, trust, how, gallery, features, pricing 96/4, band, testimonials, tabla comparativa, FAQ, CTA final, footer de columnas y anchors en navbar), conservando hero wallet, tema y rutas existentes.
+* **Archivos creados o modificados:** `apps/web/src/components/home/landing-modules.tsx`, `apps/web/app/page.tsx`, `apps/web/app/globals.css`, `apps/web/app/layout.tsx`, `apps/web/src/components/navbar.tsx`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+C:\Users\jorge\Downloads\headshotly-landing.html Bueno, en base al front que tenemos ahora lo que haremos es agregarle los modulos que estan en headshotly, para que se vea mas profesional, es decir sobre lo que tengo yo en front local, le agregaremos los modulos que estan en head. todo
+```
+
+Seguido de:
+
+```
+Todo lo que esta en html, traelo a mi front, es todo
+```
+

@@ -84,6 +84,15 @@ export function Navbar() {
             >
               Inicio
             </Link>
+            <Link href="/#how" className="nav-link nav-link--anchor">
+              Cómo funciona
+            </Link>
+            <Link href="/#pricing" className="nav-link nav-link--anchor">
+              Precios
+            </Link>
+            <Link href="/#faq" className="nav-link nav-link--anchor">
+              FAQ
+            </Link>
             <Link
               href="/marketplace"
               className={`nav-link ${pathname?.startsWith('/marketplace') ? 'active' : ''}`}

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { Navbar } from '@/src/components/navbar';
 import { WorkRequestAlert } from '@/src/components/work-request-alert';
 import { SmoothScrollProvider } from '@/app/providers/smooth-scroll';
@@ -39,21 +40,39 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <main className="app-container" style={{ padding: '36px 20px 48px', flex: 1 }}>
               {children}
             </main>
-            <footer className="app-footer">
-              <div
-                className="app-container"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <strong>TaskStream AI</strong> · Custodia, revisión IA y liquidación Open Payments
+            <footer className="app-footer app-footer--rich">
+              <div className="app-container">
+                <div className="app-footer__cols">
+                  <div>
+                    <Link href="/" className="app-footer__brand">
+                      TaskStream<span> AI</span>
+                    </Link>
+                    <p className="ld-muted" style={{ marginTop: 8, fontSize: '0.9rem' }}>
+                      Marketplace con escrow Open Payments para Buyer y Seller.
+                    </p>
+                  </div>
+                  <div>
+                    <h4>Producto</h4>
+                    <Link href="/marketplace">Marketplace</Link>
+                    <Link href="/#how">Cómo funciona</Link>
+                    <Link href="/#pricing">Precios 96/4</Link>
+                  </div>
+                  <div>
+                    <h4>Cuenta</h4>
+                    <Link href="/sign-in">Iniciar sesión</Link>
+                    <Link href="/onboarding/wallet">Billetera</Link>
+                    <Link href="/settings/mode">Modo Buyer/Seller</Link>
+                  </div>
+                  <div>
+                    <h4>Recursos</h4>
+                    <Link href="/#faq">FAQ</Link>
+                    <Link href="/#reviews">Flujo</Link>
+                    <Link href="/activity">Actividad</Link>
+                  </div>
                 </div>
-                <div>96% seller · 4% plataforma · GNAP · WebGL</div>
+                <p className="app-footer__copy">
+                  © 2026 TaskStream AI · 96% seller · 4% plataforma · GNAP · WebGL
+                </p>
               </div>
             </footer>
           </div>
