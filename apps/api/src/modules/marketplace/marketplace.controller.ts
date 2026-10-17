@@ -88,6 +88,14 @@ export class MarketplaceController {
     return this.marketplace.updateGig(request.userId!, gigId, body);
   }
 
+  /** El dueño elimina (desactiva) su Gig; deja de aparecer en el catálogo. */
+  @Delete('gigs/:gigId')
+  @HttpCode(200)
+  @UseGuards(SessionAuthGuard, WalletVerifiedGuard)
+  deleteGig(@Req() request: AuthenticatedRequest, @Param('gigId') gigId: string) {
+    return this.marketplace.deleteGig(request.userId!, gigId);
+  }
+
   @Patch('gigs/:gigId/page')
   @UseGuards(SessionAuthGuard, WalletVerifiedGuard)
   updateGigPage(
