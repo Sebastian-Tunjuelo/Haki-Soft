@@ -1,4 +1,5 @@
 export type ActiveMode = 'BUYER' | 'SELLER';
+export type PlatformRole = 'USER' | 'ADMIN';
 
 export type ChallengeStatus = 'PENDING_REDIRECT' | 'VERIFIED' | 'FAILED' | 'EXPIRED';
 
@@ -9,6 +10,7 @@ export interface StoredUser {
   avatarUrl: string | null;
   countryCode: string;
   activeMode: ActiveMode;
+  platformRole: PlatformRole;
 }
 
 export interface LocalUserInput {
@@ -17,6 +19,9 @@ export interface LocalUserInput {
   displayName: string;
   countryCode: string;
 }
+
+/** Saldo inicial demo ($1,000.00) al vincular billetera. */
+export const DEMO_WALLET_STARTING_BALANCE_USD_IN_CENTS = 100_000;
 
 export interface StoredWallet {
   id: string;
@@ -29,6 +34,8 @@ export interface StoredWallet {
   isVerified: boolean;
   isActive: boolean;
   verifiedAt: Date | null;
+  /** Centavos USD del ledger demo (fondeo/liberación simulados). */
+  demoBalanceUSDInCents: number;
 }
 
 export interface StoredChallenge {
@@ -87,6 +94,14 @@ export interface IdentityRepository {
     receivedHash: string;
     verifiedAt: Date;
   }): Promise<void>;
+  /**
+   * Ajusta el saldo demo de la wallet activa verificada.
+   * `deltaCents` negativo = débito (fondeo); positivo = crédito (liberación/reembolso).
+   */
+  adjustDemoBalance(
+    userId: string,
+    deltaCents: number,
+  ): Promise<'OK' | 'INSUFFICIENT' | 'NO_WALLET'>;
 }
 
 export interface WalletDiscovery {
