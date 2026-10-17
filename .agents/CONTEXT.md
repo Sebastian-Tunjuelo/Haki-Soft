@@ -350,6 +350,9 @@ export const TaskLifecycleStatusEnum = z.enum([
   'AUTO_REFUNDED_EXTENDED_EXPIRED', // No entregó dentro de la extensión aprobada → reembolso 100%
 ]);
 
+/** Centavos USD enteros en [100, 50_000_000]; mismo rango que los CHECK de la base de datos. */
+const MarketplaceAmountUSDInCents = z.number().int().min(100).max(50_000_000);
+
 /**
  * 0. PUBLICACIÓN DE TAREA DEL SOLICITANTE Y NEGOCIACIÓN DE PRESUPUESTO
  */
@@ -360,7 +363,7 @@ export const ClientTaskPublicationSchema = z.object({
   description: z.string().min(20).max(3000),
   category: TaskCategoryEnum,
   expectedMediaType: DeliverableMediaTypeEnum,
-  initialBudgetUSDInCents: z.number().int().positive(),
+  initialBudgetUSDInCents: MarketplaceAmountUSDInCents, // entero en [100, 50_000_000]
   initialDeliveryDays: z.number().int().min(1).max(7).default(7),
   status: z.enum(['OPEN_FOR_PROPOSALS', 'AGREED_AND_LOCKED', 'CANCELLED']),
 });
@@ -369,9 +372,10 @@ export const FreelancerNegotiationProposalSchema = z.object({
   proposalId: z.string().uuid(),
   publicationId: z.string().uuid(),
   buyerUserId: z.string().uuid(),
-  freelancerUserId: z.string().uuid(),
-  initialBudgetUSDInCents: z.number().int().positive(),
-  proposedBudgetUSDInCents: z.number().int().positive(),
+  freelancerUserId: z.string().uuid(), // distinto de buyerUserId
+  initialBudgetUSDInCents: MarketplaceAmountUSDInCents,
+  proposedBudgetUSDInCents: MarketplaceAmountUSDInCents,
+  proposedDeliveryDays: z.number().int().min(1).max(7), // se congela en la orden al acordar
   status: z.enum([
     'IN_NEGOTIATION',
     'AGREED_PATH_1',
@@ -408,9 +412,12 @@ export const DeadlineExtensionRequestSchema = z.object({
   ]),
 });
 
+// Origen: exactamente uno de gigId o proposalId (espejo de chk_task_order_single_origin).
+// publicationId es informativo y solo acompaña a proposalId. buyer.userId ≠ seller.userId.
 export const TaskOrderCardSchema = z.object({
   taskId: z.string().uuid(),
   gigId: z.string().uuid().optional(),
+  proposalId: z.string().uuid().optional(),
   publicationId: z.string().uuid().optional(),
   title: z.string().min(10).max(120),
   category: TaskCategoryEnum,
@@ -433,9 +440,9 @@ export const TaskOrderCardSchema = z.object({
     escrowWalletAddress: z.string().url().default('https://ilp.interledger-test.dev/taskstream-escrow'),
     platformOwnerWalletAddress: z.string().url()
       .describe('Wallet distinta del escrow que recibe el 4% de comisión del dueño/plataforma'),
-    totalAmountUSDInCents: z.number().int().positive(),
-    freelancerPayoutUSDInCents: z.number().int().positive().describe('96% para el Freelancer'),
-    platformFeeUSDInCents: z.number().int().nonnegative().describe('4% transferido a platformOwnerWalletAddress'),
+    totalAmountUSDInCents: MarketplaceAmountUSDInCents,
+    freelancerPayoutUSDInCents: z.number().int().positive().describe('96%: total - platformFee'),
+    platformFeeUSDInCents: z.number().int().nonnegative().describe('4%: floor(total * 4 / 100) → platformOwnerWalletAddress'),
     buyerAssumesDoubleFxConversion: z.literal(true),
     deliveryReviewHours: z.literal(32),
     finalClaimWindowMinutes: z.literal(30),
@@ -454,7 +461,7 @@ export const TaskOrderCardSchema = z.object({
   }),
   revisionTerms: z.object({
     maxRevisionsAllowed: z.literal(2).describe('Máximo 2 correcciones globales por orden; no se reinicia con extensión'),
-    revisionsUsed: z.number().int().min(0).max(2).default(0),
+    revisionsUsed: z.number().int().min(0).max(2).default(0), // se lee de v_task_order_revision_usage
     arbitrationAuthorityOnDispute: z.literal('PLATFORM_ADMIN'),
     adminDecisionModality: z.literal('STRICT_BINARY_JUSTIFIED'),
   }),
