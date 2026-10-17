@@ -174,7 +174,7 @@ Sin preguntas abiertas bloqueantes.
 Decisiones operativas:
 
 1. La herramienta de IA de este turno se registra como `Cursor`, junto a la ya declarada `Antigravity` en `AI_USAGE.md`.
-2. `SPEC-04` a `SPEC-12` permanecen como `Pendiente de redactar` hasta su propio turno de redacción.
+2. `SPEC-04` a `SPEC-12` ya tienen archivo. El estado de cada una vive en su cabecera y en `specs/README.md`.
 3. El validador oficial es `.agents/skills/taskstream-spec/scripts/check-spec.mjs`.
 
 ---
@@ -185,3 +185,4 @@ Decisiones operativas:
 | :--- | :--- | :--- | :--- | :--- |
 | `1.0.0` | `2026-10-16` | `Redactada (DRAFTED)` | `Cursor` + `AI-1` | Redacción inicial de `SPEC-00`: carpeta `specs/`, plantilla de 12 secciones, índice `SPEC-00` a `SPEC-12` y trazabilidad de IA. |
 | `1.1.0` | `2026-10-16` | `Testeada (TESTED)` | `Cursor` + `AI-1` | `check-spec.mjs` sobre `SPEC-00` terminó con 0 errores. El índice y la plantilla existen. Sigue sin aprobación del líder. |
+| `1.2.0` | `2026-10-17` | `Testeada (TESTED)` | `Cursor` | Revisión hasta `SPEC-07`. La decisión que las dejaba pendientes de redactar queda cerrada: cada spec lleva su propio estado. |
