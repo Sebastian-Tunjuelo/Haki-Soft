@@ -27,6 +27,7 @@ Este archivo contiene el **registro histórico, secuencial e íntegro (sin omisi
 | **Prompt #015** | `2026-10-16` | `Antigravity` | `Frontend`, `Planeación`, `Gobernanza`, `Tests` | Solicitud de implementación de `SPEC-03` desde los roles FE-1 y FE-2 (motor 3D y scroll). Análisis inicial de requerimientos e inspección de contexto sin alteración de archivos. | Ninguno (análisis e inspección de especificaciones) |
 | **Prompt #016** | `2026-10-16` | `Antigravity` | `Gobernanza` | Solicitud de pausa inmediata por el usuario; detención inmediata de tareas sin modificaciones y reporte de estado. | Ninguno (pausa inmediata confirmada) |
 | **Prompt #017** | `2026-10-16` | `Antigravity` | `Frontend`, `Planeación`, `Gobernanza`, `Tests` | Implementación completa de `SPEC-03` desde FE-1 y FE-2: `SmoothScrollProvider` (Lenis + GSAP ticker con `lagSmoothing(0)`), escena `HeroScene` en Three.js/R3F con mutación de refs (zero-setState), `HeroSceneLoader` aislado (`ssr: false`), composición de landing por FE-1, suite Vitest con 8/8 pruebas verdes y actualización de `taskboard.md` y `SPEC-03.md` a `[DONE]` / `TESTED`. | [`apps/web/app/providers/smooth-scroll.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/providers/smooth-scroll.tsx), [`apps/web/app/scenes/`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/scenes), [`apps/web/app/layout.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/layout.tsx), [`apps/web/app/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/page.tsx), [`apps/web/vitest.config.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/vitest.config.ts), [`apps/web/src/tests/spec-03-scroll-canvas.test.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/tests/spec-03-scroll-canvas.test.ts), [`planning/taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Soft/planning/taskboard.md), [`specs/SPEC-03.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/SPEC-03.md), [`specs/README.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/README.md), [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #020** | `2026-10-16` | `Kiro` | `Gobernanza` | Merge fast-forward de la rama `modelo_datos` hacia `main` sin conflictos. Se integraron 20 archivos del modelo de datos desacoplado (SPEC-04, SPEC-05, schema Prisma v2, migración, domain_checks.sql, shared-schemas, planificación y trazabilidad AI). Registro de trazabilidad actualizado en `AI_USAGE.md`, `promptsAI_USAGE.md` y `prompts/AI_USAGE.md`. | [`AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/prompts/AI_USAGE.md) |
 
 ---
 
@@ -954,3 +955,19 @@ Aunque la sección 5.1 sostiene que el modelo está *"libre de God-Entities"*, e
 
 Teniendo en cuenta esta auditoria y posibles hallazgos propios que hagas a mejorar, modifica el modelado de datos encontrado en el documento architecture e implementa las mejoras del modelado de datos ya planteada, lo principal es desacoplar la entidad TaskOrder y realizar mejores practicas en el MER. Resuelve incongruencias y posibles fallos con el modelado de datos. Estandariza por completo la base de datos en sus 3 pasos. Ayudate de skills si así lo crees conveniente. Y modifica el resto de archivos que se vean relacionados con el modelado de datos
 ````
+
+
+---
+
+### Prompt #020 — Merge fast-forward de `modelo_datos` → `main`
+
+* **Herramienta de IA utilizada:** `Kiro`
+* **Área(s) donde toma lugar:** `Gobernanza`
+* **Resumen de su funcionalidad:**
+  Ejecución del merge de la rama `modelo_datos` hacia `main` sin conflictos (fast-forward). Se integraron 20 archivos del modelo de datos desacoplado: schema Prisma v2, migración SQL `20261017000000_decouple_task_order`, `domain_checks.sql`, paquete `shared-schemas` (money, schemas, mocks, index, contracts.test), `SPEC-04.md`, `SPEC-05.md`, `planning/architecture-overview.md`, `.agents/CONTEXT.md`, `taskboard.md`, `pbp-development.md`, `specs/README.md`, `specs/SPEC-01.md`, `.agents/skills/taskstream-spec/SKILL.md` y archivos de trazabilidad AI. Registro de gobernanza actualizado conforme a `AGENTS.md`.
+* **Archivos creados o modificados:** [`AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/prompts/AI_USAGE.md)
+* **Texto literal del prompt enviado:**
+
+```
+realiza un merge de la rama modelo_datos hacia la rama main y resuleve cualquier conflicto que haya durante este proceso
+```

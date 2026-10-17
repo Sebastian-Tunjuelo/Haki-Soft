@@ -954,3 +954,19 @@ Aunque la sección 5.1 sostiene que el modelo está *"libre de God-Entities"*, e
 
 Teniendo en cuenta esta auditoria y posibles hallazgos propios que hagas a mejorar, modifica el modelado de datos encontrado en el documento architecture e implementa las mejoras del modelado de datos ya planteada, lo principal es desacoplar la entidad TaskOrder y realizar mejores practicas en el MER. Resuelve incongruencias y posibles fallos con el modelado de datos. Estandariza por completo la base de datos en sus 3 pasos. Ayudate de skills si así lo crees conveniente. Y modifica el resto de archivos que se vean relacionados con el modelado de datos
 ````
+
+
+---
+
+### Prompt #020 — Merge fast-forward de `modelo_datos` → `main`
+
+* **Herramienta de IA utilizada:** `Kiro`
+* **Área(s) donde toma lugar:** `Gobernanza`
+* **Resumen de su funcionalidad:**
+  Ejecución del merge de la rama `modelo_datos` hacia `main` sin conflictos (fast-forward). Se integraron 20 archivos del modelo de datos desacoplado: schema Prisma v2, migración SQL `20261017000000_decouple_task_order`, `domain_checks.sql`, paquete `shared-schemas` (money, schemas, mocks, index, contracts.test), `SPEC-04.md`, `SPEC-05.md`, `planning/architecture-overview.md`, `.agents/CONTEXT.md`, `taskboard.md`, `pbp-development.md`, `specs/README.md`, `specs/SPEC-01.md`, `.agents/skills/taskstream-spec/SKILL.md` y archivos de trazabilidad AI. Registro de gobernanza actualizado conforme a `AGENTS.md`.
+* **Archivos creados o modificados:** [`AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/prompts/AI_USAGE.md)
+* **Texto literal del prompt enviado:**
+
+```
+realiza un merge de la rama modelo_datos hacia la rama main y resuleve cualquier conflicto que haya durante este proceso
+```
