@@ -237,6 +237,7 @@ export class PrismaIdentityRepository implements IdentityRepository {
     avatarUrl: string | null;
     countryCode: string;
     activeMode: ActiveMode;
+    platformRole?: 'USER' | 'ADMIN';
   }): StoredUser {
     return {
       id: user.id,
@@ -245,7 +246,27 @@ export class PrismaIdentityRepository implements IdentityRepository {
       avatarUrl: user.avatarUrl,
       countryCode: user.countryCode.trim(),
       activeMode: user.activeMode,
+      platformRole: user.platformRole ?? 'USER',
     };
+  }
+
+  async adjustDemoBalance(
+    userId: string,
+    deltaCents: number,
+  ): Promise<'OK' | 'INSUFFICIENT' | 'NO_WALLET'> {
+    if (!Number.isInteger(deltaCents) || deltaCents === 0) return 'OK';
+    const wallet = await this.db().userWallet.findFirst({
+      where: { userId, isActive: true, isVerified: true },
+    });
+    if (!wallet) return 'NO_WALLET';
+    if (deltaCents < 0 && wallet.demoBalanceUSDInCents + deltaCents < 0) {
+      return 'INSUFFICIENT';
+    }
+    await this.db().userWallet.update({
+      where: { id: wallet.id },
+      data: { demoBalanceUSDInCents: { increment: deltaCents } },
+    });
+    return 'OK';
   }
 
   private toWallet(wallet: {
@@ -259,6 +280,7 @@ export class PrismaIdentityRepository implements IdentityRepository {
     isVerified: boolean;
     isActive: boolean;
     verifiedAt: Date | null;
+    demoBalanceUSDInCents: number;
   }): StoredWallet {
     return {
       id: wallet.id,
@@ -271,6 +293,7 @@ export class PrismaIdentityRepository implements IdentityRepository {
       isVerified: wallet.isVerified,
       isActive: wallet.isActive,
       verifiedAt: wallet.verifiedAt,
+      demoBalanceUSDInCents: wallet.demoBalanceUSDInCents,
     };
   }
 
