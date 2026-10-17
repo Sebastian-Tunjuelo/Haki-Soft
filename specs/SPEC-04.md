@@ -42,7 +42,7 @@ Especificar la arquitectura técnica, los contratos de validación Zod, las inva
 | **`INV-04-01`** | `CONTEXT.md` §4.1, §7.2 | **Catálogo Cerrado de 6 Categorías y Correspondencia 1:1 con `DeliverableMediaType`:** Las únicas categorías válidas son `DIGITAL_MARKETING` (`DATA_CAMPAIGN`), `GRAPHICS_AND_DESIGN` (`IMAGE_RASTER_VECTOR`), `PROGRAMMING_AND_TECH` (`CODE_ARCHIVE`), `TECHNICAL_WRITING_TRANS` (`DOCUMENT_TEXT`), `VIDEO_AND_ANIMATION` (`VIDEO_STREAM`) y `MUSIC_AND_AUDIO` (`AUDIO_TRACK`). | El servidor rechaza con `422 CATEGORY_MEDIA_TYPE_MISMATCH` cualquier `Gig` o `ClientTaskPublication` cuyo `expectedMediaType` o `allowedExtensions` no corresponda a la matriz canónica de su `category`. |
 | **`INV-04-02`** | `CONTEXT.md` §5.1.A, `taskboard.md` §3 Regla 3 | **Gigs a Precio Fijo e Innegociable:** Todo `Gig` publicado por un Freelancer define un `priceUSDInCents` entero positivo (`>= 100` y `<= 50_000_000`, es decir, entre `$1.00 USD` y `$500,000.00 USD`) y un `initialDeliveryDays` entre `1` y `7` días. Su precio jamás admite regateo. | `Gig` expone precio cerrado en centavos; los formularios y endpoints de `Gig` no incluyen campos de contraoferta ni rangos de presupuesto. |
 | **`INV-04-03`** | `CONTEXT.md` §5.1.B, `taskboard.md` §3 Regla 4 | **Publicaciones de Buyer con Presupuesto Tope y Cancelación Condicional:** Una `ClientTaskPublication` nace en `OPEN_FOR_PROPOSALS` con `initialBudgetUSDInCents` (`>= 100` y `<= 50_000_000`) e `initialDeliveryDays` (`1..7`). El Buyer puede cancelarla (`CANCELLED`) **únicamente** mientras siga en `OPEN_FOR_PROPOSALS` (antes de formalizar la aceptación mutua). | La transición `OPEN_FOR_PROPOSALS -> CANCELLED` se ejecuta mediante actualización condicional atómica en base de datos; si la publicación ya está en `AGREED_AND_LOCKED`, retorna `409 PUBLICATION_ALREADY_LOCKED`. |
-| **`INV-04-04`** | `CONTEXT.md` §2.3, `SPEC-02` | **Billetera Open Payments Verificada Obligatoria (`WalletVerifiedGuard`):** Ningún usuario puede publicar o activar un `Gig` ni crear una `ClientTaskPublication` sin poseer una `UserWallet` con `isVerified = true` e `isActive = true`. | Todos los endpoints de mutación en `MarketplaceController` aplican `SessionAuthGuard` + `WalletVerifiedGuard` y extraen la identidad del actor desde `req.user.id`. |
+| **`INV-04-04`** | `CONTEXT.md` §2.3, `SPEC-02` | **Billetera Open Payments Verificada Obligatoria (`WalletVerifiedGuard`):** Ningún usuario puede publicar o activar un `Gig` ni crear una `ClientTaskPublication` sin poseer una `UserWallet` con `isVerified = true` e `isActive = true`. | Todos los endpoints de mutación en `MarketplaceController` aplican `ClerkAuthGuard` + `WalletVerifiedGuard` y extraen la identidad del actor desde `req.user.id`. |
 | **`INV-04-05`** | `CONTEXT.md` §1.1, §8.1 | **Seguridad de W3C Web Monetization (`<link rel="monetization">`):** La etiqueta de micropagos directos solo se emite si `SellerProfile.webMonetizationEnabled === true` y su atributo `href` se resuelve en servidor desde la única `UserWallet` activa y verificada (`https://`) del Freelancer. | Prohibido permitir que el usuario ingrese una URL libre para Web Monetization distinta de su `UserWallet` verificada contra Rafiki (prevención de desvío de micropagos y XSS). |
 | **`INV-04-06`** | `CONTEXT.md` §4.1, §6.1 | **Transparencia de Cobertura del Consejero de IA en el Catálogo:** Solo `GRAPHICS_AND_DESIGN` (`IMAGE_RASTER_VECTOR` → `IMAGE`) y `TECHNICAL_WRITING_TRANS` (`DOCUMENT_TEXT` → `TEXT`) cuentan con auditoría semántica/visual del Consejero de IA en el MVP; las 4 restantes operan con validación determinista + revisión humana. | Cada tarjeta de categoría, Gig y publicación muestra explícitamente la insignia de cobertura (`AI Advisor: Imagen/Texto` vs. `Validación Determinista + Revisión Humana`). |
 
@@ -87,11 +87,14 @@ import {
 
 /**
  * Límites financieros seguros en centavos de USD para prevenir:
- * 1) Comisiones de 0 centavos por truncamiento (floor(100 * 0.04) = 4 >= 1).
+ * 1) Comisiones de 0 centavos por truncamiento (floor(100 * 4 / 100) = 4 >= 1).
  * 2) Integer overflow en PostgreSQL INT4 durante el CHECK (total * 4) / 100.
+ * Fuente única: se importan desde ./money (también los usa splitSingleBlockEscrow).
  */
-export const MIN_MARKETPLACE_AMOUNT_USD_IN_CENTS = 100; // $1.00 USD
-export const MAX_MARKETPLACE_AMOUNT_USD_IN_CENTS = 50_000_000; // $500,000.00 USD
+import {
+  MIN_MARKETPLACE_AMOUNT_USD_IN_CENTS, // 100 = $1.00 USD
+  MAX_MARKETPLACE_AMOUNT_USD_IN_CENTS, // 50_000_000 = $500,000.00 USD
+} from './money';
 
 /**
  * Matriz canónica inmutable que vincula cada una de las 6 categorías del MVP
@@ -234,15 +237,17 @@ export const CreatePublicationInputSchema = z
 
 1. **`Gig` (`gigs`):**
    - Clave foránea `sellerId` → `User.id` (`ON DELETE RESTRICT`).
-   - Restricción SQL activa `chk_gig_price_and_days`: `price_usd_in_cents > 0 AND initial_delivery_days BETWEEN 1 AND 7`.
+   - Restricción SQL activa `chk_gig_price_and_days`: `price_usd_in_cents BETWEEN 100 AND 50000000 AND initial_delivery_days BETWEEN 1 AND 7 AND cardinality(allowed_extensions) >= 1`.
+   - FK compuesta `(category, expected_media_type)` → `task_category_media_types`: la base rechaza combinaciones fuera de `CATEGORY_MEDIA_CONSTRAINTS_MAP`.
    - `defaultCriteriaJson` almacena la estructura validada de criterios y metadatos técnicos por defecto (`defaultCriteria` + `allowedExtensions`) sin duplicar tablas transaccionales hasta que nazca una `TaskOrder`.
    - Índice compuesto `@@index([category, isActive])` para filtrado O(log n) en el catálogo público.
 2. **`ClientTaskPublication` (`client_task_publications`):**
    - Clave foránea `buyerId` → `User.id` (`ON DELETE RESTRICT`).
-   - Restricción SQL activa `chk_publication_budget_and_days`: `initial_budget_usd_in_cents > 0 AND initial_delivery_days BETWEEN 1 AND 7`.
+   - Restricción SQL activa `chk_publication_budget_and_days`: `initial_budget_usd_in_cents BETWEEN 100 AND 50000000 AND initial_delivery_days BETWEEN 1 AND 7 AND republish_count >= 0 AND cardinality(allowed_extensions) >= 1`.
+   - FK compuesta `(category, expected_media_type)` → `task_category_media_types`.
    - Estado gobernado por `PublicationStatus` (`OPEN_FOR_PROPOSALS`, `AGREED_AND_LOCKED`, `CANCELLED`).
    - Índice compuesto `@@index([category, status])` para el tablón de tareas abiertas.
-3. **Verificación de 3NF:**
+3. **Verificación de normalización (modelo v2, `architecture-overview.md` §5.2.3):**
    - Los datos de billetera (`walletAddressUrl`, `currencyCode`, `isVerified`, `isActive`) jamás se duplican dentro de `gigs` ni de `client_task_publications`; se resuelven mediante `JOIN` con `user_wallets` (`WHERE is_active = true AND is_verified = true`) y `seller_profiles` (`web_monetization_enabled`).
 
 ---
@@ -256,12 +261,12 @@ export const CreatePublicationInputSchema = z
 | `GET /api/v1/marketplace/categories` | Público (con rate limit IP) | Sin parámetros | Lista estática enriquecida de las 6 categorías con `expectedMediaType`, `allowedExtensions`, `aiAuditableModality` y conteos de Gigs activos / publicaciones abiertas. | `429 TOO_MANY_REQUESTS` |
 | `GET /api/v1/marketplace/gigs` | Público (con rate limit IP) | Query: `category?: TaskCategory`, `maxPriceCents?: number`, `maxDays?: number`, `cursor?: string`, `limit?: 1..24` | `{ items: GigCard[], nextCursor: string \| null }` (solo `isActive = true` y donde el Seller mantiene una `UserWallet` verificada activa). | `400 VALIDATION_ERROR` |
 | `GET /api/v1/marketplace/gigs/:gigId` | Público | Param: `gigId` (UUID) | `GigCard` completo incluyendo metadatos de Web Monetization resueltos en servidor. | `404 GIG_NOT_FOUND` |
-| `POST /api/v1/marketplace/gigs` | `SessionAuthGuard`, `WalletVerifiedGuard` | Body: `CreateGigInputSchema` + Header `Idempotency-Key` | `201 Created` → `GigCard` (crea automáticamente `SellerProfile` por defecto si el usuario verificado aún no lo tenía). | `401 UNAUTHORIZED`, `403 WALLET_NOT_VERIFIED`, `422 CATEGORY_MEDIA_TYPE_MISMATCH` |
-| `PATCH /api/v1/marketplace/gigs/:gigId` | `SessionAuthGuard`, `WalletVerifiedGuard` | Param: `gigId`, Body: `UpdateGigInputSchema` (`isActive`, `title`, `description`, `priceUSDInCents`, `initialDeliveryDays`, `defaultCriteria`) | `200 OK` → `GigCard` actualizado (el cambio de precio solo aplica a contrataciones futuras, nunca a `TaskOrder` ya creadas). | `403 FORBIDDEN_GIG_OWNERSHIP`, `404 GIG_NOT_FOUND`, `422 CATEGORY_MEDIA_TYPE_MISMATCH` |
+| `POST /api/v1/marketplace/gigs` | `ClerkAuthGuard`, `WalletVerifiedGuard` | Body: `CreateGigInputSchema` + Header `Idempotency-Key` | `201 Created` → `GigCard` (crea automáticamente `SellerProfile` por defecto si el usuario verificado aún no lo tenía). | `401 UNAUTHORIZED`, `403 WALLET_NOT_VERIFIED`, `422 CATEGORY_MEDIA_TYPE_MISMATCH` |
+| `PATCH /api/v1/marketplace/gigs/:gigId` | `ClerkAuthGuard`, `WalletVerifiedGuard` | Param: `gigId`, Body: `UpdateGigInputSchema` (`isActive`, `title`, `description`, `priceUSDInCents`, `initialDeliveryDays`, `defaultCriteria`) | `200 OK` → `GigCard` actualizado (el cambio de precio solo aplica a contrataciones futuras, nunca a `TaskOrder` ya creadas). | `403 FORBIDDEN_GIG_OWNERSHIP`, `404 GIG_NOT_FOUND`, `422 CATEGORY_MEDIA_TYPE_MISMATCH` |
 | `GET /api/v1/marketplace/publications` | Público / Autenticado | Query: `category?: TaskCategory`, `status?: PublicationStatus` (default `OPEN_FOR_PROPOSALS`), `cursor?: string`, `limit?: 1..24` | `{ items: ClientTaskPublicationSummary[], nextCursor: string \| null }` | `400 VALIDATION_ERROR` |
 | `GET /api/v1/marketplace/publications/:publicationId` | Público / Autenticado | Param: `publicationId` (UUID) | Detalle de la `ClientTaskPublication` con criterios preliminares, restricciones técnicas y conteo de propuestas activas (sin exponer los montos ni identidades de otros freelancers competidores). | `404 PUBLICATION_NOT_FOUND` |
-| `POST /api/v1/marketplace/publications` | `SessionAuthGuard`, `WalletVerifiedGuard` | Body: `CreatePublicationInputSchema` + Header `Idempotency-Key` | `201 Created` → `ClientTaskPublication` en estado `OPEN_FOR_PROPOSALS`. | `401 UNAUTHORIZED`, `403 WALLET_NOT_VERIFIED`, `422 CATEGORY_MEDIA_TYPE_MISMATCH` |
-| `POST /api/v1/marketplace/publications/:publicationId/cancel` | `SessionAuthGuard` | Param: `publicationId`, Body: `{ cancelReason?: string }` | `200 OK` → `ClientTaskPublication` en estado `CANCELLED` (y cierre en cascada de propuestas `IN_NEGOTIATION` a `DISCREPANCY_CLOSED_PATH_2`). | `403 FORBIDDEN_PUBLICATION_OWNERSHIP`, `404 PUBLICATION_NOT_FOUND`, `409 PUBLICATION_ALREADY_LOCKED` |
+| `POST /api/v1/marketplace/publications` | `ClerkAuthGuard`, `WalletVerifiedGuard` | Body: `CreatePublicationInputSchema` + Header `Idempotency-Key` | `201 Created` → `ClientTaskPublication` en estado `OPEN_FOR_PROPOSALS`. | `401 UNAUTHORIZED`, `403 WALLET_NOT_VERIFIED`, `422 CATEGORY_MEDIA_TYPE_MISMATCH` |
+| `POST /api/v1/marketplace/publications/:publicationId/cancel` | `ClerkAuthGuard` | Param: `publicationId`, Body: `{ cancelReason?: string }` | `200 OK` → `ClientTaskPublication` en estado `CANCELLED` (y cierre en cascada de propuestas `IN_NEGOTIATION` a `DISCREPANCY_CLOSED_PATH_2`). | `403 FORBIDDEN_PUBLICATION_OWNERSHIP`, `404 PUBLICATION_NOT_FOUND`, `409 PUBLICATION_ALREADY_LOCKED` |
 
 ### 5.2. Jobs y Colas en BullMQ (`apps/api/src/modules/timers`)
 - `SPEC-04` **no** encola temporizadores contractuales en BullMQ (`INITIAL_DELIVERY_7D`, `DELIVERY_REVIEW_32H`, etc.), dado que la publicación de un `Gig` o de una `ClientTaskPublication` es un acto precontractual y aún no existe depósito en escrow.
@@ -299,7 +304,7 @@ export const CreatePublicationInputSchema = z
 
 ### 7.1. Validación de Frontera y Autorización por Rol / Modo
 1. **Prevención de IDOR y Suplantación de Identidad:**
-   - Ni `CreateGigInputSchema` ni `CreatePublicationInputSchema` aceptan `sellerId` o `buyerId` desde el payload del cliente. El backend asigna `sellerId = req.user.id` o `buyerId = req.user.id` extraído de la sesión local (`SessionAuthGuard`).
+   - Ni `CreateGigInputSchema` ni `CreatePublicationInputSchema` aceptan `sellerId` o `buyerId` desde el payload del cliente. El backend asigna `sellerId = req.user.id` o `buyerId = req.user.id` extraído del JWT verificado de Clerk (`ClerkAuthGuard`).
    - En `PATCH /api/v1/marketplace/gigs/:gigId` y `POST /api/v1/marketplace/publications/:publicationId/cancel`, el servicio verifica en la misma sentencia SQL (`WHERE id = :id AND seller_id = :userId` / `WHERE id = :id AND buyer_id = :userId`) que el actor sea el propietario legítimo; de lo contrario, retorna `403 FORBIDDEN_GIG_OWNERSHIP` o `403 FORBIDDEN_PUBLICATION_OWNERSHIP` y registra el intento en `AuditLog`.
 2. **Enforce de `WalletVerifiedGuard` y Visibilidad Condicional en Catálogo:**
    - Ningún usuario sin `UserWallet` con `isVerified = true AND isActive = true` puede crear Gigs ni publicaciones (`403 WALLET_NOT_VERIFIED`).
@@ -311,8 +316,8 @@ export const CreatePublicationInputSchema = z
 ### 7.2. Idempotencia, Bloqueos Transaccionales y Límites Monetarios
 1. **Límites Anti-Overflow y Anti-Truncamiento de Comisión (`100 .. 50_000_000` centavos):**
    - Todo precio de Gig (`priceUSDInCents`) y presupuesto tope (`initialBudgetUSDInCents`) debe ser un entero entre `100` (`$1.00 USD`) y `50_000_000` (`$500,000.00 USD`).
-   - El límite inferior (`100` centavos) garantiza que el `4 %` de comisión de plataforma (`Math.floor(total * 0.04)`) sea siempre `>= 4` centavos, cerrando la brecha de *Fee Truncation Attack* (donde tareas de `< 25` centavos producirían `platformFeeUSDInCents = 0` y harían fallar el Outgoing Payment en Rafiki).
-   - El límite superior (`50_000_000` centavos) evita el desbordamiento aritmético (`integer out of range`) en PostgreSQL `INT4` al evaluar `("total_amount_usd_in_cents" * 4) / 100` en `chk_task_order_exact_96_4_split`.
+   - El límite inferior (`100` centavos) garantiza que el `4 %` de comisión de plataforma (`Math.floor((total * 4) / 100)`) sea siempre `>= 4` centavos, cerrando la brecha de *Fee Truncation Attack* (donde tareas de `< 25` centavos producirían `platformFeeUSDInCents = 0` y harían fallar el Outgoing Payment en Rafiki).
+   - El límite superior (`50_000_000` centavos) acota los montos del marketplace; además, `chk_escrow_exact_96_4_split` (en `escrow_ledgers`) evalúa `"total_amount_usd_in_cents"::bigint * 4 / 100`, de modo que la multiplicación nunca desborda `INT4`.
 2. **Idempotencia en Creación y Bloqueo Atómico en Cancelación:**
    - Los endpoints `POST /api/v1/marketplace/gigs` y `POST /api/v1/marketplace/publications` exigen el encabezado `Idempotency-Key` (UUID v4) con deduplicación en Redis durante 24 horas para evitar publicaciones duplicadas por doble clic o reintentos de red.
    - La cancelación `POST /api/v1/marketplace/publications/:publicationId/cancel` ejecuta una transacción interactiva con `SELECT id, status, buyer_id FROM client_task_publications WHERE id = $1 FOR UPDATE`:
@@ -418,7 +423,7 @@ export const CreatePublicationInputSchema = z
 | Caso de Borde / Fallo | Detección | Acción de Recuperación / Rollback | Código HTTP / Evento de Dominio |
 | :--- | :--- | :--- | :--- |
 | **Cambio de billetera o pérdida de estado verificado de un Seller con Gigs activos** | La `UserWallet` del Seller deja de estar activa/verificada. | Las consultas públicas del catálogo excluyen automáticamente Gigs sin wallet activa verificada y omiten `<link rel="monetization">` hasta que el Seller vincule una wallet verificada. | `200 OK` (filtrado automático en catálogo) |
-| **Edición del precio fijo de un Gig (`priceUSDInCents`) mientras existen órdenes en curso** | Un Seller actualiza `priceUSDInCents` en `PATCH /api/v1/marketplace/gigs/:gigId`. | La actualización modifica `gigs.price_usd_in_cents` solo para contrataciones futuras; las `TaskOrder` ya creadas conservan su `totalAmountUSDInCents` inmutable copiado al nacer. | `200 OK` + registro en `AuditLog` |
+| **Edición del precio fijo de un Gig (`priceUSDInCents`) mientras existen órdenes en curso** | Un Seller actualiza `priceUSDInCents` en `PATCH /api/v1/marketplace/gigs/:gigId`. | La actualización modifica `gigs.price_usd_in_cents` solo para contrataciones futuras; las órdenes ya creadas conservan el `totalAmountUSDInCents` de su `EscrowLedger` y los términos congelados en `task_orders`, que el trigger `trg_task_order_origin_guard` impide modificar. | `200 OK` + registro en `AuditLog` |
 | **Intento concurrente de cancelar una `ClientTaskPublication` en el mismo milisegundo en que se acepta una oferta (`SPEC-05`)** | Colisión de transacciones sobre la fila `client_task_publications`. | Ambas operaciones adquieren `SELECT ... FOR UPDATE` sobre `client_task_publications.id`. La segunda en llegar observa el nuevo `status` (`AGREED_AND_LOCKED` o `CANCELLED`) y aborta limpiamente sin corromper el estado. | `409 PUBLICATION_ALREADY_LOCKED` o `409 PUBLICATION_CANCELLED` |
 | **Inyección de delimitadores de Prompt Injection o payloads XSS en criterios de aceptación** | Validador de seguridad detecta `<deliverable_untrusted_content>` o etiquetas `<script>` en `defaultCriteria` / `preliminaryCriteria`. | Se rechaza la transacción antes de tocar PostgreSQL y se informa el campo exacto infractor. | `422 UNSAFE_CONTENT_DETECTED` |
 
@@ -441,3 +446,4 @@ export const CreatePublicationInputSchema = z
 | Versión | Fecha | Herramienta IA / Autor | Resumen del Cambio |
 | :--- | :--- | :--- | :--- |
 | `0.1.0` | `2026-10-16` | `Cursor` + Equipo Humano | Redacción inicial completa de `SPEC-04` (12 secciones, contratos Zod con matriz canónica de las 6 categorías, blindaje de Web Monetization, protección anti-IDOR/anti-overflow y 5 RF con escenarios BDD). |
+| `0.2.0` | `2026-10-16` | `Cursor` | Alineación con el modelo de datos v2: constantes de rango importadas de `./money`, `CHECK` de gigs y publicaciones con rango `[100, 50_000_000]`, FK compuesta categoría ↔ medio y fórmula entera `floor(total * 4 / 100)` con `::bigint` en `escrow_ledgers`. |

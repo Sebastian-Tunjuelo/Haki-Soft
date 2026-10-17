@@ -96,8 +96,8 @@ Si el usuario pide "la spec de X" sin indicar el número, ubícala por capacidad
 3. **Secciones de `.agents/CONTEXT.md` y `planning/architecture-overview.md`** que rigen la capacidad:
    - Flujos de negocio, reglas financieras (`96% / 4%`, reembolsos `100%`, doble FX asumido por el Buyer) y plazos (`7d`, `24h`, `+7d`, `32h`, `30m`, máx. 2 correcciones).
    - Esquemas Zod en `.agents/CONTEXT.md` §8.2 y `planning/architecture-overview.md` §3.2 (`ClientTaskPublicationSchema`, `FreelancerNegotiationProposalSchema`, `TaskOrderCardSchema`, `DeadlineExtensionRequestSchema`, `AiAdvisorInputContractSchema`, `AiAdvisorReportSchema`).
-   - Modelos de Prisma 6 en 3NF y restricciones `CHECK` SQL en `planning/architecture-overview.md` §5.3 y §5.4.
-4. **Reglas operativas cerradas** en `.agents/CONTEXT.md` §12 y `planning/taskboard.md` §3 (incluyendo la fórmula de redondeo exacto en centavos: `platformFeeUSDInCents = Math.floor(totalAmountUSDInCents * 0.04)` y `freelancerPayoutUSDInCents = totalAmountUSDInCents - platformFeeUSDInCents`).
+   - Modelo de datos v2 en sus tres pasos en `planning/architecture-overview.md` §5.1 (conceptual), §5.2 (lógico) y §5.3 (físico: `CHECK`, índices parciales, triggers y vistas de `apps/api/prisma/sql/domain_checks.sql`).
+4. **Reglas operativas cerradas** en `.agents/CONTEXT.md` §12 y `planning/taskboard.md` §3 (incluyendo la fórmula de redondeo exacto en centavos: `platformFeeUSDInCents = Math.floor((totalAmountUSDInCents * 4) / 100)` y `freelancerPayoutUSDInCents = totalAmountUSDInCents - platformFeeUSDInCents`, con total en `[100, 50_000_000]`).
 5. **Specs previas de las que depende** para mantener consistencia exacta en nombres de tipos, tablas, rutas y eventos.
 
 **Paso 3 — Construir el mapa de trazabilidad y activar skills complementarias.**

@@ -806,235 +806,151 @@ Continua implementando
 
 ---
 
-### Prompt #018 — Integración del frontend con el backend según SPEC-02 y SPEC-03
+### Prompt #018 — Redacción de `SPEC-04` y `SPEC-05` con Seguridad Fintech, Escenarios BDD y Planteamiento de Brechas/Decisiones Abiertas en `taskboard.md`
 
 * **Herramienta de IA utilizada:** `Cursor`
-* **Área(s) donde toma lugar:** `Frontend`, `Tests`, `Planeación`, `Gobernanza`
+* **Área(s) donde toma lugar:** `Planeación`, `Gobernanza`, `Backend`, `Frontend`, `IA`, `Tests`
 * **Resumen de su funcionalidad:**
-  1. **SPEC-02:** las rutas `/api/v1/me/*` de Next dejan el almacén en memoria y reenvían la sesión Clerk a Nest. La pantalla de billetera abre `interactRedirectUri` y ya no simula el hash ni muestra nonces. Sin sesión no se monta el formulario ni el selector de modo.
-  2. **SPEC-03:** se verifica que la hero, el loader y el proveedor de scroll no llaman a `/api/v1`. No hay integración de API porque la spec lo prohíbe. El estado sigue `Testeada (TESTED)`.
-  3. SPEC-02 pasa a `Implementada (IMPLEMENTED)`. No se tocó `open-payments.service.ts` ni `escrow-payment.service.ts`.
+  1. **Redacción de `specs/SPEC-04.md` (`Redactada (DRAFTED)`):**
+     - Especificación completa en 12 secciones del catálogo de 6 categorías del MVP (`CATEGORY_MEDIA_CONSTRAINTS_MAP`), Gigs a precio fijo no negociables, publicaciones de Buyer con presupuesto tope (`ClientTaskPublication`) y cancelación atómica previa al acuerdo, inyección segura Server-Side de W3C Web Monetization (`<link rel="monetization">`) y escena 3D de categorías + `ScrollTrigger.batch()` a 60–120 FPS.
+     - Cierre de brechas de seguridad en el flujo de Marketplace: prevención de IDOR tomando `buyerId`/`sellerId` exclusivamente del token Clerk en servidor, `WalletVerifiedGuard` obligatorio, rango financiero seguro `[100 .. 50_000_000]` centavos para impedir *Fee Truncation* (`platformFee = 0` en Rafiki) e *Integer Overflow* en `INT4` de PostgreSQL, exclusión de `.svg` ejecutables y sanitización temprana anti-*Prompt Injection*.
+  2. **Redacción de `specs/SPEC-05.md` (`Redactada (DRAFTED)`):**
+     - Especificación completa en 12 secciones del motor de contratación de Gig fijo y bandeja de ofertas competitivas a la baja (`proposedBudgetUSDInCents <= initialBudgetUSDInCents`), bifurcación entre Camino 1 (`AGREED_PATH_1` con bloqueo pesimista `SELECT ... FOR UPDATE`, cierre en cascada de propuestas competidoras e instanciación atómica de `TaskOrder` en `PENDING_ESCROW_FUNDING` + `EscrowLedger` en `AWAITING_FUNDS`) y Camino 2 (`DISCREPANCY_CLOSED_PATH_2` manteniendo la publicación en `OPEN_FOR_PROPOSALS`), junto con el clasificador determinista `resolveMvpAiAuditableModality`.
+     - Cierre de brechas de seguridad en negociación: prohibición estricta de *Self-Dealing* (`buyerId !== sellerId` y wallets distintas), aislamiento entre freelancers competidores (*Anti-Bid Sniping*), confirmación explícita de términos (`expectedAmountUSDInCents` y `expectedDeliveryDays`) contra ataques *TOCTOU / Bait-and-Switch*, y congelamiento inmutable de `TaskAcceptanceCriterion`.
+  3. **Validación SDD y Actualización Documental (Sin implementar código):**
+     - Ejecución del validador `.agents/skills/taskstream-spec/scripts/check-spec.mjs` sobre `specs/SPEC-04.md` y `specs/SPEC-05.md` con **0 errores bloqueantes**.
+     - Actualización de `specs/README.md` registrando `SPEC-04` y `SPEC-05` como `Redactada (DRAFTED)`.
+     - Adición de la **Sección 4** al final de `planning/taskboard.md` planteando brechas de seguridad fintech (`SEC-GAP-01` a `SEC-GAP-07`), decisiones abiertas críticas (`DEC-OPEN-01` a `DEC-OPEN-05`) y pendientes técnicos urgentes (`URG-SYNC-01` a `URG-SYNC-03`).
 * **Archivos creados / modificados:**
-  * [`apps/web/src/lib/identity-contract.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/lib/identity-contract.ts) *(Creado)*
-  * [`apps/web/src/lib/identity-proxy.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/lib/identity-proxy.ts) *(Creado)*
-  * [`apps/web/src/tests/spec-02-identity-client.test.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/tests/spec-02-identity-client.test.ts) *(Creado)*
-  * [`apps/web/app/api/v1/me/mode/route.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/api/v1/me/mode/route.ts) *(Modificado)*
-  * [`apps/web/app/api/v1/me/wallet/route.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/api/v1/me/wallet/route.ts) *(Modificado)*
-  * [`apps/web/app/api/v1/me/wallet/discovery/route.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/api/v1/me/wallet/discovery/route.ts) *(Modificado)*
-  * [`apps/web/app/api/v1/me/wallet/challenges/route.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/api/v1/me/wallet/challenges/route.ts) *(Modificado)*
-  * [`apps/web/src/components/wallet-verification.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/components/wallet-verification.tsx) *(Modificado)*
-  * [`apps/web/src/components/mode-switcher.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/components/mode-switcher.tsx) *(Modificado)*
-  * [`apps/web/src/components/navbar.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/components/navbar.tsx) *(Modificado)*
-  * [`apps/web/app/onboarding/wallet/page.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/onboarding/wallet/page.tsx) *(Modificado)*
-  * [`apps/web/app/settings/mode/page.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/settings/mode/page.tsx) *(Modificado)*
-  * [`apps/web/src/mocks/handlers.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/mocks/handlers.ts) *(Modificado)*
-  * [`apps/web/src/tests/spec-03-scroll-canvas.test.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/tests/spec-03-scroll-canvas.test.ts) *(Modificado)*
-  * [`specs/SPEC-02.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-02.md) *(Modificado)*
-  * [`specs/SPEC-03.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-03.md) *(Modificado)*
-  * [`specs/README.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/README.md) *(Modificado)*
-  * [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Modificado)*
-  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
-  * [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
-  * [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+  * [`specs/SPEC-04.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/specs/SPEC-04.md) *(Creado)*
+  * [`specs/SPEC-05.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/specs/SPEC-05.md) *(Creado)*
+  * [`specs/README.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/specs/README.md) *(Modificado)*
+  * [`planning/taskboard.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/planning/taskboard.md) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/prompts/AI_USAGE.md) *(Modificado)*
 * **Texto de Prompt Enviado a la IA (Verbatim):**
 
 ```text
-verifica o integra el front con el backend segun las specs 2 y 3
+Redacta la spec 4 y 5 teniendo en cuenta los documentos de planeación, no rompiendo la jerarquía que propone el proyecto de fuentes de verdad. Sigue al pie de la letra las reglas de negocio planteada, recuerda que es una fintech por lo cual la seguridad es muy importante, cierra todas las brechas posibles de seguridad en el flujo. Plantea cosas pendientes urgentes o decisiones abiertas que son muy necesarias, brechas de seguridad, etc. ponlo como una sección en la parte final del documento taskboard, solo plantea, no implementes nada. Sigue el BDD en la redacción de las specs y plantealas de la mejor manera posible para que al momento de implementarlas salga de buena calidad. Recuerda usar las skills necesarias y modificar al final los documentos para que estas specs queden redactadas, no implementes nada
 ```
 
 ---
 
-### Prompt #019 — Entorno local, Docker de comprobación y pagos sin clave privada en el código
+### Prompt #019 — Auditoría y Rediseño del Modelo de Datos v2: Desacople de `TaskOrder` y Estandarización en los 3 Pasos (Conceptual, Lógico y Físico)
 
 * **Herramienta de IA utilizada:** `Cursor`
-* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Herramientas / DX`, `Tests`, `Gobernanza`
+* **Área(s) donde toma lugar:** `Backend`, `Planeación`, `Gobernanza`, `Tests`
 * **Resumen de su funcionalidad:**
-  1. Configura `.env` local (gitignored) con Postgres de Docker, Redis y la wallet/Key ID de la Test Wallet visibles en Developer Keys. La clave privada queda vacía: no estaba en la pantalla y no se escribe en el repositorio.
-  2. Crea `docker-compose.yml` (Postgres en 5433 y Redis en 6379). Los contenedores quedaron sanos y `prisma migrate deploy` aplicó las dos migraciones.
-  3. El cliente de Open Payments firma solo si hay un archivo local de clave. El grant y el pago los confirma la API de testnet. Se elimina el PEM que estaba escrito en el fuente del MCP.
+  1. **Desacople de `TaskOrder` (de 31 a 14 columnas) en `apps/api/prisma/schema.prisma`:** la orden guarda solo partes, origen (`gigId` XOR `proposalId`), términos congelados y estado. Montos 96/4 y las cuatro wallets pasan a `EscrowLedger`; los plazos viven solo en `ScheduledTimerJob` (`startedAt` / `expiresAt` inmutables); las correcciones usadas se derivan de `TaskDeliverable.reviewDecision`. Se eliminan las FK redundantes `AiAdvisorReport.taskOrderId` y `OpenPaymentsTransaction.taskOrderId`. Se crean `PlatformWallet` (custodia y fee del dueño) y la tabla de referencia `TaskCategoryMediaType`. Todas las relaciones de contratos y dinero pasan a `ON DELETE RESTRICT`.
+  2. **Capa física canónica en `apps/api/prisma/sql/domain_checks.sql` y nueva migración `20261017000000_decouple_task_order`:** `CHECK` de rango `[100, 50_000_000]`, fórmula entera `floor(total*4/100)` con `::bigint`, anti self-dealing, coherencia de timestamps y duración fija por tipo de reloj; índices únicos parciales (wallet activa, acuerdo único por publicación — SEC-GAP-01 —, una pierna de pago completada y una en curso — SEC-GAP-06 —, revisión pendiente y reloj activo únicos); triggers de origen e inmutabilidad de la orden, wallets del ledger, relojes, secuencia de revisiones y alcance de IA; vistas `v_task_order_revision_usage`, `v_task_order_active_deadline`, `v_escrow_ledger_settlement` y `v_seller_profile_stats`.
+  3. **Documentación en los 3 pasos:** reescritura de `planning/architecture-overview.md` §5 (conceptual con contextos delimitados y reglas R-01..R-12; lógico con esquema relacional, dependencias funcionales, 1FN–FNBC, desnormalizaciones justificadas, tabla de resolución de los 10 hallazgos de la auditoría y 14 hallazgos propios; físico con convenciones, fórmula canónica, catálogo de `CHECK`, índices parciales, triggers, vistas, política de borrado y operación de migraciones).
+  4. **Desviaciones justificadas respecto a la auditoría:** se mantuvo `floor` (no *round half up*) porque `taskboard.md` §3 regla 8 es la fuente superior; el vencimiento de la revisión vive solo en el reloj (no en `TaskDeliverable`) para tener una única fuente de verdad; la orden referencia a su origen (y no al revés) porque el Marketplace está aguas arriba de la Contratación.
+  5. **Contratos y sincronización:** `money.ts` (constantes de rango y fórmula entera), `schemas.ts` (`proposalId` en `TaskOrderCardSchema`, `proposedDeliveryDays`, rango de montos, anti self-dealing), mocks y pruebas; `.agents/CONTEXT.md` §8.2, `planning/taskboard.md` (regla 8 y SEC-GAP-01..04/06), `planning/pbp-development.md`, `specs/SPEC-01.md` (1.3.0), `specs/SPEC-04.md` (0.2.0), `specs/SPEC-05.md` (0.2.0) y la skill `taskstream-spec`.
+  6. **Verificación:** `prisma validate` OK; las 3 migraciones aplicadas en orden sobre PostgreSQL embebido (PGlite) con 45/45 escenarios positivos y negativos; `domain_checks.sql` aplicado sobre el DDL fresco; Vitest de `shared-schemas` 13/13 y `tsc` limpio; `check-spec.mjs` con 0 errores en SPEC-01, SPEC-04 y SPEC-05. No se tocaron `open-payments.service.ts`, `escrow-payment.service.ts` ni claves `Ed25519`.
 * **Archivos creados / modificados:**
-  * [`docker-compose.yml`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/docker-compose.yml) *(Creado)*
-  * [`.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env), [`apps/api/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/.env), [`apps/web/.env.local`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/.env.local) *(Creados, no versionados)*
-  * [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example), [`.gitignore`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.gitignore), [`package.json`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/package.json) *(Modificados)*
-  * [`apps/api/src/main.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/main.ts) *(Modificado)*
-  * [`apps/api/src/modules/open-payments/open-payments.service.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/modules/open-payments/open-payments.service.ts) *(Modificado)*
-  * [`apps/api/src/modules/open-payments/open-payments.service.spec.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/modules/open-payments/open-payments.service.spec.ts) *(Modificado)*
-  * [`tools/open-payments-mcp/src/open-payments-service.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-mcp/src/open-payments-service.ts) *(Modificado)*
-  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
+  * [`apps/api/prisma/schema.prisma`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/apps/api/prisma/schema.prisma) *(Modificado)*
+  * [`apps/api/prisma/sql/domain_checks.sql`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/apps/api/prisma/sql/domain_checks.sql) *(Modificado)*
+  * [`apps/api/prisma/migrations/20261017000000_decouple_task_order/migration.sql`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/apps/api/prisma/migrations/20261017000000_decouple_task_order/migration.sql) *(Creado)*
+  * [`packages/shared-schemas/src/money.ts`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/packages/shared-schemas/src/money.ts) *(Modificado)*
+  * [`packages/shared-schemas/src/schemas.ts`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/packages/shared-schemas/src/schemas.ts) *(Modificado)*
+  * [`packages/shared-schemas/src/mocks.ts`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/packages/shared-schemas/src/mocks.ts) *(Modificado)*
+  * [`packages/shared-schemas/src/index.ts`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/packages/shared-schemas/src/index.ts) *(Modificado)*
+  * [`packages/shared-schemas/src/contracts.test.ts`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/packages/shared-schemas/src/contracts.test.ts) *(Modificado)*
+  * [`planning/architecture-overview.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/planning/architecture-overview.md) *(Modificado)*
+  * [`.agents/CONTEXT.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/.agents/CONTEXT.md) *(Modificado)*
+  * [`planning/taskboard.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/planning/taskboard.md) *(Modificado)*
+  * [`planning/pbp-development.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/planning/pbp-development.md) *(Modificado)*
+  * [`specs/SPEC-01.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/specs/SPEC-01.md) *(Modificado)*
+  * [`specs/SPEC-04.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/specs/SPEC-04.md) *(Modificado)*
+  * [`specs/SPEC-05.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/specs/SPEC-05.md) *(Modificado)*
+  * [`.agents/skills/taskstream-spec/SKILL.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/.agents/skills/taskstream-spec/SKILL.md) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/prompts/AI_USAGE.md) *(Modificado)*
 * **Texto de Prompt Enviado a la IA (Verbatim):**
 
-```text
-configura el .env ademas de que para comprobar todo el proyecto crea el docker que necesita el proyecto para hacer las comprobaciones. ademas como aclaracion, cuando se va a realizar algun tipo de pago, no debe ser con la key privada quemada, la idea para ver el flujo real dentro de la testnet, debe de consumir la api, ahi se valida o consume key, o como corresponda el flujo para confirmar pago, que no dependa de quemar la key.
-```
+````text
+A continuación se presenta la auditoría técnica del modelado de datos presente en [`architecture-overview.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/planning/architecture-overview.md#L224-L968), respondiendo puntualmente a cada uno de los aspectos consultados:
 
 ---
 
-### Prompt #020 — Captura de la clave pública de Developer Keys
+### 1. ¿Está bien estandarizado en sus 3 pasos clásicos?
+**Dictamen: Parcialmente / Incompleto.**
 
-* **Herramienta de IA utilizada:** `Cursor`
-* **Área(s) donde toma lugar:** `Backend`, `Gobernanza`
-* **Resumen de su funcionalidad:**
-  1. El usuario envía la pantalla Developer Keys con "Show" abierto sobre la clave "hack".
-  2. Se identifica el PEM como clave pública Ed25519. No se escribe en `.env` ni en el código, porque no firma peticiones ni confirma pagos en la Test Wallet.
-* **Archivos creados / modificados:**
-  * [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
-  * [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
-  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
-* **Texto de Prompt Enviado a la IA (Verbatim):**
+En ingeniería de bases de datos, el modelado formal requiere 3 pasos secuenciales diferenciados:
+1. **Modelo Conceptual:** Entidades puras de negocio, límites de contexto y cardinalidades de alto nivel, independientes de la tecnología.
+2. **Modelo Lógico:** Normalización rigurosa (1NF, 2NF, 3NF), resolución de dependencias funcionales, claves candidatas y eliminación de dependencias transitivas.
+3. **Modelo Físico:** Tipado concreto del RDBMS (PostgreSQL), DDL, índices (`@@index`), constraints de integridad (`CHECK`), estrategias de borrado referencial (`Cascade`, `Restrict`) y mapeos de tablas.
 
-```text
-[Imagen: Interledger Test Wallet, Developer Keys, cuenta EUR $ilp.interledger-test.dev/633c95b8, clave "hack" creada el 16 de octubre de 2026, Key ID 2f149a29-10ac-4a84-a9b3-f1e4393457ee, bloque "Public key" visible con un PEM BEGIN PUBLIC KEY.]
-```
+**Hallazgo en el archivo:**
+* El documento **comprime y mezcla los pasos 1 y 2**: salta directamente de un diagrama Mermaid (`erDiagram`) a la definición física en [Prisma 6](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/planning/architecture-overview.md#L274-L920) y a los scripts SQL de PostgreSQL.
+* Afirma estar en **3NF**, pero no documenta el modelo conceptual ni desglosa la transición lógica formal. El diagrama de Mermaid es un híbrido entre lógico y físico (ya incluye relaciones dirigidas por claves foráneas técnicas en lugar de relaciones de dominio).
 
 ---
 
-### Prompt #021 — Clave privada descargada de hack2
+### 2. ¿Existe una *God Entity*?
+**Dictamen: Sí, latente y en gestación (`TaskOrder` y en menor medida `User`).**
 
-* **Herramienta de IA utilizada:** `Cursor`
-* **Área(s) donde toma lugar:** `Backend`, `Gobernanza`
-* **Resumen de su funcionalidad:**
-  1. El usuario muestra la generación de una clave nueva y la pantalla de "hack2" con su Key ID. El PEM privado no se transcribe en el repositorio ni en esta bitácora.
-  2. El archivo descargado se mueve a `secrets/hack2.key`, ignorado por git. `.env` local apunta a esa ruta y al Key ID `927b39ea-a362-4484-879e-a8e9bf0ae16f`. La copia en el Escritorio de OneDrive se elimina para que no se sincronice.
-* **Archivos creados / modificados:**
-  * [`secrets/hack2.key`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/secrets/hack2.key) *(Creado, gitignored)*
-  * [`.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env), [`apps/api/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/.env) *(Modificados, gitignored)*
-  * [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Modificado: solo el Key ID público)*
-  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
-* **Texto de Prompt Enviado a la IA (Verbatim):**
-
-```text
-[Imágenes: modal de éxito de la Test Wallet indicando que la clave privada se descargó como private (1).key; pantalla Developer Keys con la clave hack2, Key ID 927b39ea-a362-4484-879e-a8e9bf0ae16f y su clave pública. El PEM privado no se copia en este registro.]
-```
+Aunque la sección 5.1 sostiene que el modelo está *"libre de God-Entities"*, en la práctica:
+* **`TaskOrder` acumula 31 atributos propios y 14 relaciones foráneas directas**.
+  * Absorbe responsabilidades de **cuatro dominios distintos**:
+    1. *Negociación y Contratación:* `publicationId`, `proposalId`, `gigId`.
+    2. *Finanzas y Escrow:* montos 96/4, monedas origen/destino, referencias a wallets.
+    3. *Operación y Plazos:* contadores de revisiones y 9 columnas de marcas de tiempo (`*DeadlineAt`, `*ExpiresAt`, `*StartedAt`).
+    4. *Inspección e IA:* `aiAuditableModality`, relaciones con `AiAdvisorReport` y `TaskDeliverable`.
+* Si bien no llega al extremo de una tabla monolítica que guarde los mensajes o transacciones dentro de sí (hubo acierto en extraer `EscrowLedger` y `TaskDeliverable`), **`TaskOrder` actúa como un embudo centralizado sobrecargado**, violando el principio de responsabilidad única (*Single Responsibility Principle* en agregados DDD).
 
 ---
 
-### Prompt #022 — Cerrar lo pendiente antes del push
+### 3. ¿Es completamente necesario que `TaskOrder` esté tan acoplada a las demás entidades?
+**Dictamen: No. Gran parte del acoplamiento es innecesario, redundante o circular.**
 
-* **Herramienta de IA utilizada:** `Cursor`
-* **Área(s) donde toma lugar:** `Tests`, `Gobernanza`
-* **Resumen de su funcionalidad:**
-  1. Se vuelven a ejecutar las pruebas de identidad del web (13) y las del cliente Open Payments (7). SPEC-04 y SPEC-05 superan el validador SDD en estado `Redactada`.
-  2. No se hace un Subject Grant contra la testnet ni se lee el PEM. `.env`, `apps/api/.env`, `apps/web/.env.local` y `secrets/hack2.key` siguen fuera de git. Las claves de Clerk no se inventan.
-* **Archivos creados / modificados:**
-  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
-* **Texto de Prompt Enviado a la IA (Verbatim):**
-
-```text
-completa lo que te falte antes de hacer push
-```
+1. **Acoplamiento polimórfico de origen (`publicationId`, `proposalId`, `gigId`):**
+   * Si una orden proviene de una oferta (`proposalId`), esa `NegotiationProposal` ya apunta a `publicationId`. Mantener ambas FKs en `TaskOrder` crea una **dependencia redundante y desnormalizada**.
+2. **Doble relación con el subsistema de IA (`AiAdvisorReport`):**
+   * `AiAdvisorReport` tiene relación 1:1 con `TaskDeliverable`, pero a la vez guarda una clave foránea `taskOrderId` directa hacia `TaskOrder`. Es un acoplamiento redundante: la IA audita una *entrega*, no la orden abstracta.
+3. **Acoplamiento circular con Transacciones Open Payments:**
+   * `OpenPaymentsTransaction` tiene tanto `taskOrderId` como `escrowLedgerId`. Dado que `EscrowLedger` es 1:1 con `TaskOrder`, esta doble vinculación crea un triángulo referencial evitable.
+4. **Acoplamiento de Wallets en `TaskOrder` y en `EscrowLedger`:**
+   * `TaskOrder` retiene `buyerWalletId` y `sellerWalletId`, mientras que `EscrowLedger` custodia los movimientos financieros y retiene `platformOwnerWalletAddress`. Las wallets transaccionales deberían pertenecer exclusivamente al agregado financiero (`EscrowLedger`).
 
 ---
 
-### Prompt #023 — Completar los archivos .env
+### 4. Posibles fallos y riesgos detectados en el modelado
 
-* **Herramienta de IA utilizada:** `Cursor`
-* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Herramientas / DX`, `Gobernanza`
-* **Resumen de su funcionalidad:**
-  1. Alinea `.env`, `apps/api/.env` y `apps/web/.env.local` con las variables que leen Nest, Next y Prisma. Las tres claves de Clerk quedan vacías: no existen en el entorno ni en el escritorio, y no se inventan.
-  2. Las herramientas de Open Payments pasan de la clave "hack" a hack2 y a `secrets/hack2.key`. El CLI lee esa ruta en lugar de exigir el PEM dentro del `.env`.
-* **Archivos creados / modificados:**
-  * [`.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env), [`apps/api/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/.env), [`apps/web/.env.local`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/.env.local) *(Modificados, gitignored)*
-  * [`tools/open-payments-mcp/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-mcp/.env), [`tools/open-payments-cli/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/.env) *(Modificados, gitignored)*
-  * [`tools/open-payments-cli/index.js`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/index.js) *(Modificado)*
-  * [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Modificado)*
-  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
-* **Texto de Prompt Enviado a la IA (Verbatim):**
-
-```text
-configura al completo los .env
-```
-
----
-
-### Prompt #024 — Cómo obtener las claves de Clerk
-
-* **Herramienta de IA utilizada:** `Cursor`
-* **Área(s) donde toma lugar:** `Frontend`, `Backend`, `Gobernanza`
-* **Resumen de su funcionalidad:**
-  1. Explica cómo crear la aplicación en el dashboard de Clerk, copiar la publishable key y la secret key, y pegarlas en los `.env` locales.
-  2. Indica el webhook `POST /api/v1/webhooks/clerk` con `user.created` y `user.updated`. No se escriben secretos.
-* **Archivos creados / modificados:**
-  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
-* **Texto de Prompt Enviado a la IA (Verbatim):**
-
-```text
-y como hago eso del clerk
-```
+1. **Riesgo de *Split-Brain* en tiempos y plazos (Múltiples fuentes de verdad):**
+   * La expiración de la revisión de 32 horas está modelada en 3 sitios distintos:
+     - `TaskOrder.currentReviewExpiresAt`
+     - `TaskDeliverable.reviewExpiresAt`
+     - `ScheduledTimerJob.scheduledFor`
+   * Si una actualización asíncrona o job de BullMQ falla o reintenta, es muy factible que los 3 valores diverjan, provocando estados inconsistentes en la base de datos.
+2. **Regla de 96/4 y colisión con centavos indivisibles:**
+   * El constraint SQL `chk_task_order_exact_96_4_split` exige que:
+     `freelancer_payout_usd_in_cents + platform_fee_usd_in_cents = total_amount_usd_in_cents`.
+   * Para montos impares (ej. 1555 centavos: 4% = 62.2, 96% = 1492.8), el modelo de base de datos no especifica una política de redondeo determinista. Si el backend trunca ambos hacia abajo ($62 + 1492 = 1554$), el `CHECK` constraint de PostgreSQL **rechazará la inserción y tumbará la transacción**.
+3. **Inexistencia de constraint físico para la regla de *"máximo 1 wallet activa"*:**
+   * El comentario en `UserWallet` estipula que solo puede haber una wallet activa por usuario. Sin embargo, Prisma no soporta índices condicionales nativos y en la sección 5.4 **se omitió el DDL de PostgreSQL** para crear el índice único parcial:
+     `CREATE UNIQUE INDEX uq_user_wallets_single_active ON user_wallets (user_id) WHERE is_active = true;`
+   * Esto deja la integridad del sistema dependiendo únicamente del código de aplicación, vulnerable a condiciones de carrera concurrentes.
+4. **Múltiples rutas de borrado en cascada (*Cascade Cycles*):**
+   * `TaskDeliverable` tiene `onDelete: Cascade` hacia `TaskOrder`.
+   * `AiAdvisorReport` tiene `onDelete: Cascade` hacia `TaskOrder` **y además** hacia `TaskDeliverable`.
+   * Esto puede generar conflictos o advertencias en motores relacionales al existir múltiples caminos de cascada sobre la misma jerarquía.
 
 ---
 
-### Prompt #025 — Push de la plantilla de entorno y del CLI
+### 5. Recomendaciones de mejora
 
-* **Herramienta de IA utilizada:** `Cursor`
-* **Área(s) donde toma lugar:** `Gobernanza`, `Herramientas / DX`
-* **Resumen de su funcionalidad:**
-  1. Sube a `main` la plantilla `.env.example`, el CLI que lee la clave desde un archivo y la bitácora de los prompts #023 a #025.
-  2. Los `.env` locales y `secrets/hack2.key` siguen fuera del repositorio.
-* **Archivos creados / modificados:**
-  * [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Modificado)*
-  * [`tools/open-payments-cli/index.js`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/index.js) *(Modificado)*
-  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
-* **Texto de Prompt Enviado a la IA (Verbatim):**
+1. **Desacoplar `TaskOrder` aplicando Límites de Contexto (Bounded Contexts):**
+   * **Contratación:** Reemplazar `publicationId`, `proposalId` y `gigId` por un identificador de origen único o permitir que `NegotiationProposal` y `Gig` sean los que conozcan el `orderId` resultante, no al revés.
+   * **Auditoría de IA:** Desvincular `AiAdvisorReport` de `TaskOrder`. La relación natural es estrictamente `TaskDeliverable 1:1 AiAdvisorReport`.
+   * **Finanzas:** Mover las referencias a las billeteras de pago (`buyerWalletId`, `sellerWalletId`) al modelo `EscrowLedger`.
+2. **Unificar la Fuente de Verdad de los Plazos:**
+   * Eliminar las columnas temporales redundantes en `TaskOrder` (`currentReviewExpiresAt`, `currentReviewStartedAt`). Las fechas de inicio y vencimiento de una revisión deben residir exclusivamente en la entrega evaluada (`TaskDeliverable`), y el temporizador en `ScheduledTimerJob` debe sincronizarse referenciando a dicha entrega.
+3. **Completar las restricciones SQL faltantes:**
+   * Incluir formalmente el índice parcial de wallet única activa en las migraciones SQL.
+   * Documentar la fórmula canónica de redondeo (ej. *Round half up* en la comisión de la plataforma y el remanente exacto al freelancer: `freelancerPayout = total - platformFee`).
 
-```text
-has push al repo
-```
-
----
-
-### Prompt #026 — Adelantar Backend hasta main
-
-* **Herramienta de IA utilizada:** `Cursor`
-* **Área(s) donde toma lugar:** `Gobernanza`
-* **Resumen de su funcionalidad:**
-  1. La rama local `Backend` no tenía commits propios respecto de `main`. Se hizo checkout y fast-forward hasta `3889a65`, el mismo commit que `main`.
-  2. El árbol de trabajo quedó en `Backend`. No se publicó al remoto.
-* **Archivos creados / modificados:**
-  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
-* **Texto de Prompt Enviado a la IA (Verbatim):**
-
-```text
-pasa lo que tiene la rama main a la rama Backend y parate en ella
-```
-
----
-
-### Prompt #027 — Retirar Clerk y dejar un registro propio
-
-* **Herramienta de IA utilizada:** `Cursor`
-* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Planeación`, `Gobernanza`
-* **Resumen de su funcionalidad:**
-  1. Se elimina Clerk (dependencias, middleware, webhook, guards y pantallas). El acceso pasa a registro e inicio de sesión con correo y contraseña. La contraseña se guarda con `scrypt` y la sesión va en una cookie httpOnly.
-  2. Se borran `.env` de la raíz y `.env.example`. Las variables de Clerk salen de los `.env` de API y web. La migración `20261016210000_local_password` queda aplicada en el Postgres local.
-* **Archivos creados / modificados:**
-  * [`apps/api/src/modules/identity/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/modules/identity), [`apps/api/prisma/schema.prisma`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/prisma/schema.prisma), [`apps/api/prisma/migrations/20261016210000_local_password/migration.sql`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/prisma/migrations/20261016210000_local_password/migration.sql) *(Modificados / creado)*
-  * [`apps/web/app/sign-in/page.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/sign-in/page.tsx), [`apps/web/app/sign-up/page.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/sign-up/page.tsx), [`apps/web/src/components/auth-form.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/components/auth-form.tsx), [`apps/web/app/api/v1/auth/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/api/v1/auth) *(Creados)*
-  * [`.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env), [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Eliminados)*
-  * [`.agents/CONTEXT.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/CONTEXT.md), [`specs/SPEC-02.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-02.md), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
-* **Texto de Prompt Enviado a la IA (Verbatim):**
-
-```text
-Bien, ahora hablando decidimos no implementar el Clerk, Por ende borra toda logica que lo implique ademas del env.example y el env original eliminalo. Consideramos que de momento con inicio de sesion proporcionado por nostros mismos mediante un registro de momento es suficiente
-```
-
----
-
-### Prompt #028 — Restaurar los .env sin Clerk
-
-* **Herramienta de IA utilizada:** `Cursor`
-* **Área(s) donde toma lugar:** `Gobernanza`, `Backend`, `Frontend`
-* **Resumen de su funcionalidad:**
-  1. Se reponen `.env` y `.env.example`. No se borran los archivos: solo desaparecen las variables y los comentarios de Clerk.
-  2. `apps/api/.env` y `apps/web/.env.local` conservan la base de datos, Redis y Open Payments.
-* **Archivos creados / modificados:**
-  * [`.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env), [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Restaurados)*
-  * [`apps/api/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/.env), [`apps/web/.env.local`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/.env.local) *(Modificados)*
-  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
-* **Texto de Prompt Enviado a la IA (Verbatim):**
-
-```text
-A lo que me referia no es que borraras los archivos de .env, si no dentro de ellos lo que mencionara a Clerk.
-```
-
-
-
+Teniendo en cuenta esta auditoria y posibles hallazgos propios que hagas a mejorar, modifica el modelado de datos encontrado en el documento architecture e implementa las mejoras del modelado de datos ya planteada, lo principal es desacoplar la entidad TaskOrder y realizar mejores practicas en el MER. Resuelve incongruencias y posibles fallos con el modelado de datos. Estandariza por completo la base de datos en sus 3 pasos. Ayudate de skills si así lo crees conveniente. Y modifica el resto de archivos que se vean relacionados con el modelado de datos
+````
