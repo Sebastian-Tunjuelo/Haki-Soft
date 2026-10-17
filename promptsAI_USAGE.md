@@ -1585,3 +1585,75 @@ Por Ãºltimo, a TODAS las pages restantes que no tengan diseÃ±o actualizado al qu
 ```
 
 
+
+### Prompt #069 — Pull de main y relanzar proyecto
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`, `Herramientas / DX`
+* **Resumen de su funcionalidad:** `git pull origin main` (fast-forward a tip de Meridia/UI), rebuild, migrate y relanzar API (3001) + web (3000). Verificación: health API 200, home web 200, Nest `successfully started`, Next Ready. Sin errores de build/compilación que solventar. Cambio local pendiente: mejora del callback en `create-escrow-outgoing-grant.mjs`.
+* **Archivos creados o modificados:** `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`, `AI_USAGE.md` (trazabilidad); sin cambios de código de producto en este turno.
+* **Texto literal del prompt enviado:**
+
+```
+Generame el pull de la rama main y solventa los posibles errores, y re lanza el proyecto para verficar
+```
+
+### Prompt #070 ? Fix Navbar crash al cambiar de página
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Corrige `ReferenceError: poll is not defined` en el cleanup de `Navbar.useEffect` (resto de un `setInterval` eliminado en merge Meridia). Al cambiar `pathname` el overlay de Next caía unos segundos.
+* **Archivos creados o modificados:** `apps/web/src/components/navbar.tsx`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`, `AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+cada vez que cambio de pagina se cae durante unos segundos y luego retoma
+```
+
+### Prompt #071 — Fix formatCountdown en WorkRequestAlert
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Añade el import de `formatCountdown` desde `@/src/lib/format-countdown` en `work-request-alert.tsx` (faltaba tras merge Meridia; `ReferenceError` al abrir el popup de solicitud).
+* **Archivos creados o modificados:** `apps/web/src/components/work-request-alert.tsx`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`, `AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+al mandar la peticion de una tarea tambien genera error
+```
+
+### Prompt #072 — Fix `locked` / release-refund en EscrowCheckout
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Restaura `const locked`, `release()` y `refund()` perdidos en merge Meridia (`ReferenceError: locked is not defined` en `/orders/.../escrow`). Vuelve el panel GNAP del buyer tras aceptación del seller.
+* **Archivos creados o modificados:** `apps/web/src/components/escrow-checkout.tsx`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`, `AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+Persiste
+```
+
+### Prompt #073 — Regenerar token escrow OPEN_PAYMENTS
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Herramientas / DX`, `Gobernanza`
+* **Resumen de su funcionalidad:** Regenera `OPEN_PAYMENTS_ESCROW_ACCESS_TOKEN` con `create-escrow-outgoing-grant.mjs` sobre wallet `633c95b8`, sincroniza `apps/api/.env` y `.env` raíz, reinicia Nest.
+* **Archivos creados o modificados:** `apps/api/.env`, `.env` (token local, no commit), `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`, `AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+(imagen: error token de custodia / regenerar OPEN_PAYMENTS_ESCROW_ACCESS_TOKEN)
+```
+
+### Prompt #074 — README del proyecto MERIDIA
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Gobernanza`, `Planeación`
+* **Resumen de su funcionalidad:** Crea `README.md` raíz orientado al producto **MERIDIA**: visión, integrantes GitHub, arquitectura monorepo, flujo escrow 96/4, arranque local, Open Payments, identidad UI y enlaces a CONTEXT/arquitectura/specs/AI_USAGE.
+* **Archivos creados o modificados:** `README.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+Generame readme sobre el proyecto, teniendo en cuenta que la app se llama Meridia. Integrantes, arquitectura y lo que consideres necesario indagar del contexto
+```

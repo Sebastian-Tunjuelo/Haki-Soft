@@ -127,10 +127,37 @@ export function EscrowCheckout({ taskId }: { taskId: string }) {
     });
   }
 
+  async function release() {
+    await run(async () => {
+      const result = await api(`/api/v1/orders/${taskId}/escrow/simulate-release`, { method: 'POST' });
+      if (result.status !== 200 && result.status !== 201) {
+        setError(humanError(result.status, result.body));
+        return;
+      }
+      const parsed = EscrowFundingViewSchema.safeParse(result.body);
+      if (parsed.success) setView(parsed.data);
+      setMessage('Pago liberado: 96 % al Freelancer y 4 % a MERIDIA.');
+    });
+  }
+
+  async function refund() {
+    await run(async () => {
+      const result = await api(`/api/v1/orders/${taskId}/escrow/simulate-refund`, { method: 'POST' });
+      if (result.status !== 200 && result.status !== 201) {
+        setError(humanError(result.status, result.body));
+        return;
+      }
+      const parsed = EscrowFundingViewSchema.safeParse(result.body);
+      if (parsed.success) setView(parsed.data);
+      setMessage('Reembolso completo al Cliente. La actividad queda cerrada.');
+    });
+  }
+
   const status = view?.lifecycleStatus ?? null;
   const pending = status === 'PENDING_ESCROW_FUNDING';
+  const locked = status === 'ESCROW_LOCKED';
   const activeCustody =
-    status === 'ESCROW_LOCKED' ||
+    locked ||
     status === 'ESCROW_EXTENDED' ||
     status === 'EXTENSION_REQUESTED' ||
     status === 'IN_REVIEW' ||
@@ -290,7 +317,39 @@ export function EscrowCheckout({ taskId }: { taskId: string }) {
 
       {/* Paneles de Acción según estado y rol */}
       <section className="ts-reveal" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        {pending && isBuyer ? (
+        {pending && isBuyer && view?.sellerConfirmed && view.interactRedirectUri ? (
+          <div
+            className="card"
+            style={{
+              padding: '24px 28px',
+              borderRadius: 24,
+              border: '1px solid rgba(var(--tide-rgb), 0.45)',
+              background: 'linear-gradient(135deg, rgba(var(--tide-rgb), 0.12), transparent), var(--surface)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <ShieldCheck size={19} style={{ color: 'var(--tide)' }} />
+              <h3 className="kinetic-heading" style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.18rem', fontWeight: 700 }}>
+                Autoriza el pago en la Test Wallet
+              </h3>
+            </div>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.55 }}>
+              El Freelancer ya aceptó. Para mover fondos reales a custodia, abre Interledger Test Wallet y confirma el
+              grant. Al volver, el saldo de la testnet bajará.
+            </p>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
+              <a className="btn btn-emerald" href={view.interactRedirectUri}>
+                <ShieldCheck size={16} />
+                <span>Abrir autorización Open Payments</span>
+              </a>
+            </div>
+          </div>
+        ) : null}
+
+        {pending && isBuyer && !view?.sellerConfirmed ? (
           <div
             className="card"
             style={{

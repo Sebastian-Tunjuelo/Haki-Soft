@@ -176,9 +176,13 @@ console.log(pending.interact.redirect);
 console.log('\nEsperando callback en', finishUri, '…');
 
 await new Promise((resolvePromise, rejectPromise) => {
+  let settled = false;
   const server = createServer(async (req, res) => {
     try {
       const url = new URL(req.url ?? '/', `http://127.0.0.1:${finishPort}`);
+      console.log('[callback]', req.method, url.pathname + url.search);
+
+      // Favicon / probes sin query: no tumbar el grant.
       if (url.pathname !== finishPath) {
         res.writeHead(404);
         res.end('not found');
@@ -188,8 +192,19 @@ await new Promise((resolvePromise, rejectPromise) => {
       const interactRef = url.searchParams.get('interact_ref') ?? '';
       const hash = url.searchParams.get('hash') ?? '';
       if (!interactRef || !hash) {
-        res.writeHead(400);
-        res.end('Faltan interact_ref o hash');
+        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(
+          `<html><body style="font-family:sans-serif;padding:2rem">
+            <h1>Callback incompleto</h1>
+            <p>Faltan <code>interact_ref</code> o <code>hash</code> en la URL.</p>
+            <p>No cierres el script: vuelve a la Test Wallet, <strong>aprueba</strong> el grant
+            y deja que el navegador te redirija solo (no abras esta URL a mano).</p>
+            <p>Si ya rechazaste o caducó, cancela el script (Ctrl+C) y vuelve a ejecutarlo.</p>
+          </body></html>`,
+        );
+        console.warn(
+          'Petición sin interact_ref/hash (prefetch o URL manual). Sigo esperando el redirect real…',
+        );
         return;
       }
 
@@ -200,8 +215,13 @@ await new Promise((resolvePromise, rejectPromise) => {
         authServerUrl: wallet.authServer,
       });
       if (expected !== hash) {
-        res.writeHead(400);
-        res.end('GNAP hash mismatch');
+        res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(
+          `<html><body style="font-family:sans-serif;padding:2rem">
+            <h1>GNAP hash mismatch</h1>
+            <p>El hash del redirect no coincide. Cancela el script y genera un grant nuevo.</p>
+          </body></html>`,
+        );
         console.error('Hash inválido. expected=', expected, 'got=', hash);
         return;
       }
@@ -236,14 +256,18 @@ await new Promise((resolvePromise, rejectPromise) => {
       console.log('\n=== LISTO ===');
       console.log('Token (inicio):', token.slice(0, 24) + '…');
       console.log('Reinicia la API para cargarlo.');
+      settled = true;
       server.close();
       resolvePromise();
     } catch (err) {
       console.error(err);
       res.writeHead(500);
       res.end(String(err));
-      server.close();
-      rejectPromise(err);
+      if (!settled) {
+        settled = true;
+        server.close();
+        rejectPromise(err);
+      }
     }
   });
 

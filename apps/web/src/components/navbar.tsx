@@ -60,7 +60,6 @@ export function Navbar() {
 
     return () => {
       cancelled = true;
-      clearInterval(poll);
     };
   }, [pathname, sessionLoaded, sessionEmail]);
 
