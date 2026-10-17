@@ -63,7 +63,10 @@ const HUMAN_ERRORS: Record<string, string> = {
     'Faltan credenciales Open Payments del cliente (wallet, keyId, private key).',
   OPEN_PAYMENTS_ESCROW_TOKEN_MISSING:
     'Falta OPEN_PAYMENTS_ESCROW_ACCESS_TOKEN: crea un grant outgoing de larga duración en la Test Wallet de custodia.',
-  OPEN_PAYMENTS_UPSTREAM: 'La API de Open Payments / Test Wallet rechazó la operación.',
+  OPEN_PAYMENTS_ESCROW_TOKEN_INVALID:
+    'El token de custodia no autoriza pagos desde la wallet escrow actual. Regenera OPEN_PAYMENTS_ESCROW_ACCESS_TOKEN con el script create-escrow-outgoing-grant.mjs (misma wallet que OPEN_PAYMENTS_ESCROW_WALLET_ADDRESS).',
+  OPEN_PAYMENTS_UPSTREAM:
+    'Open Payments / Test Wallet rechazó la operación (fondos insuficientes en custodia, asset distinto o grant inválido). Revisa saldos y que el token sea de la wallet escrow.',
   OPEN_PAYMENTS_GRANT_NOT_PENDING: 'Se esperaba un grant interactivo pendiente (autorización en Test Wallet).',
   OPEN_PAYMENTS_GRANT_NOT_FINALIZED: 'El grant de Open Payments no quedó finalizado.',
   GNAP_HASH_MISMATCH: 'El hash GNAP del callback no coincide. Vuelve a autorizar el pago.',
