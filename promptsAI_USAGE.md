@@ -32,6 +32,7 @@ Este archivo contiene el **registro histórico, secuencial e íntegro (sin omisi
 | **Prompt #022** | `2026-10-16` | `Cursor` | `Planeación`, `Backend`, `Gobernanza` | `SPEC-04` y `SPEC-05` pasan a v0.3.0 y siguen `Redactada (DRAFTED)`. Se sustituye `ClerkAuthGuard` por `SessionAuthGuard`, la identidad del actor es `req.userId` y la sesión ausente responde `401 UNAUTHENTICATED`. | [`specs/SPEC-04.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-04.md), [`specs/SPEC-05.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-05.md), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 | **Prompt #023** | `2026-10-16` | `Cursor` | `Gobernanza`, `IA` | Registro local de `IA-JORGE` que estaba numerado como Prompt #006: reglas permanentes de AI-1 en `.cursor/rules/ai-only.mdc`. No sustituye al Prompt #006 del remoto. | [`.cursor/rules/ai-only.mdc`](.cursor/rules/ai-only.mdc), [`AI_USAGE.md`](AI_USAGE.md), [`promptsAI_USAGE.md`](promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](prompts/AI_USAGE.md) |
 | **Prompt #024** | `2026-10-16` | `Cursor` | `Planeación`, `Gobernanza`, `IA` | El usuario lo tituló Prompt #015. Sincroniza `origin/Backend` (línea de `main` sin Clerk), conserva las bitácoras y redacta `SPEC-06` a `SPEC-12` en `DRAFTED`, sin código ni commit. | `specs/SPEC-06.md` a `specs/SPEC-12.md`, `specs/README.md`, `specs/COVERAGE.md`, `planning/taskboard.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md` |
+| **Prompt #025** | `2026-10-16` | `Cursor` | `Gobernanza`, `Planeación` | El usuario lo tituló Prompt #016. Cierra el merge de `origin/Backend`, publica la base documental en `origin/main` y deja el clasificador de AI-1 fuera de `apps/api`. No integra `origin/master`. | `specs/SPEC-05.md`, `planning/taskboard.md`, `.cursor/rules/ai-only.mdc`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md` |
 
 ---
 
@@ -1103,5 +1104,30 @@ Preparar las especificaciones restantes necesarias para completar el MVP de Task
 El objetivo es maximizar el tiempo del hackathon y permitir que backend, frontend e IA trabajen en paralelo, de forma asíncrona, sin bloquearse mutuamente por falta de contratos.
 
 Fases 1 a 9 del mismo mensaje: sincronización segura sin comandos destructivos ni push; reconstrucción del estado real; no reintroducir Clerk si la autenticación vigente es local; matriz de cobertura; SPEC restantes con plantilla oficial y estado de redacción; frentes BE, FE y AI con contratos, mocks, criterios independientes y bloqueos reales; sin implementar código, migraciones ni dependencias; Graphify fuera del repositorio; informe final. Criterio de éxito: todas las funcionalidades necesarias para completar el MVP cubiertas por especificaciones coherentes, con contratos definidos y trabajo distribuido. No implementar código ni hacer push.
+```
+
+### Prompt #025 — Publicar la base común del hackathon en main (el usuario lo tituló Prompt #016)
+
+El número `#016` ya identifica la pausa pedida en la bitácora remota. Esta entrada conserva ese registro y numera el mensaje nuevo como `#025`.
+
+* **Resumen de funcionalidad:** Cerrar el merge de `origin/Backend` en `IA-JORGE` y publicar esa base en `origin/main`, sin integrar `origin/master` y sin implementar negocio.
+* **Área:** `Gobernanza`, `Planeación`.
+* **Archivos:** `specs/SPEC-05.md`, `planning/taskboard.md`, `.cursor/rules/ai-only.mdc`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`.
+* **Texto literal del prompt enviado:**
+
+```
+# Prompt #016 — Publicar la base común del hackathon en main
+
+## Objetivo
+
+Dejar origin/main con la documentación, las SPEC y las decisiones vigentes de TaskStream AI, para que backend, frontend e IA puedan comenzar a trabajar independientemente.
+
+Repositorio: D:\jorge\Projects\Hackaton\Haki-Soft
+Rama de trabajo: IA-JORGE
+Destino: origin/main
+
+Esta tarea autoriza preparar, validar, integrar y publicar los cambios documentales existentes en main. No autoriza implementar funcionalidades de negocio.
+
+Secciones 1 a 8 del mismo mensaje: inspeccionar el merge pendiente; cerrarlo solo si las bitácoras conservan el historial local y remoto y SPEC-04/SPEC-05 no reintroducen Clerk; validar SPEC-00 a SPEC-12 en DRAFTED con DEC-OPEN-01 a DEC-OPEN-05 abiertas; publicar en origin/main sin force y solo si main no avanzó; incluir .cursor/rules/ai-only.mdc; excluir backups, cachés y graphify-out; no integrar origin/master; Graphify solo en la carpeta externa; verificar el hash remoto. Criterio de éxito: origin/main contiene la base documental, las SPEC, la separación BE/FE/AI y las reglas de trabajo, sin perder historial ni introducir artefactos locales.
 ```
 
