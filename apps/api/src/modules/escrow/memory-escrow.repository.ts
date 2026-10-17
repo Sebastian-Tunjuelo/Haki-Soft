@@ -7,6 +7,16 @@ import {
   type StoredOpTx,
 } from './escrow.types';
 
+const SETTLEMENT_LIFECYCLES = new Set([
+  'ESCROW_LOCKED',
+  'EXTENSION_REQUESTED',
+  'ESCROW_EXTENDED',
+  'IN_REVIEW',
+  'REVISION_REQUESTED',
+  'FINAL_CLAIM_WINDOW_30M',
+  'DISPUTED',
+]);
+
 export class MemoryEscrowRepository implements EscrowRepository {
   private orders = new Map<string, StoredEscrowOrder>();
   private txs: StoredOpTx[] = [];
@@ -44,9 +54,9 @@ export class MemoryEscrowRepository implements EscrowRepository {
     return matches[0] ? { ...matches[0] } : null;
   }
 
-  async listSellerActivity(sellerId: string): Promise<SellerActivityItemStored[]> {
+  async listSellerActivity(userId: string): Promise<SellerActivityItemStored[]> {
     return [...this.orders.values()]
-      .filter((order) => order.sellerId === sellerId && order.lifecycleStatus !== 'CANCELLED')
+      .filter((order) => order.sellerId === userId || order.buyerId === userId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .map((order) => ({
         taskId: order.taskId,
@@ -55,7 +65,9 @@ export class MemoryEscrowRepository implements EscrowRepository {
         lifecycleStatus: order.lifecycleStatus,
         sellerConfirmed: Boolean(order.sellerConfirmedAt),
         createdAt: order.createdAt,
+        viewerRole: order.sellerId === userId ? ('seller' as const) : ('buyer' as const),
         buyerDisplayName: order.buyerDisplayName,
+        sellerDisplayName: order.sellerDisplayName,
         projectBrief: extractProjectBrief(order.scopeDescription),
       }));
   }
@@ -108,6 +120,14 @@ export class MemoryEscrowRepository implements EscrowRepository {
     idempotencyKey: string;
     interactRedirectUri: string;
     incomingPaymentUrl: string;
+    quoteUrl?: string | null;
+    grantContinueUri?: string | null;
+    grantContinueToken?: string | null;
+    clientNonce?: string | null;
+    metadataJson?: Record<string, unknown> | null;
+    receiveAssetCode?: string;
+    receiveAssetScale?: number;
+    receiveAmountValue?: string;
   }): Promise<
     StoredOpTx | 'ALREADY_LOCKED' | 'ORDER_NOT_FOUND' | 'DUPLICATE_KEY' | 'SELLER_NOT_CONFIRMED'
   > {
@@ -122,6 +142,10 @@ export class MemoryEscrowRepository implements EscrowRepository {
     const attemptNumber =
       this.txs.filter((tx) => tx.taskId === input.taskId && tx.operationType === 'ESCROW_LOCK').length + 1;
 
+    void input.receiveAssetCode;
+    void input.receiveAssetScale;
+    void input.receiveAmountValue;
+
     const tx: StoredOpTx = {
       id: randomUUID(),
       escrowLedgerId: order.ledgerId,
@@ -133,6 +157,11 @@ export class MemoryEscrowRepository implements EscrowRepository {
       interactRedirectUri: input.interactRedirectUri,
       incomingPaymentUrl: input.incomingPaymentUrl,
       outgoingPaymentUrl: null,
+      quoteUrl: input.quoteUrl ?? null,
+      grantContinueUri: input.grantContinueUri ?? null,
+      grantContinueToken: input.grantContinueToken ?? null,
+      clientNonce: input.clientNonce ?? null,
+      metadataJson: input.metadataJson ?? null,
       completedAt: null,
     };
     this.txs.push(tx);
@@ -182,7 +211,8 @@ export class MemoryEscrowRepository implements EscrowRepository {
     if (order.lifecycleStatus === 'COMPLETED' || order.lifecycleStatus === 'REFUNDED') {
       return 'ALREADY_TERMINAL';
     }
-    if (order.lifecycleStatus !== 'ESCROW_LOCKED') return 'NOT_LOCKED';
+    if (order.ledgerStatus !== 'FUNDS_LOCKED') return 'NOT_LOCKED';
+    if (!SETTLEMENT_LIFECYCLES.has(order.lifecycleStatus)) return 'NOT_LOCKED';
 
     this.txs.push(
       {
@@ -225,7 +255,8 @@ export class MemoryEscrowRepository implements EscrowRepository {
     if (order.lifecycleStatus === 'COMPLETED' || order.lifecycleStatus === 'REFUNDED') {
       return 'ALREADY_TERMINAL';
     }
-    if (order.lifecycleStatus !== 'ESCROW_LOCKED') return 'NOT_LOCKED';
+    if (order.ledgerStatus !== 'FUNDS_LOCKED') return 'NOT_LOCKED';
+    if (!SETTLEMENT_LIFECYCLES.has(order.lifecycleStatus)) return 'NOT_LOCKED';
 
     this.txs.push({
       id: randomUUID(),
