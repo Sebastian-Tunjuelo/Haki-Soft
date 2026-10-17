@@ -201,6 +201,16 @@ CREATE TABLE "task_category_media_types" (
     CONSTRAINT "task_category_media_types_pkey" PRIMARY KEY ("category","media_type")
 );
 
+-- Seed BEFORE FKs from gigs/publications/task_orders (DB may already have rows).
+INSERT INTO "task_category_media_types" ("category", "media_type") VALUES
+  ('DIGITAL_MARKETING', 'DATA_CAMPAIGN'),
+  ('GRAPHICS_AND_DESIGN', 'IMAGE_RASTER_VECTOR'),
+  ('PROGRAMMING_AND_TECH', 'CODE_ARCHIVE'),
+  ('TECHNICAL_WRITING_TRANS', 'DOCUMENT_TEXT'),
+  ('VIDEO_AND_ANIMATION', 'VIDEO_STREAM'),
+  ('MUSIC_AND_AUDIO', 'AUDIO_TRACK')
+ON CONFLICT DO NOTHING;
+
 -- CreateIndex
 CREATE UNIQUE INDEX "platform_wallets_wallet_address_url_key" ON "platform_wallets"("wallet_address_url");
 
@@ -349,15 +359,6 @@ CREATE UNIQUE INDEX "platform_wallets_one_active_per_role"
 -- ============================================================================
 -- 2. MARKETPLACE
 -- ============================================================================
-
-INSERT INTO "task_category_media_types" ("category", "media_type") VALUES
-  ('DIGITAL_MARKETING', 'DATA_CAMPAIGN'),
-  ('GRAPHICS_AND_DESIGN', 'IMAGE_RASTER_VECTOR'),
-  ('PROGRAMMING_AND_TECH', 'CODE_ARCHIVE'),
-  ('TECHNICAL_WRITING_TRANS', 'DOCUMENT_TEXT'),
-  ('VIDEO_AND_ANIMATION', 'VIDEO_STREAM'),
-  ('MUSIC_AND_AUDIO', 'AUDIO_TRACK')
-ON CONFLICT DO NOTHING;
 
 ALTER TABLE "gigs"
   ADD CONSTRAINT "chk_gig_price_and_days"

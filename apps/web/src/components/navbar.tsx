@@ -96,6 +96,14 @@ export function Navbar() {
               Inicio
             </Link>
             <Link
+              href="/marketplace"
+              className={`nav-link ${pathname?.startsWith('/marketplace') ? 'active' : ''}`}
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <ShieldCheck size={15} />
+              <span>Marketplace</span>
+            </Link>
+            <Link
               href="/onboarding/wallet"
               className={`nav-link ${pathname === '/onboarding/wallet' ? 'active' : ''}`}
               style={{ display: 'flex', alignItems: 'center', gap: 6 }}

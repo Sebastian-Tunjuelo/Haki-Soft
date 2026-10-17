@@ -260,9 +260,9 @@ export function WalletVerification({
             <div style={{ display: 'flex', gap: 10 }}>
               <input
                 id="wallet-url"
-                type="url"
+                type="text"
                 className="form-input"
-                placeholder="https://ilp.interledger-test.dev/tu-usuario"
+                placeholder="$ilp.interledger-test.dev/tu-usuario"
                 value={walletUrl}
                 onChange={(event) => setWalletUrl(event.target.value)}
                 disabled={isSubmitting}

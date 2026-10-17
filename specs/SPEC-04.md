@@ -8,8 +8,8 @@
 | **Roles Propietarios** | `FE-1`, `FE-2`, `BE-2` |
 | **Tareas Asociadas (`taskboard.md`)** | `T-F2-FE1-01`, `T-F2-FE1-03`, `T-F2-FE2-01`, `T-F2-BE2-01` |
 | **Dependencias Previas** | `SPEC-00`, `SPEC-01`, `SPEC-02`, `SPEC-03` |
-| **Estado del Ciclo SDD** | `Redactada (DRAFTED)` |
-| **Última Actualización** | `2026-10-16` (v0.3.0) |
+| **Estado del Ciclo SDD** | `Implementada (IMPLEMENTED)` — backend Marketplace + storefront editable TipTap/media |
+| **Última Actualización** | `2026-10-17` (v0.5.0) |
 | **Aprobada por / fecha** | `—` |
 
 ---
@@ -265,6 +265,12 @@ La autenticación es la de `SPEC-02` v1.5.0: registro e inicio de sesión propio
 | `GET /api/v1/marketplace/gigs/:gigId` | Público | Param: `gigId` (UUID) | `GigCard` completo incluyendo metadatos de Web Monetization resueltos en servidor. | `404 GIG_NOT_FOUND` |
 | `POST /api/v1/marketplace/gigs` | `SessionAuthGuard`, `WalletVerifiedGuard` | Body: `CreateGigInputSchema` + Header `Idempotency-Key` | `201 Created` → `GigCard` (crea automáticamente `SellerProfile` por defecto si el usuario verificado aún no lo tenía). | `401 UNAUTHENTICATED`, `403 WALLET_NOT_VERIFIED`, `422 CATEGORY_MEDIA_TYPE_MISMATCH` |
 | `PATCH /api/v1/marketplace/gigs/:gigId` | `SessionAuthGuard`, `WalletVerifiedGuard` | Param: `gigId`, Body: `UpdateGigInputSchema` (`isActive`, `title`, `description`, `priceUSDInCents`, `initialDeliveryDays`, `defaultCriteria`) | `200 OK` → `GigCard` actualizado (el cambio de precio solo aplica a contrataciones futuras, nunca a `TaskOrder` ya creadas). | `401 UNAUTHENTICATED`, `403 FORBIDDEN_GIG_OWNERSHIP`, `404 GIG_NOT_FOUND`, `422 CATEGORY_MEDIA_TYPE_MISMATCH` |
+| `PATCH /api/v1/marketplace/gigs/:gigId/page` | `SessionAuthGuard`, `WalletVerifiedGuard` | Body: `UpdatePageDocumentInputSchema` | `200` → `GigCard` con `pageDocument` (displayName del bloque profile fijado al de la cuenta). | `403 FORBIDDEN_GIG_OWNERSHIP` |
+| `POST /api/v1/marketplace/gigs/:gigId/media` | `SessionAuthGuard`, `WalletVerifiedGuard` | multipart `file` (jpeg/png/webp ≤2MB) | `201` → asset; máx. 6 por Gig. | `409 GALLERY_FULL`, `400 MEDIA_*` |
+| `PATCH /api/v1/marketplace/publications/:publicationId/page` | `SessionAuthGuard`, `WalletVerifiedGuard` | Body: `UpdatePageDocumentInputSchema` | `200` → publicación con `pageDocument`. | `403 FORBIDDEN_PUBLICATION_OWNERSHIP` |
+| `POST /api/v1/marketplace/publications/:publicationId/media` | `SessionAuthGuard`, `WalletVerifiedGuard` | multipart `file` | `201` → asset; máx. 6. | `409 GALLERY_FULL` |
+| `GET /api/v1/marketplace/media/:mediaId` | Público | — | Binario de la imagen. | `404 MEDIA_NOT_FOUND` |
+| `DELETE /api/v1/marketplace/media/:mediaId` | `SessionAuthGuard`, `WalletVerifiedGuard` | — | `{ ok: true }`. | `403 FORBIDDEN_MEDIA_OWNERSHIP` |
 | `GET /api/v1/marketplace/publications` | Público / Autenticado | Query: `category?: TaskCategory`, `status?: PublicationStatus` (default `OPEN_FOR_PROPOSALS`), `cursor?: string`, `limit?: 1..24` | `{ items: ClientTaskPublicationSummary[], nextCursor: string \| null }` | `400 VALIDATION_ERROR` |
 | `GET /api/v1/marketplace/publications/:publicationId` | Público / Autenticado | Param: `publicationId` (UUID) | Detalle de la `ClientTaskPublication` con criterios preliminares, restricciones técnicas y conteo de propuestas activas (sin exponer los montos ni identidades de otros freelancers competidores). | `404 PUBLICATION_NOT_FOUND` |
 | `POST /api/v1/marketplace/publications` | `SessionAuthGuard`, `WalletVerifiedGuard` | Body: `CreatePublicationInputSchema` + Header `Idempotency-Key` | `201 Created` → `ClientTaskPublication` en estado `OPEN_FOR_PROPOSALS`. | `401 UNAUTHENTICATED`, `403 WALLET_NOT_VERIFIED`, `422 CATEGORY_MEDIA_TYPE_MISMATCH` |
@@ -451,3 +457,5 @@ La autenticación es la de `SPEC-02` v1.5.0: registro e inicio de sesión propio
 | `0.1.0` | `2026-10-16` | `Cursor` + Equipo Humano | Redacción inicial completa de `SPEC-04` (12 secciones, contratos Zod con matriz canónica de las 6 categorías, blindaje de Web Monetization, protección anti-IDOR/anti-overflow y 5 RF con escenarios BDD). |
 | `0.2.0` | `2026-10-16` | `Cursor` | Alineación con el modelo de datos v2: constantes de rango importadas de `./money`, `CHECK` de gigs y publicaciones con rango `[100, 50_000_000]`, FK compuesta categoría ↔ medio y fórmula entera `floor(total * 4 / 100)` con `::bigint` en `escrow_ledgers`. |
 | `0.3.0` | `2026-10-16` | `Cursor` | Se retira Clerk. Las mutaciones usan `SessionAuthGuard` y `req.userId` (`User.id`). El código de sesión ausente pasa de `401 UNAUTHORIZED` a `401 UNAUTHENTICATED`, igual que `SPEC-02`. |
+| `0.4.0` | `2026-10-16` | `Cursor` | Backend `MarketplaceModule` (`T-F2-BE2-01`): contratos Zod en `shared-schemas`, endpoints `/api/v1/marketplace/*`, tests HTTP RF-01..RF-04, harness FE mínimo en `/marketplace` para validar el flujo. Idempotencia en memoria (Redis/BullMQ pendiente de specs posteriores). |
+| `0.5.0` | `2026-10-17` | `Cursor` | Extensión storefront: `pageDocumentJson` + `MarketplaceMediaAsset` (máx. 6 imgs locales), `PATCH …/page`, upload/delete/get media, redirect post-create a detalle Gig/Publication, editor TipTap Editar/Vista previa + carrusel. |

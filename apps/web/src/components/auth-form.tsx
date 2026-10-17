@@ -4,13 +4,23 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 
+export type AuthSuccessPayload = {
+  mode: 'login' | 'register';
+  displayName?: string;
+};
+
 interface AuthFormProps {
   mode: 'login' | 'register';
+  /** `page` navega a rutas; `embedded` se usa dentro del modal sobre el contenido actual. */
+  variant?: 'page' | 'embedded';
+  onSuccess?: (result: AuthSuccessPayload) => void;
+  onSwitchMode?: (mode: 'login' | 'register' | 'recover') => void;
 }
 
-export function AuthForm({ mode }: AuthFormProps) {
+export function AuthForm({ mode, variant = 'page', onSuccess, onSwitchMode }: AuthFormProps) {
   const router = useRouter();
   const isRegister = mode === 'register';
+  const embedded = variant === 'embedded';
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,6 +48,18 @@ export function AuthForm({ mode }: AuthFormProps) {
         setError(messageFor(code));
         return;
       }
+      if (onSuccess) {
+        onSuccess({
+          mode: isRegister ? 'register' : 'login',
+          displayName: isRegister ? displayName.trim() : undefined,
+        });
+        return;
+      }
+      if (isRegister) {
+        router.push('/onboarding/wallet?welcome=1');
+        router.refresh();
+        return;
+      }
       router.push('/');
       router.refresh();
     } catch {
@@ -52,14 +74,14 @@ export function AuthForm({ mode }: AuthFormProps) {
       onSubmit={onSubmit}
       style={{
         width: '100%',
-        maxWidth: 420,
+        maxWidth: embedded ? 'none' : 420,
         display: 'flex',
         flexDirection: 'column',
         gap: 14,
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-lg)',
-        padding: 24,
+        background: embedded ? 'transparent' : 'var(--surface)',
+        border: embedded ? 'none' : '1px solid var(--border)',
+        borderRadius: embedded ? 0 : 'var(--radius-lg)',
+        padding: embedded ? 0 : 24,
       }}
     >
       {isRegister ? (
@@ -104,11 +126,33 @@ export function AuthForm({ mode }: AuthFormProps) {
       <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>
         {isRegister ? (
           <>
-            ¿Ya tienes cuenta? <Link href="/sign-in">Inicia sesión</Link>
+            ¿Ya tienes cuenta?{' '}
+            {embedded && onSwitchMode ? (
+              <button type="button" onClick={() => onSwitchMode('login')} style={linkButtonStyle}>
+                Inicia sesión
+              </button>
+            ) : (
+              <Link href="/sign-in">Inicia sesión</Link>
+            )}
           </>
         ) : (
           <>
-            ¿Aún no tienes cuenta? <Link href="/sign-up">Regístrate</Link>
+            ¿Aún no tienes cuenta?{' '}
+            {embedded && onSwitchMode ? (
+              <button type="button" onClick={() => onSwitchMode('register')} style={linkButtonStyle}>
+                Regístrate
+              </button>
+            ) : (
+              <Link href="/sign-up">Regístrate</Link>
+            )}
+            {embedded && onSwitchMode ? (
+              <>
+                {' · '}
+                <button type="button" onClick={() => onSwitchMode('recover')} style={linkButtonStyle}>
+                  Recuperar cuenta
+                </button>
+              </>
+            ) : null}
           </>
         )}
       </p>
@@ -130,4 +174,13 @@ const fieldStyle = {
   color: 'var(--text-primary)',
   padding: '10px 12px',
   fontSize: 14,
+};
+
+const linkButtonStyle = {
+  background: 'transparent',
+  border: 0,
+  color: 'var(--brand-blue)',
+  cursor: 'pointer',
+  padding: 0,
+  fontSize: 13,
 };

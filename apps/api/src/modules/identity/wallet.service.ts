@@ -165,10 +165,17 @@ function publicApiUrl(): string {
   return (process.env.PUBLIC_API_URL ?? 'http://localhost:3001').replace(/\/$/, '');
 }
 
+/**
+ * Rafiki mete el hash en query string. Algunos parsers tratan `+` como espacio;
+ * restauramos `+` antes de comparar. Base64 es case-sensitive.
+ */
+function normalizeReceivedGnapHash(value: string): string {
+  return value.replace(/ /g, '+');
+}
+
 function hashesMatch(expected: string, received: string): boolean {
-  const normalized = /^[0-9a-fA-F]+$/.test(received) ? received.toLowerCase() : received;
   const left = Buffer.from(expected);
-  const right = Buffer.from(normalized);
+  const right = Buffer.from(normalizeReceivedGnapHash(received));
   if (left.length !== right.length) return false;
   return timingSafeEqual(left, right);
 }

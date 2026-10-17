@@ -10,3 +10,4 @@ coverage
 *.pem
 secrets/
 .data/
+apps/api/storage/

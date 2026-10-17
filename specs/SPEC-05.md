@@ -8,8 +8,8 @@
 | **Roles Propietarios** | `FE-1`, `BE-1`, `AI-1` |
 | **Tareas Asociadas (`taskboard.md`)** | `T-F2-FE1-02`, `T-F2-BE1-01`, `T-F2-AI1-01` |
 | **Dependencias Previas** | `SPEC-00`, `SPEC-01`, `SPEC-02`, `SPEC-03`, `SPEC-04` |
-| **Estado del Ciclo SDD** | `Redactada (DRAFTED)` |
-| **Última Actualización** | `2026-10-16` (v0.3.1) |
+| **Estado del Ciclo SDD** | `Implementada (IMPLEMENTED)` — backend Negotiations + harness FE mínimo |
+| **Última Actualización** | `2026-10-17` (v0.4.0) |
 | **Aprobada por / fecha** | `—` |
 
 ---
@@ -374,3 +374,4 @@ La autenticación es la de `SPEC-02` v1.5.0: sesión HMAC local, no Clerk. El BF
 | `0.2.0` | `2026-10-16` | `Cursor` | Alineación con el modelo de datos v2: origen `gigId` XOR `proposalId` sin `publication_id` en la orden, montos y wallets en `EscrowLedger` (incluidas las `PlatformWallet`), ausencia de relojes en lugar de `initialDeadlineAt`, modalidad IA derivada, `scheduled_timer_jobs`, FK compuesta e índices parciales en propuestas, y nombres de `CHECK` y triggers reales de `domain_checks.sql`. |
 | `0.3.0` | `2026-10-16` | `Cursor` | Se retira Clerk. Las rutas de negociación usan `SessionAuthGuard` y comparan propiedad con `req.userId`. El código de sesión ausente es `401 UNAUTHENTICATED`, igual que `SPEC-02`. |
 | `0.3.1` | `2026-10-16` | `Cursor` | El clasificador de `AI-1` queda en `packages/shared-schemas`. No se crea un servicio en `apps/api`. `BE-1` llama a `resolveMvpAiAuditableModality` al crear la orden. |
+| `0.4.0` | `2026-10-17` | `Cursor` | Backend `NegotiationsModule` (propuestas, mensajes, Camino 1/2, hire Gig fijo, TaskOrder+EscrowLedger en memoria/Prisma), contratos Zod, tests HTTP RF-01..RF-04, harness FE `/marketplace/negotiations`. |

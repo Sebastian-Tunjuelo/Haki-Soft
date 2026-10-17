@@ -63,9 +63,9 @@
 | **`T-F2-FE1-02`** | `FE-1` | 🔴 `P0` | `SPEC-05` | Construir la Sala de Negociación entre Buyer y Freelancer: validación de propuesta `<= presupuesto inicial`, acuerdo para iniciar orden (Camino 1) y cierre de contacto por discrepancia manteniendo activa la publicación (Camino 2). | `T-F2-FE1-01` | `[READY_UNBLOCKED]` |
 | **`T-F2-FE1-03`** | `FE-1` | 🟡 `P2` | `SPEC-04` | Inyectar la etiqueta W3C Web Monetization (`<link rel="monetization">`) en las páginas públicas de perfil de cada Freelancer verificado. | `T-F2-FE1-01` | `[READY_UNBLOCKED]` |
 | **`T-F2-FE2-01`** | `FE-2` | 🟠 `P1` | `SPEC-04` | Diseñar las transiciones espaciales con `GSAP ScrollTrigger` para las tarjetas de las 6 categorías del Marketplace. | `T-F1-FE2-01` | `[READY_UNBLOCKED]` |
-| **`T-F2-BE1-01`** | `BE-1` | 🔴 `P0` | `SPEC-05` | Implementar el módulo de negociación en Backend: validación estricta `proposedBudget <= initialBudget`, transición atómica de Camino 1 (crea `TaskOrder` + `EscrowLedger`) y Camino 2 (`DISCREPANCY_CLOSED_PATH_2` manteniendo `OPEN_FOR_PROPOSALS`). | `T-F1-BE2-01` | `[READY_UNBLOCKED]` |
-| **`T-F2-BE2-01`** | `BE-2` | 🔴 `P0` | `SPEC-04` | Implementar el módulo de Marketplace (CRUD de `Gig` y `ClientTaskPublication`, paginación por las 6 categorías y semillas de datos). | `T-F1-BE2-01` | `[READY_UNBLOCKED]` |
-| **`T-F2-AI1-01`** | `AI-1` | 🟠 `P1` | `SPEC-05` | Implementar el clasificador automático de modalidad auditable (`IMAGE | TEXT` vs. no auditable en MVP) al crearse una `TaskOrder`. | `T-F1-AI1-01` | `[READY_UNBLOCKED]` |
+| **`T-F2-BE1-01`** | `BE-1` | 🔴 `P0` | `SPEC-05` | Implementar el módulo de negociación en Backend: validación estricta `proposedBudget <= initialBudget`, transición atómica de Camino 1 (crea `TaskOrder` + `EscrowLedger`) y Camino 2 (`DISCREPANCY_CLOSED_PATH_2` manteniendo `OPEN_FOR_PROPOSALS`). | `T-F1-BE2-01` | `[DONE]` |
+| **`T-F2-BE2-01`** | `BE-2` | 🔴 `P0` | `SPEC-04` | Implementar el módulo de Marketplace (CRUD de `Gig` y `ClientTaskPublication`, paginación por las 6 categorías y semillas de datos). | `T-F1-BE2-01` | `[DONE]` |
+| **`T-F2-AI1-01`** | `AI-1` | 🟠 `P1` | `SPEC-05` | Implementar el clasificador automático de modalidad auditable (`IMAGE | TEXT` vs. no auditable en MVP) al crearse una `TaskOrder`. | `T-F1-AI1-01` | `[DONE]` |
 
 ---
 
