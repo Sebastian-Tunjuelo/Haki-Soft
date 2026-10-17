@@ -2,17 +2,44 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ShieldCheck, Wallet, ArrowLeftRight } from 'lucide-react';
+import { ShieldCheck, Wallet } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { readActiveMode, readActiveWallet, readSessionUser } from '@/src/lib/identity-contract';
+import { readActiveWallet, readSessionUser } from '@/src/lib/identity-contract';
+import { formatUsd } from '@/src/lib/api-client';
+import { useHomeTheme } from '@/src/lib/use-home-theme';
+import type { HomeTheme } from '@/src/lib/home-theme';
+
+function ThemeToggleButton({ theme, onToggle }: { theme: HomeTheme; onToggle: () => void }) {
+  return (
+    <button
+      className="theme-toggle"
+      type="button"
+      aria-label={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+      onClick={onToggle}
+    >
+      {theme === 'dark' ? (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+        </svg>
+      ) : (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+        </svg>
+      )}
+    </button>
+  );
+}
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { theme, toggleTheme } = useHomeTheme();
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
-  const [activeMode, setActiveMode] = useState<'BUYER' | 'SELLER'>('BUYER');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [hasActiveWallet, setHasActiveWallet] = useState<boolean>(false);
+  const [demoBalanceUSDInCents, setDemoBalanceUSDInCents] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -22,12 +49,13 @@ export function Navbar() {
         if (cancelled) return;
         const user = readSessionUser(data);
         setSessionEmail(user?.email ?? null);
-        if (user) setActiveMode(user.activeMode);
+        setIsAdmin(user?.platformRole === 'ADMIN');
         setSessionLoaded(true);
       })
       .catch(() => {
         if (!cancelled) {
           setSessionEmail(null);
+          setIsAdmin(false);
           setSessionLoaded(true);
         }
       });
@@ -39,28 +67,29 @@ export function Navbar() {
   useEffect(() => {
     if (!sessionLoaded || !sessionEmail) {
       setHasActiveWallet(false);
+      setDemoBalanceUSDInCents(null);
       return;
     }
 
     let cancelled = false;
-    fetch('/api/v1/me/mode')
-      .then((res) => res.json())
-      .then((data: unknown) => {
-        const mode = readActiveMode(data);
-        if (!cancelled && mode) setActiveMode(mode);
-      })
-      .catch(() => {});
-
-    fetch('/api/v1/me/wallet')
-      .then((res) => res.json())
-      .then((data: unknown) => {
-        const wallet = readActiveWallet(data);
-        if (!cancelled) setHasActiveWallet(Boolean(wallet?.isVerified && wallet.isActive));
-      })
-      .catch(() => {});
-
+    const pullWallet = () => {
+      fetch('/api/v1/me/wallet')
+        .then((res) => res.json())
+        .then((data: unknown) => {
+          const wallet = readActiveWallet(data);
+          if (cancelled) return;
+          setHasActiveWallet(Boolean(wallet?.isVerified && wallet.isActive));
+          setDemoBalanceUSDInCents(
+            wallet?.isVerified && wallet.isActive ? wallet.demoBalanceUSDInCents : null,
+          );
+        })
+        .catch(() => {});
+    };
+    pullWallet();
+    const poll = setInterval(pullWallet, 4_000);
     return () => {
       cancelled = true;
+      clearInterval(poll);
     };
   }, [pathname, sessionLoaded, sessionEmail]);
 
@@ -73,18 +102,6 @@ export function Navbar() {
             <div className="logo-title">
               <span>TaskStream</span>
               <span style={{ color: 'var(--brand-blue)', fontWeight: 700 }}>AI</span>
-              <span
-                style={{
-                  fontSize: 10,
-                  background: 'var(--bg-subtle)',
-                  padding: '2px 6px',
-                  borderRadius: 4,
-                  border: '1px solid var(--border)',
-                  color: 'var(--text-muted)',
-                }}
-              >
-                Fase 1 · SPEC-02
-              </span>
             </div>
           </Link>
 
@@ -111,6 +128,14 @@ export function Navbar() {
                 Actividad
               </Link>
             ) : null}
+            {isAdmin ? (
+              <Link
+                href="/admin/disputes"
+                className={`nav-link ${pathname?.startsWith('/admin') ? 'active' : ''}`}
+              >
+                Admin
+              </Link>
+            ) : null}
             <Link
               href="/onboarding/wallet"
               className={`nav-link ${pathname === '/onboarding/wallet' ? 'active' : ''}`}
@@ -118,35 +143,26 @@ export function Navbar() {
             >
               <Wallet size={15} />
               <span>Billetera</span>
-              {hasActiveWallet && (
+              {hasActiveWallet && demoBalanceUSDInCents !== null ? (
+                <span className="badge badge-verified" style={{ padding: '2px 6px', fontSize: 10 }}>
+                  {formatUsd(demoBalanceUSDInCents)}
+                </span>
+              ) : hasActiveWallet ? (
                 <span className="badge badge-verified" style={{ padding: '2px 6px', fontSize: 10 }}>
                   <span className="pulse-dot" /> Activa
                 </span>
-              )}
-            </Link>
-            <Link
-              href="/settings/mode"
-              className={`nav-link ${pathname === '/settings/mode' ? 'active' : ''}`}
-              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-            >
-              <ArrowLeftRight size={15} />
-              <span>Modo</span>
-              {sessionEmail && (
-                <span
-                  className={`badge ${activeMode === 'BUYER' ? 'badge-buyer' : 'badge-seller'}`}
-                  style={{ padding: '2px 6px', fontSize: 10 }}
-                >
-                  {activeMode}
-                </span>
-              )}
+              ) : null}
             </Link>
           </nav>
 
           <div className="header-actions">
             {!sessionLoaded ? (
-              <div style={{ width: 80, height: 32, background: 'var(--surface)', borderRadius: 'var(--radius-sm)' }} />
+              <div className="header-auth-cluster">
+                <ThemeToggleButton theme={theme} onToggle={toggleTheme} />
+                <div style={{ width: 80, height: 32, background: 'var(--surface)', borderRadius: 'var(--radius-sm)' }} />
+              </div>
             ) : sessionEmail ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div className="header-auth-cluster">
                 <span
                   style={{
                     fontSize: 12,
@@ -159,6 +175,7 @@ export function Navbar() {
                   <ShieldCheck size={14} style={{ color: 'var(--status-verified)' }} />
                   {sessionEmail}
                 </span>
+                <ThemeToggleButton theme={theme} onToggle={toggleTheme} />
                 <button
                   className="btn btn-outline btn-sm"
                   type="button"
@@ -173,7 +190,8 @@ export function Navbar() {
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="header-auth-cluster">
+                <ThemeToggleButton theme={theme} onToggle={toggleTheme} />
                 <Link href="/sign-in" className="btn btn-outline btn-sm">
                   Iniciar sesión
                 </Link>
