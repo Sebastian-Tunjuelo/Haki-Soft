@@ -17,9 +17,10 @@ import { WalletCallbackController, WalletController } from './wallet.controller'
 import { WalletService } from './wallet.service';
 import { WalletVerifiedGuard } from './wallet-verified.guard';
 
-const HASH_OK = 'a864cb9cb67ade8df4e58d8e55c22f757270f7a9128c943c745b631ac1f7d0dd';
-const HASH_TWO = '5bc96aca7d4f1b849b81a9335014646d834df83082b112e3a3b8c087bcc95762';
-const HASH_ABORT = '51b97e0191821aa0256c997c5872cc67d1c6d1aab9aca4a0e870f4bfb6907721';
+/** Digests Base64 con padding (Rafiki) para client-nonce-fixed + finish-nonce-fixed + auth.example.test */
+const HASH_OK = 'qGTLnLZ63o305Y2OVcIvdXJw96kSjJQ8dFtjGsH30N0=';
+const HASH_TWO = 'W8lqyn1PG4SbgakzUBRkbYNN+DCCsRLjo7jAh7zJV2I=';
+const HASH_ABORT = 'Ubl+AZGCGqAlbJl8WHLMZ9HG0aq5rKSg6HD0v7aQdyE=';
 const WALLET_A = 'https://ilp.interledger-test.dev/ada';
 const WALLET_B = 'https://ilp.interledger-test.dev/grace';
 
@@ -235,8 +236,8 @@ describe('SPEC-02 backend identity', () => {
       interact_ref: 'interact-ref-bad',
       hash: '0'.repeat(64),
     });
-    expect(mismatch.status).toBe(400);
-    expect(mismatch.body).toEqual({ code: 'GNAP_HASH_MISMATCH' });
+    expect(mismatch.status).toBe(303);
+    expect(String(mismatch.headers.location)).toContain('code=GNAP_HASH_MISMATCH');
     expect(gateway.continueCalls).toBe(0);
     expect(repository.walletsOf((await repository.findUserByEmail('ada@example.com'))!.user.id).some((wallet) => wallet.isVerified)).toBe(
       false,
@@ -257,8 +258,9 @@ describe('SPEC-02 backend identity', () => {
       interact_ref: 'interact-ref-ok',
       hash: HASH_OK,
     });
-    expect(verified.status).toBe(200);
-    expect(verified.body).toEqual({ status: 'VERIFIED', walletAddress: WALLET_A });
+    expect(verified.status).toBe(303);
+    expect(String(verified.headers.location)).toContain('status=verified');
+    expect(String(verified.headers.location)).toContain(encodeURIComponent(WALLET_A));
     expect(gateway.continueCalls).toBe(1);
 
     const allowed = await request(app.getHttpServer())
@@ -272,8 +274,8 @@ describe('SPEC-02 backend identity', () => {
       interact_ref: 'interact-ref-ok',
       hash: HASH_OK,
     });
-    expect(reused.status).toBe(409);
-    expect(reused.body).toEqual({ code: 'GNAP_INTERACT_ALREADY_USED' });
+    expect(reused.status).toBe(303);
+    expect(String(reused.headers.location)).toContain('code=GNAP_INTERACT_ALREADY_USED');
 
     await request(app.getHttpServer())
       .post('/api/v1/me/wallet/discovery')
@@ -290,8 +292,8 @@ describe('SPEC-02 backend identity', () => {
       interact_ref: 'interact-ref-expired',
       hash: HASH_TWO,
     });
-    expect(expired.status).toBe(410);
-    expect(expired.body).toEqual({ code: 'WALLET_CHALLENGE_EXPIRED' });
+    expect(expired.status).toBe(303);
+    expect(String(expired.headers.location)).toContain('code=WALLET_CHALLENGE_EXPIRED');
     expect(repository.walletsOf(user.id).filter((wallet) => wallet.isActive)).toEqual([
       expect.objectContaining({ walletAddressUrl: WALLET_A, isVerified: true, isActive: true }),
     ]);
@@ -306,7 +308,8 @@ describe('SPEC-02 backend identity', () => {
       interact_ref: 'interact-ref-two',
       hash: HASH_TWO,
     });
-    expect(replaced.status).toBe(200);
+    expect(replaced.status).toBe(303);
+    expect(String(replaced.headers.location)).toContain('status=verified');
     const active = repository.walletsOf(user.id).filter((wallet) => wallet.isActive);
     expect(active).toHaveLength(1);
     expect(active[0]?.walletAddressUrl).toBe(WALLET_B);
@@ -327,8 +330,8 @@ describe('SPEC-02 backend identity', () => {
       interact_ref: 'interact-ref-abort',
       hash: HASH_ABORT,
     });
-    expect(aborted.status).toBe(500);
-    expect(aborted.body).toEqual({ code: 'ACTIVE_WALLET_REPLACEMENT_ABORTED' });
+    expect(aborted.status).toBe(303);
+    expect(String(aborted.headers.location)).toContain('code=ACTIVE_WALLET_REPLACEMENT_ABORTED');
     expect(repository.walletsOf(user.id).filter((wallet) => wallet.isActive)).toEqual([
       expect.objectContaining({ walletAddressUrl: WALLET_B, isActive: true }),
     ]);

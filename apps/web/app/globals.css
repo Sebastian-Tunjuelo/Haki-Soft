@@ -56,6 +56,14 @@ a {
   text-decoration: none;
 }
 
+/* Select nativo: contraste legible en tema oscuro (evita texto blanco sobre blanco). */
+select,
+select option {
+  background-color: var(--surface);
+  color: var(--text-primary);
+  color-scheme: dark;
+}
+
 /* Layout Utilities */
 .app-container {
   width: 100%;

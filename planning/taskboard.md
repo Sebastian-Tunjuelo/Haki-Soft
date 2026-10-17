@@ -63,9 +63,9 @@
 | **`T-F2-FE1-02`** | `FE-1` | 🔴 `P0` | `SPEC-05` | Construir la Sala de Negociación entre Buyer y Freelancer: validación de propuesta `<= presupuesto inicial`, acuerdo para iniciar orden (Camino 1) y cierre de contacto por discrepancia manteniendo activa la publicación (Camino 2). | `T-F2-FE1-01` | `[READY_UNBLOCKED]` |
 | **`T-F2-FE1-03`** | `FE-1` | 🟡 `P2` | `SPEC-04` | Inyectar la etiqueta W3C Web Monetization (`<link rel="monetization">`) en las páginas públicas de perfil de cada Freelancer verificado. | `T-F2-FE1-01` | `[READY_UNBLOCKED]` |
 | **`T-F2-FE2-01`** | `FE-2` | 🟠 `P1` | `SPEC-04` | Diseñar las transiciones espaciales con `GSAP ScrollTrigger` para las tarjetas de las 6 categorías del Marketplace. | `T-F1-FE2-01` | `[READY_UNBLOCKED]` |
-| **`T-F2-BE1-01`** | `BE-1` | 🔴 `P0` | `SPEC-05` | Implementar el módulo de negociación en Backend: validación estricta `proposedBudget <= initialBudget`, transición atómica de Camino 1 (crea `TaskOrder` + `EscrowLedger`) y Camino 2 (`DISCREPANCY_CLOSED_PATH_2` manteniendo `OPEN_FOR_PROPOSALS`). | `T-F1-BE2-01` | `[READY_UNBLOCKED]` |
-| **`T-F2-BE2-01`** | `BE-2` | 🔴 `P0` | `SPEC-04` | Implementar el módulo de Marketplace (CRUD de `Gig` y `ClientTaskPublication`, paginación por las 6 categorías y semillas de datos). | `T-F1-BE2-01` | `[READY_UNBLOCKED]` |
-| **`T-F2-AI1-01`** | `AI-1` | 🟠 `P1` | `SPEC-05` | Implementar el clasificador automático de modalidad auditable (`IMAGE | TEXT` vs. no auditable en MVP) al crearse una `TaskOrder`. | `T-F1-AI1-01` | `[READY_UNBLOCKED]` |
+| **`T-F2-BE1-01`** | `BE-1` | 🔴 `P0` | `SPEC-05` | Implementar el módulo de negociación en Backend: validación estricta `proposedBudget <= initialBudget`, transición atómica de Camino 1 (crea `TaskOrder` + `EscrowLedger`) y Camino 2 (`DISCREPANCY_CLOSED_PATH_2` manteniendo `OPEN_FOR_PROPOSALS`). | `T-F1-BE2-01` | `[DONE]` |
+| **`T-F2-BE2-01`** | `BE-2` | 🔴 `P0` | `SPEC-04` | Implementar el módulo de Marketplace (CRUD de `Gig` y `ClientTaskPublication`, paginación por las 6 categorías y semillas de datos). | `T-F1-BE2-01` | `[DONE]` |
+| **`T-F2-AI1-01`** | `AI-1` | 🟠 `P1` | `SPEC-05` | Implementar el clasificador automático de modalidad auditable (`IMAGE | TEXT` vs. no auditable en MVP) al crearse una `TaskOrder`. | `T-F1-AI1-01` | `[DONE]` |
 
 ---
 
@@ -74,10 +74,10 @@
 | ID Tarea | Rol | Prioridad | Spec Asociada | Descripción de la Tarea | Dependencias | Estado |
 | :---- | :---- | :---- | :---- | :---- | :---- | :---- |
 | **`T-F3-BE1-01`** | `BE-1` | 🔴 `P0` | `SPEC-06` | 🛡️ **`[MANUAL / IA MÍNIMA-NULA]`** `escrow-payment.service.ts`: **(1)** Depósito 100 % en escrow; **(2)** Dos payouts: **96 %** Freelancer + **4 %** wallet dueño; **(3)** Reembolso **100 %** (7d sin extensión, rechazo/silencio extensión, fallo extensión, Admin→Buyer) — actividad muere; **(4)** Grants / rotate / revoke. | `T-F1-BE1-01` | `[READY_UNBLOCKED]` |
-| **`T-F3-BE2-01`** | `BE-2` | 🔴 `P0` | `SPEC-06` | Implementar el guardia de idempotencia financiera (`SHA256` en `OpenPaymentsTransaction`), bloqueo transaccional sobre `EscrowLedger` y el receptor de Webhooks de Rafiki. | `T-F1-BE2-01` | `[READY_UNBLOCKED]` |
-| **`T-F3-FE1-01`** | `FE-1` | 🔴 `P0` | `SPEC-06` | Construir el Checkout de Custodia en Escrow: resumen del depósito del 100 %, distribución futura (`96 % Freelancer / 4 % TaskStream`), redirección al consentimiento GNAP y activación del plazo inicial de 7 días (`ESCROW_LOCKED`). | `T-F2-FE1-02` | `[READY_UNBLOCKED]` |
+| **`T-F3-BE2-01`** | `BE-2` | 🔴 `P0` | `SPEC-06` | Implementar el guardia de idempotencia financiera (`SHA256` en `OpenPaymentsTransaction`), bloqueo transaccional sobre `EscrowLedger` y el receptor de Webhooks de Rafiki. | `T-F1-BE2-01` | `[DONE]` — gateway simulado + harness; swap a 🛡️ OP cuando BE-1 cierre |
+| **`T-F3-FE1-01`** | `FE-1` | 🔴 `P0` | `SPEC-06` | Construir el Checkout de Custodia en Escrow: resumen del depósito del 100 %, distribución futura (`96 % Freelancer / 4 % TaskStream`), redirección al consentimiento GNAP y activación del plazo inicial de 7 días (`ESCROW_LOCKED`). | `T-F2-FE1-02` | `[READY_UNBLOCKED]` — harness mínimo en `/orders/escrow` |
 | **`T-F3-FE2-01`** | `FE-2` | 🔴 `P0` | `SPEC-06` | Construir la **Escena 3D de Bóveda Escrow** en `@react-three/fiber v9` controlada por `GSAP ScrollTrigger` y eventos de estado de la orden. | `T-F1-FE2-02` | `[READY_UNBLOCKED]` |
-| **`T-F3-AI1-01`** | `AI-1` | 🟠 `P1` | `SPEC-06` | Automatizar las pruebas de invariantes matemáticas de pagos (`100 % = 96 % + 4 %` e idempotencia ante reintentos concurrentes). | `T-F0-05` | `[READY_UNBLOCKED]` |
+| **`T-F3-AI1-01`** | `AI-1` | 🟠 `P1` | `SPEC-06` | Automatizar las pruebas de invariantes matemáticas de pagos (`100 % = 96 % + 4 %` e idempotencia ante reintentos concurrentes). | `T-F0-05` | `[DONE]` — `contracts.test.ts` + `escrow.http.spec.ts` |
 
 ---
 

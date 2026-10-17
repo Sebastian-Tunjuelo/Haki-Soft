@@ -96,6 +96,22 @@ export function Navbar() {
               Inicio
             </Link>
             <Link
+              href="/marketplace"
+              className={`nav-link ${pathname?.startsWith('/marketplace') ? 'active' : ''}`}
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <ShieldCheck size={15} />
+              <span>Marketplace</span>
+            </Link>
+            {sessionEmail ? (
+              <Link
+                href="/activity"
+                className={`nav-link ${pathname?.startsWith('/activity') ? 'active' : ''}`}
+              >
+                Actividad
+              </Link>
+            ) : null}
+            <Link
               href="/onboarding/wallet"
               className={`nav-link ${pathname === '/onboarding/wallet' ? 'active' : ''}`}
               style={{ display: 'flex', alignItems: 'center', gap: 6 }}

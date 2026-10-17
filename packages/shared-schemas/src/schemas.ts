@@ -7,6 +7,7 @@ import {
   splitSingleBlockEscrow,
 } from './money';
 import { resolveMvpAiAuditableModality } from './modality';
+import { normalizeWalletAddressInput } from './wallet-address';
 
 export const TaskCategoryEnum = z.enum([
   'DIGITAL_MARKETING',
@@ -325,7 +326,13 @@ export const AiAdvisorReportSchema = z.object({
 });
 
 export const WalletLinkRequestSchema = z.object({
-  walletAddress: z.string().url().startsWith('https://'),
+  /** Acepta `https://…` o Payment Pointer `$host/path` (se normaliza a HTTPS). */
+  walletAddress: z
+    .string()
+    .trim()
+    .min(3)
+    .transform(normalizeWalletAddressInput)
+    .pipe(z.string().url().startsWith('https://')),
 });
 
 export const ActiveModeSwitchSchema = z.object({

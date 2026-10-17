@@ -24,6 +24,9 @@ export function splitSingleBlockEscrow(totalAmountUSDInCents: number): {
 
 export const ESCROW_WALLET_ADDRESS = 'https://ilp.interledger-test.dev/taskstream-escrow';
 
+/** Wallet del dueño/plataforma que recibe el 4 % (distinta del escrow). */
+export const PLATFORM_OWNER_WALLET_ADDRESS = 'https://ilp.interledger-test.dev/taskstream-owner';
+
 export const MANDATORY_AI_DISCLAIMER =
   'Este informe es estrictamente consultivo para tareas de imagen y texto. El Consejero de IA nunca aprueba ni ejecuta pagos.';
 

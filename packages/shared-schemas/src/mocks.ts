@@ -1,4 +1,10 @@
-import { buyerExtensionDecisionDeadline, ESCROW_WALLET_ADDRESS, MANDATORY_AI_DISCLAIMER, splitSingleBlockEscrow } from './money';
+import {
+  buyerExtensionDecisionDeadline,
+  ESCROW_WALLET_ADDRESS,
+  MANDATORY_AI_DISCLAIMER,
+  PLATFORM_OWNER_WALLET_ADDRESS,
+  splitSingleBlockEscrow,
+} from './money';
 import {
   AiAdvisorInputContractSchema,
   AiAdvisorReportSchema,
@@ -24,7 +30,7 @@ const DELIVERABLE_ID = '77777777-7777-4777-8777-777777777777';
 
 const BUYER_WALLET = 'https://ilp.interledger-test.dev/buyer-demo';
 const SELLER_WALLET = 'https://ilp.interledger-test.dev/seller-demo';
-const OWNER_WALLET = 'https://ilp.interledger-test.dev/taskstream-owner';
+const OWNER_WALLET = PLATFORM_OWNER_WALLET_ADDRESS;
 
 const CRITERION = {
   criterionId: 'tone-of-voice',

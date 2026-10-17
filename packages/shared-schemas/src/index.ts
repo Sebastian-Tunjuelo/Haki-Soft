@@ -4,8 +4,35 @@ export {
   MANDATORY_AI_DISCLAIMER,
   MAX_MARKETPLACE_AMOUNT_USD_IN_CENTS,
   MIN_MARKETPLACE_AMOUNT_USD_IN_CENTS,
+  PLATFORM_OWNER_WALLET_ADDRESS,
   splitSingleBlockEscrow,
 } from './money';
+export {
+  AcceptPath1ResultSchema,
+  AcceptProposalPath1InputSchema,
+  ClosePath2ResultSchema,
+  CloseProposalPath2InputSchema,
+  CreateNegotiationProposalInputSchema,
+  HireFixedGigInputSchema,
+  HireFixedGigResultSchema,
+  NegotiationInboxItemSchema,
+  NegotiationMessageViewSchema,
+  NegotiationProposalDetailSchema,
+  SendNegotiationMessageInputSchema,
+} from './negotiations';
+export type {
+  AcceptPath1Result,
+  AcceptProposalPath1Input,
+  ClosePath2Result,
+  CloseProposalPath2Input,
+  CreateNegotiationProposalInput,
+  HireFixedGigInput,
+  HireFixedGigResult,
+  NegotiationInboxItem,
+  NegotiationMessageView,
+  NegotiationProposalDetail,
+  SendNegotiationMessageInput,
+} from './negotiations';
 export {
   buyerRefundIdempotencyKey,
   escrowLockIdempotencyKey,
@@ -13,6 +40,7 @@ export {
   gnapInteractHash,
   platformFeePayoutIdempotencyKey,
 } from './idempotency';
+export { normalizeWalletAddressInput } from './wallet-address';
 export { resolveMvpAiAuditableModality } from './modality';
 export {
   mockAiAdvisorInputContract,
@@ -24,6 +52,69 @@ export {
   mockIds,
   mockTaskOrderCard,
 } from './mocks';
+export {
+  EscrowFundingViewSchema,
+  OrderWorkspaceMessageSchema,
+  OrderWorkspaceViewSchema,
+  RafikiIncomingCompletedWebhookSchema,
+  SellerActivityItemSchema,
+  SellerWorkRequestEventSchema,
+  SendOrderWorkspaceMessageInputSchema,
+  SELLER_CONFIRMATION_WINDOW_HOURS,
+  sellerConfirmationDeadlineIso,
+} from './escrow';
+export type {
+  EscrowFundingView,
+  OrderWorkspaceMessage,
+  OrderWorkspaceView,
+  RafikiIncomingCompletedWebhook,
+  SellerActivityItem,
+  SellerWorkRequestEvent,
+  SendOrderWorkspaceMessageInput,
+} from './escrow';
+export {
+  CATEGORY_MEDIA_CONSTRAINTS_MAP,
+  CancelPublicationInputSchema,
+  ClientTaskPublicationSummarySchema,
+  CreateGigInputSchema,
+  CreateMarketplaceReviewInputSchema,
+  CreatePublicationInputSchema,
+  GigCardSchema,
+  MarketplaceCategoryCatalogItemSchema,
+  MarketplaceListQuerySchema,
+  MarketplaceReviewCardSchema,
+  MarketplaceReviewsPayloadSchema,
+  UpdateGigInputSchema,
+  UpdatePublicationInputSchema,
+} from './marketplace';
+export type {
+  CancelPublicationInput,
+  ClientTaskPublicationSummary,
+  CreateGigInput,
+  CreateMarketplaceReviewInput,
+  CreatePublicationInput,
+  GigCard,
+  MarketplaceCategory,
+  MarketplaceCategoryCatalogItem,
+  MarketplaceReviewCard,
+  MarketplaceReviewsPayload,
+  UpdateGigInput,
+  UpdatePublicationInput,
+} from './marketplace';
+export {
+  MARKETPLACE_GALLERY_MAX,
+  MARKETPLACE_MEDIA_MAX_BYTES,
+  MARKETPLACE_MEDIA_MIME,
+  MarketplaceMediaAssetSchema,
+  PageDocumentSchema,
+  UpdatePageDocumentInputSchema,
+  defaultPageDocument,
+} from './page-document';
+export type {
+  MarketplaceMediaAsset,
+  PageDocument,
+  UpdatePageDocumentInput,
+} from './page-document';
 export {
   AcceptanceCriterionSchema,
   ActiveModeSwitchSchema,
