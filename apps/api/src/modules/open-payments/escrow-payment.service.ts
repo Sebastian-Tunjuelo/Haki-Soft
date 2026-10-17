@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import {
   createAuthenticatedClient,
   isFinalizedGrantWithAccessToken,
@@ -109,6 +109,9 @@ export class EscrowPaymentService {
   /**
    * Fondeo: IncomingPayment en escrow + Quote + grant interactivo de OutgoingPayment del buyer.
    * El contratador debe autorizar en la Test Wallet (redirect).
+   *
+   * `amountMinorUnits` = centavos USD de la orden. En testnet se mapean 1:1 a unidades
+   * mayores del asset de custodia (p. ej. $10.00 → 10.00 EGG si scale=2 → value "1000").
    */
   async beginBuyerFunding(input: {
     taskId: string;
@@ -120,10 +123,11 @@ export class EscrowPaymentService {
       throw new DomainError(400, 'VALIDATION_ERROR');
     }
 
+    try {
     const client = await this.client();
     const escrow = await this.getWallet(this.escrowWalletUrl());
     const buyer = await this.getWallet(input.buyerWalletUrl);
-    const amountValue = String(input.amountMinorUnits);
+    const amountValue = usdCentsToAssetMinorValue(input.amountMinorUnits, escrow.assetScale);
     const assetCode = escrow.assetCode;
     const assetScale = escrow.assetScale;
 
@@ -238,6 +242,9 @@ export class EscrowPaymentService {
       assetScale,
       amountValue,
     };
+    } catch (error) {
+      throw mapOpError(error);
+    }
   }
 
   /** Tras el redirect GNAP del buyer: continue grant + OutgoingPayment. */
@@ -248,38 +255,42 @@ export class EscrowPaymentService {
     continueAccessToken: string;
     interactRef: string;
   }): Promise<FundingCompleted> {
-    const client = await this.client();
-    const buyer = await this.getWallet(input.buyerWalletUrl);
+    try {
+      const client = await this.client();
+      const buyer = await this.getWallet(input.buyerWalletUrl);
 
-    const continued = await client.grant.continue(
-      { url: input.continueUri, accessToken: input.continueAccessToken },
-      { interact_ref: input.interactRef },
-    );
-    if (!isFinalizedGrantWithAccessToken(continued)) {
-      throw new DomainError(400, 'GNAP_SUBJECT_NOT_CONFIRMED');
+      const continued = await client.grant.continue(
+        { url: input.continueUri, accessToken: input.continueAccessToken },
+        { interact_ref: input.interactRef },
+      );
+      if (!isFinalizedGrantWithAccessToken(continued)) {
+        throw new DomainError(400, 'GNAP_SUBJECT_NOT_CONFIRMED');
+      }
+
+      const outgoing = await client.outgoingPayment.create(
+        {
+          url: buyer.resourceServer,
+          accessToken: continued.access_token.value,
+        },
+        {
+          walletAddress: buyer.id,
+          quoteId: input.quoteId,
+        },
+      );
+
+      return {
+        status: 'COMPLETED',
+        incomingPaymentUrl: outgoing.receiver,
+        outgoingPaymentUrl: outgoing.id,
+      };
+    } catch (error) {
+      throw mapOpError(error);
     }
-
-    const outgoing = await client.outgoingPayment.create(
-      {
-        url: buyer.resourceServer,
-        accessToken: continued.access_token.value,
-      },
-      {
-        walletAddress: buyer.id,
-        quoteId: input.quoteId,
-      },
-    );
-
-    return {
-      status: 'COMPLETED',
-      incomingPaymentUrl: outgoing.receiver,
-      outgoingPaymentUrl: outgoing.id,
-    };
   }
 
   /**
    * Liberación 96/4 desde la wallet de custodia con token de larga duración.
-   * Requiere `OPEN_PAYMENTS_ESCROW_ACCESS_TOKEN` (grant outgoing en Test Wallet).
+   * Requiere `OPEN_PAYMENTS_ESCROW_ACCESS_TOKEN` (grant outgoing sobre la misma wallet de custodia).
    */
   async disburse96And4(input: {
     taskId: string;
@@ -295,15 +306,25 @@ export class EscrowPaymentService {
     const freelancerOutgoingUrl = await this.payFromEscrowWithToken({
       taskId: input.taskId,
       receiverWalletUrl: input.sellerWalletUrl,
-      amountMinorUnits: input.freelancerMinorUnits,
+      amountUsdCents: input.freelancerMinorUnits,
       accessToken: token,
       purpose: 'FREELANCER_PAYOUT_96',
     });
 
+    const escrowUrl = normalizeWalletUrl(this.escrowWalletUrl());
+    const platformUrl = normalizeWalletUrl(this.platformOwnerWalletUrl());
+    // Si el 4 % queda en la misma custodia, no hay OutgoingPayment circular.
+    if (platformUrl === escrowUrl) {
+      return {
+        freelancerOutgoingUrl,
+        platformOutgoingUrl: `${escrowUrl}#fee-retained-in-escrow`,
+      };
+    }
+
     const platformOutgoingUrl = await this.payFromEscrowWithToken({
       taskId: input.taskId,
       receiverWalletUrl: this.platformOwnerWalletUrl(),
-      amountMinorUnits: input.platformFeeMinorUnits,
+      amountUsdCents: input.platformFeeMinorUnits,
       accessToken: token,
       purpose: 'PLATFORM_FEE_PAYOUT_4',
     });
@@ -323,7 +344,7 @@ export class EscrowPaymentService {
     const outgoingPaymentUrl = await this.payFromEscrowWithToken({
       taskId: input.taskId,
       receiverWalletUrl: input.buyerWalletUrl,
-      amountMinorUnits: input.amountMinorUnits,
+      amountUsdCents: input.amountMinorUnits,
       accessToken: token,
       purpose: 'BUYER_REFUND_100',
     });
@@ -333,84 +354,89 @@ export class EscrowPaymentService {
   private async payFromEscrowWithToken(input: {
     taskId: string;
     receiverWalletUrl: string;
-    amountMinorUnits: number;
+    amountUsdCents: number;
     accessToken: string;
     purpose: string;
   }): Promise<string> {
-    const client = await this.client();
-    const escrow = await this.getWallet(this.escrowWalletUrl());
-    const receiver = await this.getWallet(input.receiverWalletUrl);
-    const amountValue = String(input.amountMinorUnits);
+    try {
+      const client = await this.client();
+      const escrow = await this.getWallet(this.escrowWalletUrl());
+      const receiver = await this.getWallet(input.receiverWalletUrl);
+      // Incoming en el asset del receptor; el quote convierte desde la custodia.
+      const amountValue = usdCentsToAssetMinorValue(input.amountUsdCents, receiver.assetScale);
 
-    const incomingGrant = await client.grant.request(
-      { url: receiver.authServer },
-      {
-        access_token: {
-          access: [{ type: 'incoming-payment', actions: ['create', 'read', 'complete'] }],
+      const incomingGrant = await client.grant.request(
+        { url: receiver.authServer },
+        {
+          access_token: {
+            access: [{ type: 'incoming-payment', actions: ['create', 'read', 'complete'] }],
+          },
         },
-      },
-    );
-    if (!isFinalizedGrantWithAccessToken(incomingGrant)) {
-      throw new DomainError(502, 'OPEN_PAYMENTS_GRANT_NOT_FINALIZED');
+      );
+      if (!isFinalizedGrantWithAccessToken(incomingGrant)) {
+        throw new DomainError(502, 'OPEN_PAYMENTS_GRANT_NOT_FINALIZED');
+      }
+
+      const incomingPayment = await client.incomingPayment.create(
+        {
+          url: receiver.resourceServer,
+          accessToken: incomingGrant.access_token.value,
+        },
+        {
+          walletAddress: receiver.id,
+          incomingAmount: {
+            value: amountValue,
+            assetCode: receiver.assetCode,
+            assetScale: receiver.assetScale,
+          },
+          metadata: { taskId: input.taskId, purpose: input.purpose },
+        },
+      );
+
+      const quoteGrant = await client.grant.request(
+        { url: escrow.authServer },
+        {
+          access_token: {
+            access: [{ type: 'quote', actions: ['create', 'read'] }],
+          },
+        },
+      );
+      if (!isFinalizedGrantWithAccessToken(quoteGrant)) {
+        throw new DomainError(502, 'OPEN_PAYMENTS_GRANT_NOT_FINALIZED');
+      }
+
+      const quote = await client.quote.create(
+        {
+          url: escrow.resourceServer,
+          accessToken: quoteGrant.access_token.value,
+        },
+        {
+          method: 'ilp',
+          walletAddress: escrow.id,
+          receiver: incomingPayment.id,
+          receiveAmount: {
+            value: amountValue,
+            assetCode: receiver.assetCode,
+            assetScale: receiver.assetScale,
+          },
+        },
+      );
+
+      const outgoing = await client.outgoingPayment.create(
+        {
+          url: escrow.resourceServer,
+          accessToken: input.accessToken,
+        },
+        {
+          walletAddress: escrow.id,
+          quoteId: quote.id,
+        },
+      );
+
+      return outgoing.id;
+    } catch (error) {
+      throw mapOpError(error);
     }
-
-    const incomingPayment = await client.incomingPayment.create(
-      {
-        url: receiver.resourceServer,
-        accessToken: incomingGrant.access_token.value,
-      },
-      {
-        walletAddress: receiver.id,
-        incomingAmount: {
-          value: amountValue,
-          assetCode: escrow.assetCode,
-          assetScale: escrow.assetScale,
-        },
-        metadata: { taskId: input.taskId, purpose: input.purpose },
-      },
-    );
-
-    const quoteGrant = await client.grant.request(
-      { url: escrow.authServer },
-      {
-        access_token: {
-          access: [{ type: 'quote', actions: ['create', 'read'] }],
-        },
-      },
-    );
-    if (!isFinalizedGrantWithAccessToken(quoteGrant)) {
-      throw new DomainError(502, 'OPEN_PAYMENTS_GRANT_NOT_FINALIZED');
-    }
-
-    const quote = await client.quote.create(
-      {
-        url: escrow.resourceServer,
-        accessToken: quoteGrant.access_token.value,
-      },
-      {
-        method: 'ilp',
-        walletAddress: escrow.id,
-        receiver: incomingPayment.id,
-        debitAmount: {
-          value: amountValue,
-          assetCode: escrow.assetCode,
-          assetScale: escrow.assetScale,
-        },
-      },
-    );
-
-    const outgoing = await client.outgoingPayment.create(
-      {
-        url: escrow.resourceServer,
-        accessToken: input.accessToken,
-      },
-      {
-        walletAddress: escrow.id,
-        quoteId: quote.id,
-      },
-    );
-
-    return outgoing.id;
   }
 }
 
@@ -423,10 +449,43 @@ function readFinishNonce(finish: unknown): string | null {
   return null;
 }
 
+/** Centavos USD de la app → `value` Open Payments (1:1 en unidades mayores del asset). */
+export function usdCentsToAssetMinorValue(usdCents: number, assetScale: number): string {
+  if (!Number.isInteger(usdCents) || usdCents < 1) {
+    throw new DomainError(400, 'VALIDATION_ERROR');
+  }
+  if (!Number.isInteger(assetScale) || assetScale < 0 || assetScale > 18) {
+    throw new DomainError(502, 'OPEN_PAYMENTS_UPSTREAM');
+  }
+  const major = usdCents / 100;
+  const minor = Math.round(major * 10 ** assetScale);
+  if (minor < 1) throw new DomainError(400, 'VALIDATION_ERROR');
+  return String(minor);
+}
+
+function normalizeWalletUrl(url: string): string {
+  return url.trim().replace(/\/$/, '').toLowerCase();
+}
+
 function mapOpError(error: unknown): never {
   if (error instanceof DomainError) throw error;
-  if (error instanceof OpenPaymentsClientError && error.status === 404) {
-    throw new DomainError(404, 'WALLET_ADDRESS_NOT_FOUND');
+  if (error instanceof OpenPaymentsClientError) {
+    const status = error.status ?? 0;
+    const detail = [
+      status || undefined,
+      'code' in error ? String((error as { code?: unknown }).code ?? '') : '',
+      'description' in error ? String((error as { description?: unknown }).description ?? '') : '',
+      error.message,
+    ]
+      .filter((part) => part !== undefined && part !== '')
+      .join(' | ');
+    // eslint-disable-next-line no-console -- diagnóstico testnet sin filtrar secretos
+    console.error('[OpenPayments]', detail);
+    if (status === 404) throw new DomainError(404, 'WALLET_ADDRESS_NOT_FOUND');
+    if (status === 401 || status === 403) {
+      throw new DomainError(503, 'OPEN_PAYMENTS_ESCROW_TOKEN_INVALID');
+    }
+    throw new DomainError(502, 'OPEN_PAYMENTS_UPSTREAM');
   }
   throw new DomainError(502, 'OPEN_PAYMENTS_UPSTREAM');
 }
