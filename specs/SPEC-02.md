@@ -8,7 +8,8 @@
 | **Estado del Ciclo SDD** | `Implementada (IMPLEMENTED)` |
 | **Roles Responsables** | `FE-1`, `BE-1`, `BE-2` |
 | **Tareas Asociadas (`taskboard.md`)** | `T-F1-FE1-01`, `T-F1-BE1-01`, `T-F1-BE2-01` |
-| **Intervención Manual / IA Mínima-Nula** | `Sí (🛡️ custodia de claves y escrow-payment.service.ts)` |
+| **Intervención Manual / IA Mínima-Nula** | `Sí (🛡️ open-payments.service.ts y claves Ed25519). La custodia de escrow-payment.service.ts es SPEC-06.` |
+| **Notas de implementación** | El registro local de `T-F1-FE1-01` está hecho. `T-F1-BE1-01` y `T-F1-BE2-01` siguen abiertas. No pasa a `Testeada`. |
 | **Dependencias SDD** | `SPEC-01` |
 | **Aprobada por / fecha** | `—` |
 
@@ -306,3 +307,4 @@ Decisiones operativas:
 | `1.3.0` | `2026-10-16` | `En Implementación` | `Antigravity` + equipo | Implementación frontend FE-1 y FE-2 (T-F1-FE1-01): Clerk v6 (/sign-in, /sign-up), middleware, selector interactivo Buyer/Seller (/settings/mode), ciclo de vida 6 estados y verificación GNAP (/onboarding/wallet) con adaptadores mock. |
 | `1.4.0` | `2026-10-16` | `Implementada (IMPLEMENTED)` | `Cursor` | El BFF de Next reenvía modo, descubrimiento, reto y lectura de wallet a Nest con el JWT de Clerk. La UI abre `interactRedirectUri` y deja de simular el hash. SPEC-03 permanece sin llamadas a `/api/v1`. |
 | `1.5.0` | `2026-10-16` | `Implementada (IMPLEMENTED)` | `Cursor` | Se retira Clerk. El acceso pasa a registro e inicio de sesión propios, con hash `scrypt` y sesión HMAC. |
+| `1.5.1` | `2026-10-17` | `Implementada (IMPLEMENTED)` | `Cursor` | La frontera `🛡️` de esta spec es `open-payments.service.ts` y las claves `Ed25519`. `escrow-payment.service.ts` queda en `SPEC-06`. `T-F1-BE1-01` y `T-F1-BE2-01` siguen abiertas. |

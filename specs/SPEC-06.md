@@ -5,7 +5,8 @@
 | **ID de Especificación** | `SPEC-06` |
 | **Archivo** | `specs/SPEC-06.md` |
 | **Fase de Desarrollo** | `Fase 3 — Orquestación de pago único en escrow` |
-| **Estado del Ciclo SDD** | `Implementada (IMPLEMENTED)` — backend Escrow (BE-2) + gateway simulado + harness FE mínimo; Open Payments real queda 🛡️ `T-F3-BE1-01` |
+| **Estado del Ciclo SDD** | `Implementada (IMPLEMENTED)` |
+| **Notas de implementación** | Backend de escrow con gateway simulado y harness FE. Open Payments real sigue en `T-F3-BE1-01` (`🛡️`). `T-F3-FE1-01` y `T-F3-FE2-01` siguen abiertas. No pasa a `Testeada`. |
 | **Roles Responsables** | `BE-1`, `BE-2`, `FE-1`, `FE-2`, `AI-1` |
 | **Tareas Asociadas (`taskboard.md`)** | `T-F3-BE1-01`, `T-F3-BE2-01`, `T-F3-FE1-01`, `T-F3-FE2-01`, `T-F3-AI1-01` |
 | **Intervención Manual / IA Mínima-Nula** | `Sí (🛡️ BE-1 en open-payments.service.ts y escrow-payment.service.ts)` |
@@ -215,3 +216,4 @@ La autenticación vigente es la sesión local de `SPEC-02`. Esta spec no define 
 | :--- | :--- | :--- | :--- | :--- |
 | `0.1.0` | `2026-10-16` | `Redactada (DRAFTED)` | `Cursor` | Redacción inicial de `SPEC-06`: fondeo 100 %, 96/4, reembolso 100 %, idempotencia, frontera `🛡️` y pruebas matemáticas de `AI-1` fuera de `apps/api`. |
 | `0.2.0` | `2026-10-17` | `Implementada (IMPLEMENTED)` | `Cursor` | Backend `EscrowModule`: fund `202`, webhook Rafiki idempotente `204`, vistas `EscrowFundingViewSchema`, simuladores release/refund (sin tocar `escrow-payment.service.ts`). Harness `/orders/escrow`. Tests HTTP + contratos `splitSingleBlockEscrow`/claves. |
+| `0.2.1` | `2026-10-17` | `Implementada (IMPLEMENTED)` | `Cursor` | La celda de estado queda en el valor exacto. Sigue `Implementada` por el slice de `BE-2`. `T-F3-BE1-01`, `T-F3-FE1-01` y `T-F3-FE2-01` siguen abiertas. |

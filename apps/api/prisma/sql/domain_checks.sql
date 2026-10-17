@@ -218,7 +218,13 @@ ALTER TABLE "task_deliverables"
 
 ALTER TABLE "task_deliverables"
   ADD CONSTRAINT "chk_deliverable_file_integrity"
-  CHECK ("file_size_bytes" > 0 AND "sha256_checksum" ~ '^[0-9a-f]{64}$');
+  CHECK (
+    "sha256_checksum" ~ '^[0-9a-f]{64}$'
+    AND (
+      "file_size_bytes" > 0
+      OR "preview_status" = 'PENDING_PROCESSING'
+    )
+  );
 
 ALTER TABLE "task_deliverables"
   ADD CONSTRAINT "chk_deliverable_review_coherent"

@@ -31,7 +31,7 @@
 
 ### 1.3. Fuera de Alcance del MVP (Límites Estrictos)
 
-- No se implementa el webhook de Clerk ni el login. Eso es `SPEC-02`, aunque `T-F1-BE2-01` también lo nombre: aquí solo queda el modelo `User` listo para sincronizarse.
+- No se implementa el registro ni el inicio de sesión. Eso es `SPEC-02`. Aquí solo queda el modelo `User` listo para una cuenta local.
 - No se escribe `open-payments.service.ts` ni `escrow-payment.service.ts`.
 - No hay hitos de pago, ni `REFUNDED_AND_REOPENED`, ni auditoría de IA para video, audio, código o datos tabulares, ni suscripción `Buyer AI Pro Subscription`.
 - `maxFileSizeBytes` permanece `null` en el MVP.
@@ -115,7 +115,7 @@ No existe el estado `REFUNDED_AND_REOPENED`.
 | :--- | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/health` | Público | `{ status: "ok", service: "taskstream-api", databaseConfigured, sampleSplit }` | Ninguno en el camino feliz |
 
-`sampleSplit` de 10000 centavos devuelve 9600 y 400. El webhook de Clerk (`user.created`, `user.updated`) se especifica en `SPEC-02` y persiste sobre este `User`.
+`sampleSplit` de 10000 centavos devuelve 9600 y 400. `SPEC-02` crea el `User` por registro local. No hay webhook de Clerk.
 
 ### 5.2. Workers BullMQ, Cloudflare R2, Open Payments o `AiAdvisorService`
 
@@ -281,7 +281,7 @@ Decisiones operativas:
 
 1. El `CHECK` de reparto (`chk_escrow_exact_96_4_split`, en `escrow_ledgers`) exige la fórmula entera de `taskboard.md` §3 regla 8 con `::bigint`; `architecture-overview.md` §5.3.3 la documenta como canónica.
 2. `chk_task_order_single_origin` usa `num_nonnulls(gig_id, proposal_id) = 1`. La coherencia entre la orden y su origen se impone con trigger porque el origen es condicional y Prisma no modela FK compuestas opcionales con un campo obligatorio.
-3. `T-F1-BE2-01` se parte: el esquema y los `CHECK` son de esta spec; el webhook de Clerk se implementa con `SPEC-02` y no en este turno.
+3. `T-F1-BE2-01` se parte: el esquema y los `CHECK` son de esta spec. El alta del `User` por registro local es `SPEC-02`. No hay webhook de Clerk.
 4. Prisma permanece en la línea 6 (`prisma-client-js` y `url` en el datasource), como fija `.agents/CONTEXT.md` §11.
 5. Zod permanece en 3.23.8 para coincidir con los ejemplos de §8.2.
 
@@ -295,3 +295,4 @@ Decisiones operativas:
 | `1.1.0` | `2026-10-16` | `Implementada (IMPLEMENTED)` | `Cursor` + `AI-1`, `FE-1`, `BE-2` | Monorepo, `@taskstream/shared-schemas`, `apps/web`, `apps/api` y `schema.prisma` con migración SQL. |
 | `1.2.0` | `2026-10-16` | `Testeada (TESTED)` | `Cursor` + `AI-1` | Vitest 10/10, `prisma validate`, build de Nest y Next, `GET /api/v1/health` con reparto 9600/400 y home en el navegador. La migración no se aplicó a un PostgreSQL en marcha. |
 | `1.3.0` | `2026-10-16` | `Testeada (TESTED)` | `Cursor` + `AI-1`, `BE-2` | Modelo de datos v2: `TaskOrder` desacoplada (dinero y wallets en `EscrowLedger`, plazos en `ScheduledTimerJob`, correcciones derivadas), `PlatformWallet`, `TaskCategoryMediaType`, capa física con `CHECK`, índices parciales, triggers y vistas, fórmula entera `floor(total*4/100)` con rango `[100, 50_000_000]`, `proposalId` en `TaskOrderCardSchema`. Vitest 13/13 y migraciones aplicadas sobre PGlite con 45/45 escenarios. |
+| `1.3.1` | `2026-10-17` | `Testeada (TESTED)` | `Cursor` | Se retiran las frases que aún enviaban el webhook de Clerk a `SPEC-02`. El alta de cuenta es registro local. |

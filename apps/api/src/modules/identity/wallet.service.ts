@@ -88,6 +88,7 @@ export class WalletService {
         assetScale: wallet.assetScale,
         isVerified: wallet.isVerified,
         isActive: wallet.isActive,
+        demoBalanceUSDInCents: wallet.demoBalanceUSDInCents,
       },
     };
   }

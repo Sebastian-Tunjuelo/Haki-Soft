@@ -3,6 +3,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import {
   escrowLockIdempotencyKey,
   EscrowFundingViewSchema,
+  gnapInteractHash,
   RafikiIncomingCompletedWebhookSchema,
   SellerActivityItemSchema,
   sellerConfirmationDeadlineIso,
@@ -12,6 +13,7 @@ import {
 import { DomainError } from '../identity/domain-error';
 import { IDENTITY_REPOSITORY } from '../identity/identity.tokens';
 import type { IdentityRepository } from '../identity/identity.types';
+import { EscrowPaymentService } from '../open-payments/escrow-payment.service';
 import { ESCROW_PAYMENT_GATEWAY, ESCROW_REPOSITORY } from './escrow.tokens';
 import { extractProjectBrief, type EscrowRepository, type StoredEscrowOrder } from './escrow.types';
 import type { EscrowPaymentGateway } from './simulated-escrow-payment.gateway';
@@ -22,6 +24,7 @@ export class EscrowService {
   constructor(
     @Inject(ESCROW_REPOSITORY) private readonly escrow: EscrowRepository,
     @Inject(ESCROW_PAYMENT_GATEWAY) private readonly payments: EscrowPaymentGateway,
+    @Inject(EscrowPaymentService) private readonly openPaymentsEscrow: EscrowPaymentService,
     @Inject(IDENTITY_REPOSITORY) private readonly identity: IdentityRepository,
     @Inject(SellerNotificationHub) private readonly sellerHub: SellerNotificationHub,
   ) {}
@@ -34,7 +37,21 @@ export class EscrowService {
 
   async listSellerActivity(userId: string): Promise<SellerActivityItem[]> {
     const items = await this.escrow.listSellerActivity(userId);
-    return items.map((item) => this.toActivityItem(item));
+    return items.flatMap((item) => {
+      try {
+        return [
+          this.toActivityItem({
+            ...item,
+            viewerRole: item.viewerRole,
+            buyerDisplayName: item.buyerDisplayName,
+            sellerDisplayName: item.sellerDisplayName,
+            projectBrief: item.projectBrief,
+          }),
+        ];
+      } catch {
+        return [];
+      }
+    });
   }
 
   notifySellerWorkRequest(sellerUserId: string, item: SellerActivityItem): void {
@@ -48,7 +65,7 @@ export class EscrowService {
     this.notifySellerWorkRequest(order.sellerId, this.buildActivityItemFromOrder(order));
   }
 
-  buildActivityItemFromOrder(order: StoredEscrowOrder): SellerActivityItem {
+  buildActivityItemFromOrder(order: StoredEscrowOrder, viewerRole: 'buyer' | 'seller' = 'seller'): SellerActivityItem {
     return this.toActivityItem({
       taskId: order.taskId,
       title: order.title,
@@ -56,7 +73,9 @@ export class EscrowService {
       lifecycleStatus: order.lifecycleStatus,
       sellerConfirmed: Boolean(order.sellerConfirmedAt),
       createdAt: order.createdAt,
+      viewerRole,
       buyerDisplayName: order.buyerDisplayName,
+      sellerDisplayName: order.sellerDisplayName,
       projectBrief: extractProjectBrief(order.scopeDescription),
     });
   }
@@ -74,7 +93,9 @@ export class EscrowService {
     lifecycleStatus: StoredEscrowOrder['lifecycleStatus'];
     sellerConfirmed: boolean;
     createdAt: Date;
+    viewerRole?: 'buyer' | 'seller';
     buyerDisplayName?: string;
+    sellerDisplayName?: string;
     projectBrief?: string;
   }): SellerActivityItem {
     return SellerActivityItemSchema.parse({
@@ -85,7 +106,9 @@ export class EscrowService {
       sellerConfirmed: item.sellerConfirmed,
       createdAt: item.createdAt.toISOString(),
       sellerConfirmationDeadlineAt: sellerConfirmationDeadlineIso(item.createdAt),
+      viewerRole: item.viewerRole,
       buyerDisplayName: item.buyerDisplayName,
+      sellerDisplayName: item.sellerDisplayName,
       projectBrief: item.projectBrief,
     });
   }
@@ -178,10 +201,27 @@ export class EscrowService {
 
   async simulateRelease(userId: string, taskId: string): Promise<EscrowFundingView> {
     await this.requireOrderAccess(userId, taskId);
+    const before = await this.escrow.findOrder(taskId);
+    if (!before) throw new DomainError(404, 'ORDER_NOT_FOUND');
+
+    if (this.openPaymentsEscrow.isRealEnabled()) {
+      const sellerWallet = await this.identity.findActiveWallet(before.sellerId);
+      if (!sellerWallet?.isVerified) throw new DomainError(422, 'SELLER_WALLET_UNAVAILABLE');
+      await this.openPaymentsEscrow.disburse96And4({
+        taskId,
+        sellerWalletUrl: sellerWallet.walletAddressUrl,
+        freelancerMinorUnits: before.freelancerPayoutUSDInCents,
+        platformFeeMinorUnits: before.platformFeeUSDInCents,
+      });
+    }
+
     const result = await this.escrow.settleRelease96_4(taskId);
     if (result === 'ORDER_NOT_FOUND') throw new DomainError(404, 'ORDER_NOT_FOUND');
     if (result === 'NOT_LOCKED') throw new DomainError(409, 'ESCROW_NOT_LOCKED');
     if (result === 'ALREADY_TERMINAL') throw new DomainError(409, 'ESCROW_ALREADY_TERMINAL');
+
+    await this.identity.adjustDemoBalance(before.sellerId, before.freelancerPayoutUSDInCents);
+
     const order = await this.escrow.findOrder(taskId);
     if (!order) throw new DomainError(404, 'ORDER_NOT_FOUND');
     return this.toView(order, null, userId);
@@ -189,13 +229,109 @@ export class EscrowService {
 
   async simulateRefund(userId: string, taskId: string): Promise<EscrowFundingView> {
     await this.requireOrderAccess(userId, taskId);
+    const before = await this.escrow.findOrder(taskId);
+    if (!before) throw new DomainError(404, 'ORDER_NOT_FOUND');
+
+    if (this.openPaymentsEscrow.isRealEnabled()) {
+      const buyerWallet = await this.identity.findActiveWallet(before.buyerId);
+      if (!buyerWallet?.isVerified) throw new DomainError(422, 'BUYER_WALLET_UNAVAILABLE');
+      await this.openPaymentsEscrow.refund100ToBuyer({
+        taskId,
+        buyerWalletUrl: buyerWallet.walletAddressUrl,
+        amountMinorUnits: before.totalAmountUSDInCents,
+      });
+    }
+
     const result = await this.escrow.settleRefund100(taskId);
     if (result === 'ORDER_NOT_FOUND') throw new DomainError(404, 'ORDER_NOT_FOUND');
     if (result === 'NOT_LOCKED') throw new DomainError(409, 'ESCROW_NOT_LOCKED');
     if (result === 'ALREADY_TERMINAL') throw new DomainError(409, 'ESCROW_ALREADY_TERMINAL');
+
+    await this.identity.adjustDemoBalance(before.buyerId, before.totalAmountUSDInCents);
+
     const order = await this.escrow.findOrder(taskId);
     if (!order) throw new DomainError(404, 'ORDER_NOT_FOUND');
     return this.toView(order, null, userId);
+  }
+
+  /**
+   * Callback GNAP tras autorizar el fondeo en Test Wallet.
+   * Completa OutgoingPayment del buyer y marca ESCROW_LOCKED.
+   */
+  async completeFundingCallback(
+    taskId: string,
+    query: Record<string, unknown>,
+  ): Promise<{ redirectTo: string }> {
+    const interactRef = typeof query.interact_ref === 'string' ? query.interact_ref : '';
+    const receivedHash = typeof query.hash === 'string' ? query.hash : '';
+    if (!interactRef || !receivedHash) {
+      throw new DomainError(400, 'WALLET_CALLBACK_QUERY_INVALID');
+    }
+
+    const order = await this.escrow.findOrder(taskId);
+    if (!order) throw new DomainError(404, 'ORDER_NOT_FOUND');
+    if (order.lifecycleStatus === 'ESCROW_LOCKED') {
+      return { redirectTo: this.webEscrowUrl(taskId, 'already-locked') };
+    }
+
+    const lockTx = await this.escrow.findLatestLockTx(taskId);
+    if (!lockTx || lockTx.status !== 'PENDING_INTERACTION') {
+      throw new DomainError(409, 'ESCROW_LOCK_IN_PROGRESS');
+    }
+    if (
+      !lockTx.grantContinueUri ||
+      !lockTx.grantContinueToken ||
+      !lockTx.quoteUrl ||
+      !lockTx.clientNonce
+    ) {
+      throw new DomainError(409, 'ESCROW_LOCK_IN_PROGRESS');
+    }
+
+    const meta = lockTx.metadataJson ?? {};
+    const finishNonce = typeof meta.finishNonce === 'string' ? meta.finishNonce : '';
+    const buyerAuthServerUrl =
+      typeof meta.buyerAuthServerUrl === 'string' ? meta.buyerAuthServerUrl : '';
+    if (!finishNonce || !buyerAuthServerUrl) {
+      throw new DomainError(409, 'ESCROW_LOCK_IN_PROGRESS');
+    }
+
+    const expected = gnapInteractHash({
+      clientNonce: lockTx.clientNonce,
+      finishNonce,
+      interactRef,
+      authServerUrl: buyerAuthServerUrl,
+    });
+    if (expected !== receivedHash) {
+      throw new DomainError(400, 'GNAP_HASH_MISMATCH');
+    }
+
+    const buyerWallet = await this.identity.findActiveWallet(order.buyerId);
+    if (!buyerWallet?.isVerified) throw new DomainError(422, 'BUYER_WALLET_UNAVAILABLE');
+
+    const finalized = await this.openPaymentsEscrow.finalizeBuyerFunding({
+      buyerWalletUrl: buyerWallet.walletAddressUrl,
+      quoteId: lockTx.quoteUrl,
+      continueUri: lockTx.grantContinueUri,
+      continueAccessToken: lockTx.grantContinueToken,
+      interactRef,
+    });
+
+    await this.escrow.applyIncomingCompleted({
+      taskId,
+      idempotencyKey: lockTx.idempotencyKey,
+      eventId: randomUUID(),
+      resourceUrl: finalized.incomingPaymentUrl || lockTx.incomingPaymentUrl || finalized.outgoingPaymentUrl,
+      payload: { openPaymentsOutgoing: finalized.outgoingPaymentUrl },
+    });
+
+    await this.identity.adjustDemoBalance(order.buyerId, -order.totalAmountUSDInCents);
+
+    return { redirectTo: this.webEscrowUrl(taskId, 'funded') };
+  }
+
+  private webEscrowUrl(taskId: string, flag: string): string {
+    const web = (process.env.PUBLIC_WEB_URL ?? 'http://localhost:3000').replace(/\/$/, '');
+    return `${web}/orders/${taskId}/escrow?op=${flag}`;
   }
 
   private async lockFundsImmediately(
@@ -206,9 +342,55 @@ export class EscrowService {
     if (!buyerWallet?.isVerified || !buyerWallet.isActive) {
       throw new DomainError(422, 'BUYER_WALLET_UNAVAILABLE');
     }
+    if (buyerWallet.demoBalanceUSDInCents < order.totalAmountUSDInCents) {
+      throw new DomainError(422, 'INSUFFICIENT_DEMO_BALANCE');
+    }
 
     const attempt = ((await this.escrow.findLatestLockTx(order.taskId))?.attemptNumber ?? 0) + 1;
     const idempotencyKey = escrowLockIdempotencyKey(order.taskId, attempt);
+
+    if (this.openPaymentsEscrow.isRealEnabled()) {
+      const apiBase = (process.env.PUBLIC_API_URL ?? 'http://localhost:3001').replace(/\/$/, '');
+      const finishRedirectUri = `${apiBase}/api/v1/orders/${order.taskId}/escrow/funding/callback`;
+      const funding = await this.openPaymentsEscrow.beginBuyerFunding({
+        taskId: order.taskId,
+        buyerWalletUrl: buyerWallet.walletAddressUrl,
+        amountMinorUnits: order.totalAmountUSDInCents,
+        finishRedirectUri,
+      });
+
+      const tx = await this.escrow.beginLockAttempt({
+        taskId: order.taskId,
+        idempotencyKey,
+        interactRedirectUri: funding.interactRedirectUri,
+        incomingPaymentUrl: funding.incomingPaymentUrl,
+        quoteUrl: funding.quoteId,
+        grantContinueUri: funding.continueUri,
+        grantContinueToken: funding.continueAccessToken,
+        clientNonce: funding.clientNonce,
+        metadataJson: {
+          finishNonce: funding.finishNonce,
+          buyerAuthServerUrl: funding.buyerAuthServerUrl,
+        },
+        receiveAssetCode: funding.assetCode,
+        receiveAssetScale: funding.assetScale,
+        receiveAmountValue: funding.amountValue,
+      });
+      if (tx === 'ORDER_NOT_FOUND') throw new DomainError(404, 'ORDER_NOT_FOUND');
+      if (tx === 'ALREADY_LOCKED') {
+        const locked = await this.escrow.findOrder(order.taskId);
+        if (!locked) throw new DomainError(404, 'ORDER_NOT_FOUND');
+        return this.toView(locked, null, viewerUserId);
+      }
+      if (tx === 'DUPLICATE_KEY') throw new DomainError(409, 'ESCROW_LOCK_IN_PROGRESS');
+      if (tx === 'SELLER_NOT_CONFIRMED') throw new DomainError(409, 'SELLER_CONFIRMATION_REQUIRED');
+
+      // No se marca ESCROW_LOCKED hasta que el buyer autorice en Test Wallet.
+      const pending = await this.escrow.findOrder(order.taskId);
+      if (!pending) throw new DomainError(404, 'ORDER_NOT_FOUND');
+      return this.toView(pending, funding.interactRedirectUri, viewerUserId);
+    }
+
     const begun = await this.payments.beginEscrowLock({
       taskId: order.taskId,
       totalAmountUSDInCents: order.totalAmountUSDInCents,
@@ -237,6 +419,10 @@ export class EscrowService {
       resourceUrl: begun.incomingPaymentUrl,
       payload: { autoLockedOnSellerAccept: true },
     });
+
+    const debit = await this.identity.adjustDemoBalance(order.buyerId, -order.totalAmountUSDInCents);
+    if (debit === 'INSUFFICIENT') throw new DomainError(422, 'INSUFFICIENT_DEMO_BALANCE');
+    if (debit === 'NO_WALLET') throw new DomainError(422, 'BUYER_WALLET_UNAVAILABLE');
 
     const fresh = await this.escrow.findOrder(order.taskId);
     if (!fresh) throw new DomainError(404, 'ORDER_NOT_FOUND');

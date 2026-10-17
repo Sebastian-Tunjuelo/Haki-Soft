@@ -135,7 +135,7 @@ export function ModeSwitcher({ initialMode = 'BUYER', serverCode = null }: ModeS
               <CheckCircle2 size={13} style={{ color: 'var(--volt)' }} /> Fondeo 100% en custodia
             </li>
             <li style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <CheckCircle2 size={13} style={{ color: 'var(--volt)' }} /> Ventana de revisión 32h
+              <CheckCircle2 size={13} style={{ color: 'var(--volt)' }} /> Ventana de 72h (3 días) para revisar o solicitar corrección
             </li>
           </ul>
 

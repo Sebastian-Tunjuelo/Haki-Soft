@@ -97,7 +97,7 @@ export default function HomePage() {
           <article className="card ts-step ts-reveal">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div className="ts-step__num">2</div>
-              <span className="badge badge-pending">32h</span>
+              <span className="badge badge-pending">72h</span>
             </div>
             <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Revisión y preview</h3>
             <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0 }}>

@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { Navbar } from '@/src/components/navbar';
 import { WorkRequestAlert } from '@/src/components/work-request-alert';
+import { DeliveryReadyAlert } from '@/src/components/delivery-ready-alert';
+import { SellerAcceptanceAlert } from '@/src/components/seller-acceptance-alert';
 import { SmoothScrollProvider } from '@/app/providers/smooth-scroll';
 import './globals.css';
 
@@ -36,6 +38,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <Navbar />
             <WorkRequestAlert />
+            <DeliveryReadyAlert />
+            <SellerAcceptanceAlert />
             <main className="app-container" style={{ padding: '36px 20px 48px', flex: 1 }}>
               {children}
             </main>

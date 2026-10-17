@@ -5,7 +5,7 @@
 | **ID de Especificación** | `SPEC-10` |
 | **Archivo** | `specs/SPEC-10.md` |
 | **Fase de Desarrollo** | `Fase 5 — Disputas y arbitraje` |
-| **Estado del Ciclo SDD** | `Redactada (DRAFTED)` |
+| **Estado del Ciclo SDD** | `Implementada (IMPLEMENTED)` — beta: consola admin + resolve binario vía simuladores SPEC-06; sin BullMQ cancel job real |
 | **Roles Responsables** | `BE-1`, `BE-2`, `FE-1` |
 | **Tareas Asociadas (`taskboard.md`)** | `T-F5-BE1-02`, `T-F5-BE2-02`, `T-F5-FE1-02` |
 | **Intervención Manual / IA Mínima-Nula** | `Sí (🛡️ el movimiento de fondos lo hace escrow-payment.service.ts)` |
@@ -209,3 +209,4 @@ Sin preguntas abiertas bloqueantes sobre el carácter binario de la decisión: e
 | Versión | Fecha | Estado | Autor / Herramienta | Resumen de Cambios |
 | :--- | :--- | :--- | :--- | :--- |
 | `0.1.0` | `2026-10-16` | `Redactada (DRAFTED)` | `Cursor` | Redacción inicial de `SPEC-10`: apertura, congelamiento, decisión binaria y consola, sin regenerar el informe de IA. |
+| `0.2.0` | `2026-10-17` | `Implementada (IMPLEMENTED)` beta | `Cursor` | Admin `platformRole`; `GET/POST /admin/disputes`; resolve `BUYER_FULL_REFUND` / `FREELANCER_SPLIT_96_4` vía `simulateRefund`/`simulateRelease`; seed `admin@taskstream.local`; FE `/admin/disputes`. Sin cancelación BullMQ real ni tocar escrow-payment. |

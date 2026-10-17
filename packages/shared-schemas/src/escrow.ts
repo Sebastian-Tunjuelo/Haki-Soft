@@ -3,6 +3,7 @@ import {
   MAX_MARKETPLACE_AMOUNT_USD_IN_CENTS,
   MIN_MARKETPLACE_AMOUNT_USD_IN_CENTS,
 } from './money';
+import { TaskLifecycleStatusEnum } from './schemas';
 
 /** Horas para que el Freelancer acepte un Gig tras la solicitud del Buyer (DEC-OPEN-02). */
 export const SELLER_CONFIRMATION_WINDOW_HOURS = 24;
@@ -16,13 +17,7 @@ export function sellerConfirmationDeadlineIso(createdAt: Date | string): string 
 export const EscrowFundingViewSchema = z.object({
   taskId: z.string().uuid(),
   title: z.string().min(1).max(120).optional(),
-  lifecycleStatus: z.enum([
-    'PENDING_ESCROW_FUNDING',
-    'ESCROW_LOCKED',
-    'COMPLETED',
-    'REFUNDED',
-    'CANCELLED',
-  ]),
+  lifecycleStatus: TaskLifecycleStatusEnum,
   totalAmountUSDInCents: z
     .number()
     .int()
@@ -45,18 +40,16 @@ export const SellerActivityItemSchema = z.object({
   taskId: z.string().uuid(),
   title: z.string().min(1).max(120),
   totalAmountUSDInCents: z.number().int().positive(),
-  lifecycleStatus: z.enum([
-    'PENDING_ESCROW_FUNDING',
-    'ESCROW_LOCKED',
-    'COMPLETED',
-    'REFUNDED',
-    'CANCELLED',
-  ]),
+  lifecycleStatus: TaskLifecycleStatusEnum,
   sellerConfirmed: z.boolean(),
   createdAt: z.string().datetime(),
   sellerConfirmationDeadlineAt: z.string().datetime(),
+  /** Rol del usuario autenticado en esta orden. */
+  viewerRole: z.enum(['buyer', 'seller']).optional(),
   /** Contratador que solicita el trabajo. */
   buyerDisplayName: z.string().min(1).max(120).optional(),
+  /** Emprendedor del encargo. */
+  sellerDisplayName: z.string().min(1).max(120).optional(),
   /** Brief / descripción que el contratador añadió al solicitar. */
   projectBrief: z.string().min(1).max(4000).optional(),
 });
@@ -77,13 +70,7 @@ export const OrderWorkspaceViewSchema = z.object({
   title: z.string().min(1).max(120),
   scopeDescription: z.string().min(1).max(8000),
   projectBrief: z.string().min(1).max(4000).nullable(),
-  lifecycleStatus: z.enum([
-    'PENDING_ESCROW_FUNDING',
-    'ESCROW_LOCKED',
-    'COMPLETED',
-    'REFUNDED',
-    'CANCELLED',
-  ]),
+  lifecycleStatus: TaskLifecycleStatusEnum,
   totalAmountUSDInCents: z.number().int().positive(),
   buyerDisplayName: z.string().min(1).max(120),
   sellerDisplayName: z.string().min(1).max(120),

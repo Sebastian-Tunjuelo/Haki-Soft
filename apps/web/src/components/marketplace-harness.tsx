@@ -237,7 +237,7 @@ export function MarketplaceHarness() {
     await withSingleFlight(async () => {
       const result = await api(`/api/v1/marketplace/publications/${publicationId}/cancel`, {
         method: 'POST',
-        body: JSON.stringify({ cancelReason: 'Prueba de cancelación SPEC-04' }),
+        body: JSON.stringify({ cancelReason: 'Cancelación de prueba' }),
       });
       if (isUnauthenticated(result.status, result.body)) {
         requireAuth('Inicia sesión para cancelar tu publicación.', { type: 'cancel', publicationId });

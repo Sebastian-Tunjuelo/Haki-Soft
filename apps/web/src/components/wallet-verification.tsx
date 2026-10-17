@@ -212,6 +212,15 @@ export function WalletVerification({
           <div className="code-block" style={{ marginBottom: 16 }}>
             {activeWallet.walletAddress}
           </div>
+          <p style={{ margin: '0 0 16px', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+            Saldo demo TaskStream:{' '}
+            <strong style={{ color: 'var(--text-primary)' }}>
+              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+                activeWallet.demoBalanceUSDInCents / 100,
+              )}
+            </strong>
+            . Baja al fondear custodia y sube al liberar el pago (96 %). No es el balance de la Test Wallet Interledger.
+          </p>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <button type="button" onClick={handleResetForm} className="btn btn-outline btn-sm" style={{ fontSize: 12 }}>
               <RefreshCw size={12} />

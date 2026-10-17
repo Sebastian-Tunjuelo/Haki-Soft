@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ShieldCheck, Wallet, ArrowLeftRight } from 'lucide-react';
+import { ShieldCheck, Wallet } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { readActiveMode, readActiveWallet, readSessionUser } from '@/src/lib/identity-contract';
+import { readActiveWallet, readSessionUser } from '@/src/lib/identity-contract';
+import { formatUsd } from '@/src/lib/api-client';
 import { ThemeToggle } from '@/src/components/theme-toggle';
 
 export function Navbar() {
@@ -12,8 +13,9 @@ export function Navbar() {
   const router = useRouter();
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
-  const [activeMode, setActiveMode] = useState<'BUYER' | 'SELLER'>('BUYER');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [hasActiveWallet, setHasActiveWallet] = useState<boolean>(false);
+  const [demoBalanceUSDInCents, setDemoBalanceUSDInCents] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -23,12 +25,13 @@ export function Navbar() {
         if (cancelled) return;
         const user = readSessionUser(data);
         setSessionEmail(user?.email ?? null);
-        if (user) setActiveMode(user.activeMode);
+        setIsAdmin(user?.platformRole === 'ADMIN');
         setSessionLoaded(true);
       })
       .catch(() => {
         if (!cancelled) {
           setSessionEmail(null);
+          setIsAdmin(false);
           setSessionLoaded(true);
         }
       });
@@ -40,28 +43,29 @@ export function Navbar() {
   useEffect(() => {
     if (!sessionLoaded || !sessionEmail) {
       setHasActiveWallet(false);
+      setDemoBalanceUSDInCents(null);
       return;
     }
 
     let cancelled = false;
-    fetch('/api/v1/me/mode')
-      .then((res) => res.json())
-      .then((data: unknown) => {
-        const mode = readActiveMode(data);
-        if (!cancelled && mode) setActiveMode(mode);
-      })
-      .catch(() => {});
-
-    fetch('/api/v1/me/wallet')
-      .then((res) => res.json())
-      .then((data: unknown) => {
-        const wallet = readActiveWallet(data);
-        if (!cancelled) setHasActiveWallet(Boolean(wallet?.isVerified && wallet.isActive));
-      })
-      .catch(() => {});
-
+    const pullWallet = () => {
+      fetch('/api/v1/me/wallet')
+        .then((res) => res.json())
+        .then((data: unknown) => {
+          const wallet = readActiveWallet(data);
+          if (cancelled) return;
+          setHasActiveWallet(Boolean(wallet?.isVerified && wallet.isActive));
+          setDemoBalanceUSDInCents(
+            wallet?.isVerified && wallet.isActive ? wallet.demoBalanceUSDInCents : null,
+          );
+        })
+        .catch(() => {});
+    };
+    pullWallet();
+    const poll = setInterval(pullWallet, 4_000);
     return () => {
       cancelled = true;
+      clearInterval(poll);
     };
   }, [pathname, sessionLoaded, sessionEmail]);
 
@@ -100,6 +104,14 @@ export function Navbar() {
                 Actividad
               </Link>
             ) : null}
+            {isAdmin ? (
+              <Link
+                href="/admin/disputes"
+                className={`nav-link ${pathname?.startsWith('/admin') ? 'active' : ''}`}
+              >
+                Admin
+              </Link>
+            ) : null}
             <Link
               href="/onboarding/wallet"
               className={`nav-link ${pathname === '/onboarding/wallet' ? 'active' : ''}`}
@@ -107,36 +119,26 @@ export function Navbar() {
             >
               <Wallet size={15} />
               <span>Billetera</span>
-              {hasActiveWallet && (
+              {hasActiveWallet && demoBalanceUSDInCents !== null ? (
+                <span className="badge badge-verified" style={{ padding: '2px 6px', fontSize: 10 }}>
+                  {formatUsd(demoBalanceUSDInCents)}
+                </span>
+              ) : hasActiveWallet ? (
                 <span className="badge badge-verified" style={{ padding: '2px 6px', fontSize: 10 }}>
                   <span className="pulse-dot" /> Activa
                 </span>
-              )}
-            </Link>
-            <Link
-              href="/settings/mode"
-              className={`nav-link ${pathname === '/settings/mode' ? 'active' : ''}`}
-              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-            >
-              <ArrowLeftRight size={15} />
-              <span>Modo</span>
-              {sessionEmail && (
-                <span
-                  className={`badge ${activeMode === 'BUYER' ? 'badge-buyer' : 'badge-seller'}`}
-                  style={{ padding: '2px 6px', fontSize: 10 }}
-                >
-                  {activeMode}
-                </span>
-              )}
+              ) : null}
             </Link>
           </nav>
 
           <div className="header-actions">
             <ThemeToggle />
             {!sessionLoaded ? (
-              <div style={{ width: 80, height: 32, background: 'var(--surface)', borderRadius: 'var(--radius-sm)' }} />
+              <div className="header-auth-cluster">
+                <div style={{ width: 80, height: 32, background: 'var(--surface)', borderRadius: 'var(--radius-sm)' }} />
+              </div>
             ) : sessionEmail ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div className="header-auth-cluster">
                 <span
                   style={{
                     fontSize: 12,
@@ -163,7 +165,7 @@ export function Navbar() {
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="header-auth-cluster">
                 <Link href="/sign-in" className="btn btn-outline btn-sm">
                   Iniciar sesión
                 </Link>

@@ -42,7 +42,9 @@ export interface SellerActivityItemStored {
   lifecycleStatus: EscrowLifecycle;
   sellerConfirmed: boolean;
   createdAt: Date;
+  viewerRole: 'buyer' | 'seller';
   buyerDisplayName: string;
+  sellerDisplayName: string;
   projectBrief: string;
 }
 
@@ -57,13 +59,20 @@ export interface StoredOpTx {
   interactRedirectUri: string | null;
   incomingPaymentUrl: string | null;
   outgoingPaymentUrl: string | null;
+  quoteUrl: string | null;
+  grantContinueUri: string | null;
+  grantContinueToken: string | null;
+  clientNonce: string | null;
+  /** finish nonce GNAP + authServer del buyer (JSON en metadata si hace falta). */
+  metadataJson: Record<string, unknown> | null;
   completedAt: Date | null;
 }
 
 export interface EscrowRepository {
   findOrder(taskId: string): Promise<StoredEscrowOrder | null>;
   findLatestLockTx(taskId: string): Promise<StoredOpTx | null>;
-  listSellerActivity(sellerId: string): Promise<SellerActivityItemStored[]>;
+  /** Órdenes donde el usuario es buyer o seller (incluye cerradas para Historia). */
+  listSellerActivity(userId: string): Promise<SellerActivityItemStored[]>;
   confirmSeller(taskId: string, sellerId: string): Promise<'OK' | 'ORDER_NOT_FOUND' | 'FORBIDDEN' | 'ALREADY_CONFIRMED' | 'NOT_PENDING'>;
   /** Cancela sin fondeo: Buyer se arrepiente o Seller rechaza. */
   cancelBeforeFunding(
@@ -76,6 +85,14 @@ export interface EscrowRepository {
     idempotencyKey: string;
     interactRedirectUri: string;
     incomingPaymentUrl: string;
+    quoteUrl?: string | null;
+    grantContinueUri?: string | null;
+    grantContinueToken?: string | null;
+    clientNonce?: string | null;
+    metadataJson?: Record<string, unknown> | null;
+    receiveAssetCode?: string;
+    receiveAssetScale?: number;
+    receiveAmountValue?: string;
   }): Promise<StoredOpTx | 'ALREADY_LOCKED' | 'ORDER_NOT_FOUND' | 'DUPLICATE_KEY' | 'SELLER_NOT_CONFIRMED'>;
   applyIncomingCompleted(input: {
     taskId: string;

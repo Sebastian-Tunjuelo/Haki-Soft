@@ -8,6 +8,7 @@ import {
   type SellerActivityItem,
 } from '@taskstream/shared-schemas';
 import { api } from '@/src/lib/api-client';
+import { formatCountdown } from '@/src/lib/format-countdown';
 
 const DISMISS_KEY = 'ts-work-req-dismissed';
 
@@ -28,17 +29,6 @@ function writeDismissed(ids: Set<string>) {
   } catch {
     /* private mode */
   }
-}
-
-function formatRemaining(deadlineIso: string, nowMs: number): string {
-  const ms = Math.max(0, new Date(deadlineIso).getTime() - nowMs);
-  const totalSec = Math.floor(ms / 1000);
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  const s = totalSec % 60;
-  if (h > 0) return `${h} h ${String(m).padStart(2, '0')} min ${String(s).padStart(2, '0')} s`;
-  if (m > 0) return `${m} min ${String(s).padStart(2, '0')} s`;
-  return `${s} s`;
 }
 
 /**
@@ -163,7 +153,7 @@ export function WorkRequestAlert() {
 
   const buyer = current.buyerDisplayName ?? 'Un contratador';
   const brief = current.projectBrief?.trim() || 'Ver el detalle de la solicitud para conocer el alcance.';
-  const remaining = formatRemaining(current.sellerConfirmationDeadlineAt, nowMs);
+  const remaining = formatCountdown(current.sellerConfirmationDeadlineAt, nowMs);
   const expired = new Date(current.sellerConfirmationDeadlineAt).getTime() <= nowMs;
 
   return (

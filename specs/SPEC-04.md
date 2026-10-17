@@ -8,8 +8,9 @@
 | **Roles Propietarios** | `FE-1`, `FE-2`, `BE-2` |
 | **Tareas Asociadas (`taskboard.md`)** | `T-F2-FE1-01`, `T-F2-FE1-03`, `T-F2-FE2-01`, `T-F2-BE2-01` |
 | **Dependencias Previas** | `SPEC-00`, `SPEC-01`, `SPEC-02`, `SPEC-03` |
-| **Estado del Ciclo SDD** | `Implementada (IMPLEMENTED)` — backend Marketplace + storefront editable TipTap/media |
-| **Última Actualización** | `2026-10-17` (v0.5.0) |
+| **Estado del Ciclo SDD** | `Redactada (DRAFTED)` |
+| **Notas de implementación** | El módulo Marketplace de v0.5.0 sigue en el repositorio. Esta versión corrige la matriz de medios y vuelve a `Redactada` hasta que `BE-2` actualice `CATEGORY_MEDIA_CONSTRAINTS_MAP` y el seed `task_category_media_types`. `T-F2-FE1-01`, `T-F2-FE1-03` y `T-F2-FE2-01` siguen abiertas. |
+| **Última Actualización** | `2026-10-17` (v0.6.0) |
 | **Aprobada por / fecha** | `—` |
 
 ---
@@ -39,12 +40,12 @@ Especificar la arquitectura técnica, los contratos de validación Zod, las inva
 
 | ID Regla | Origen SSoT | Descripción de la Invariante | Impacto en `SPEC-04` |
 | :--- | :--- | :--- | :--- |
-| **`INV-04-01`** | `CONTEXT.md` §4.1, §7.2 | **Catálogo Cerrado de 6 Categorías y Correspondencia 1:1 con `DeliverableMediaType`:** Las únicas categorías válidas son `DIGITAL_MARKETING` (`DATA_CAMPAIGN`), `GRAPHICS_AND_DESIGN` (`IMAGE_RASTER_VECTOR`), `PROGRAMMING_AND_TECH` (`CODE_ARCHIVE`), `TECHNICAL_WRITING_TRANS` (`DOCUMENT_TEXT`), `VIDEO_AND_ANIMATION` (`VIDEO_STREAM`) y `MUSIC_AND_AUDIO` (`AUDIO_TRACK`). | El servidor rechaza con `422 CATEGORY_MEDIA_TYPE_MISMATCH` cualquier `Gig` o `ClientTaskPublication` cuyo `expectedMediaType` o `allowedExtensions` no corresponda a la matriz canónica de su `category`. |
+| **`INV-04-01`** | `CONTEXT.md` §7.2, §8.2 | **Catálogo cerrado de 6 categorías y medios permitidos por categoría:** Cada categoría admite solo los pares `expectedMediaType` + extensiones de `.agents/CONTEXT.md` §7.2. Marketing Digital admite imagen, texto y datos. Gráficos admite imagen (incluido `.svg`) y PDF. Programación, video y audio tienen un solo medio. | El servidor rechaza con `422 CATEGORY_MEDIA_TYPE_MISMATCH` cualquier combinación fuera de esa matriz. Las extensiones de un Gig pertenecen a un solo `expectedMediaType`. |
 | **`INV-04-02`** | `CONTEXT.md` §5.1.A, `taskboard.md` §3 Regla 3 | **Gigs a Precio Fijo e Innegociable:** Todo `Gig` publicado por un Freelancer define un `priceUSDInCents` entero positivo (`>= 100` y `<= 50_000_000`, es decir, entre `$1.00 USD` y `$500,000.00 USD`) y un `initialDeliveryDays` entre `1` y `7` días. Su precio jamás admite regateo. | `Gig` expone precio cerrado en centavos; los formularios y endpoints de `Gig` no incluyen campos de contraoferta ni rangos de presupuesto. |
 | **`INV-04-03`** | `CONTEXT.md` §5.1.B, `taskboard.md` §3 Regla 4 | **Publicaciones de Buyer con Presupuesto Tope y Cancelación Condicional:** Una `ClientTaskPublication` nace en `OPEN_FOR_PROPOSALS` con `initialBudgetUSDInCents` (`>= 100` y `<= 50_000_000`) e `initialDeliveryDays` (`1..7`). El Buyer puede cancelarla (`CANCELLED`) **únicamente** mientras siga en `OPEN_FOR_PROPOSALS` (antes de formalizar la aceptación mutua). | La transición `OPEN_FOR_PROPOSALS -> CANCELLED` se ejecuta mediante actualización condicional atómica en base de datos; si la publicación ya está en `AGREED_AND_LOCKED`, retorna `409 PUBLICATION_ALREADY_LOCKED`. |
 | **`INV-04-04`** | `CONTEXT.md` §2.3, `SPEC-02` | **Billetera Open Payments Verificada Obligatoria (`WalletVerifiedGuard`):** Ningún usuario puede publicar o activar un `Gig` ni crear una `ClientTaskPublication` sin poseer una `UserWallet` con `isVerified = true` e `isActive = true`. | Los endpoints de mutación en `MarketplaceController` aplican `SessionAuthGuard` (sesión HMAC local de `SPEC-02`) y, salvo la cancelación, `WalletVerifiedGuard`. La identidad del actor es `req.userId` (`User.id`). No hay Clerk ni `clerk_id`. |
 | **`INV-04-05`** | `CONTEXT.md` §1.1, §8.1 | **Seguridad de W3C Web Monetization (`<link rel="monetization">`):** La etiqueta de micropagos directos solo se emite si `SellerProfile.webMonetizationEnabled === true` y su atributo `href` se resuelve en servidor desde la única `UserWallet` activa y verificada (`https://`) del Freelancer. | Prohibido permitir que el usuario ingrese una URL libre para Web Monetization distinta de su `UserWallet` verificada contra Rafiki (prevención de desvío de micropagos y XSS). |
-| **`INV-04-06`** | `CONTEXT.md` §4.1, §6.1 | **Transparencia de Cobertura del Consejero de IA en el Catálogo:** Solo `GRAPHICS_AND_DESIGN` (`IMAGE_RASTER_VECTOR` → `IMAGE`) y `TECHNICAL_WRITING_TRANS` (`DOCUMENT_TEXT` → `TEXT`) cuentan con auditoría semántica/visual del Consejero de IA en el MVP; las 4 restantes operan con validación determinista + revisión humana. | Cada tarjeta de categoría, Gig y publicación muestra explícitamente la insignia de cobertura (`AI Advisor: Imagen/Texto` vs. `Validación Determinista + Revisión Humana`). |
+| **`INV-04-06`** | `CONTEXT.md` §6.1, §7.2 | **Cobertura del Consejero de IA según el medio elegido:** `IMAGE_RASTER_VECTOR` muestra `IMAGE` y `DOCUMENT_TEXT` muestra `TEXT`, también cuando la categoría es `DIGITAL_MARKETING` o el PDF de `GRAPHICS_AND_DESIGN`. `DATA_CAMPAIGN`, `CODE_ARCHIVE`, `VIDEO_STREAM` y `AUDIO_TRACK` muestran validación determinista + revisión humana. | La insignia sale de `resolveMvpAiAuditableModality(expectedMediaType)`, no de un booleano fijo por categoría. |
 
 ---
 
@@ -97,39 +98,43 @@ import {
 } from './money';
 
 /**
- * Matriz canónica inmutable que vincula cada una de las 6 categorías del MVP
- * con su único DeliverableMediaType permitido, sus extensiones válidas y su modalidad IA.
+ * Matriz de `.agents/CONTEXT.md` §7.2. Una categoría puede ofrecer varios
+ * medios. La modalidad IA sale del medio elegido, no de la categoría.
+ * `.svg` es un original de imagen válido. El preview lo rasteriza SPEC-07.
  */
 export const CATEGORY_MEDIA_CONSTRAINTS_MAP = {
   DIGITAL_MARKETING: {
-    expectedMediaType: 'DATA_CAMPAIGN',
-    allowedExtensions: ['.pdf', '.csv', '.xlsx', '.json', '.zip'],
-    aiAuditableModality: null,
+    options: [
+      { expectedMediaType: 'IMAGE_RASTER_VECTOR', allowedExtensions: ['.png', '.jpg'], aiAuditableModality: 'IMAGE' },
+      { expectedMediaType: 'DOCUMENT_TEXT', allowedExtensions: ['.pdf', '.md'], aiAuditableModality: 'TEXT' },
+      { expectedMediaType: 'DATA_CAMPAIGN', allowedExtensions: ['.csv', '.xlsx'], aiAuditableModality: null },
+    ],
   },
   GRAPHICS_AND_DESIGN: {
-    expectedMediaType: 'IMAGE_RASTER_VECTOR',
-    allowedExtensions: ['.png', '.jpg', '.jpeg', '.webp', '.pdf'],
-    aiAuditableModality: 'IMAGE',
+    options: [
+      { expectedMediaType: 'IMAGE_RASTER_VECTOR', allowedExtensions: ['.png', '.jpg', '.webp', '.svg'], aiAuditableModality: 'IMAGE' },
+      { expectedMediaType: 'DOCUMENT_TEXT', allowedExtensions: ['.pdf'], aiAuditableModality: 'TEXT' },
+    ],
   },
   PROGRAMMING_AND_TECH: {
-    expectedMediaType: 'CODE_ARCHIVE',
-    allowedExtensions: ['.zip', '.tar.gz', '.tgz', '.json', '.sql'],
-    aiAuditableModality: null,
+    options: [
+      { expectedMediaType: 'CODE_ARCHIVE', allowedExtensions: ['.zip', '.tar.gz', '.ts', '.js', '.py', '.sql', '.json'], aiAuditableModality: null },
+    ],
   },
   TECHNICAL_WRITING_TRANS: {
-    expectedMediaType: 'DOCUMENT_TEXT',
-    allowedExtensions: ['.md', '.txt', '.docx', '.pdf'],
-    aiAuditableModality: 'TEXT',
+    options: [
+      { expectedMediaType: 'DOCUMENT_TEXT', allowedExtensions: ['.md', '.pdf', '.docx', '.txt'], aiAuditableModality: 'TEXT' },
+    ],
   },
   VIDEO_AND_ANIMATION: {
-    expectedMediaType: 'VIDEO_STREAM',
-    allowedExtensions: ['.mp4', '.webm', '.mov'],
-    aiAuditableModality: null,
+    options: [
+      { expectedMediaType: 'VIDEO_STREAM', allowedExtensions: ['.mp4', '.webm', '.mov', '.gif'], aiAuditableModality: null },
+    ],
   },
   MUSIC_AND_AUDIO: {
-    expectedMediaType: 'AUDIO_TRACK',
-    allowedExtensions: ['.mp3', '.wav', '.flac', '.ogg'],
-    aiAuditableModality: null,
+    options: [
+      { expectedMediaType: 'AUDIO_TRACK', allowedExtensions: ['.mp3', '.wav', '.ogg', '.m4a'], aiAuditableModality: null },
+    ],
   },
 } as const;
 
@@ -149,22 +154,25 @@ export const CreateGigInputSchema = z
     allowedExtensions: z.array(z.string().regex(/^\.[a-z0-9.]+$/)).min(1).max(10),
   })
   .superRefine((data, ctx) => {
-    const canonical = CATEGORY_MEDIA_CONSTRAINTS_MAP[data.category];
-    if (data.expectedMediaType !== canonical.expectedMediaType) {
+    const option = CATEGORY_MEDIA_CONSTRAINTS_MAP[data.category].options.find(
+      (item) => item.expectedMediaType === data.expectedMediaType,
+    );
+    if (!option) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['expectedMediaType'],
-        message: `La categoría ${data.category} exige el tipo de medio ${canonical.expectedMediaType}.`,
+        message: `La categoría ${data.category} no admite el medio ${data.expectedMediaType}.`,
       });
+      return;
     }
     const invalidExts = data.allowedExtensions.filter(
-      (ext) => !(canonical.allowedExtensions as readonly string[]).includes(ext),
+      (ext) => !(option.allowedExtensions as readonly string[]).includes(ext),
     );
     if (invalidExts.length > 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['allowedExtensions'],
-        message: `Extensiones no permitidas para ${data.category}: ${invalidExts.join(', ')}.`,
+        message: `Extensiones no permitidas para ${data.category} / ${data.expectedMediaType}: ${invalidExts.join(', ')}.`,
       });
     }
   });
@@ -210,22 +218,25 @@ export const CreatePublicationInputSchema = z
     minHeightPx: z.number().int().min(64).max(16_384).optional(),
   })
   .superRefine((data, ctx) => {
-    const canonical = CATEGORY_MEDIA_CONSTRAINTS_MAP[data.category];
-    if (data.expectedMediaType !== canonical.expectedMediaType) {
+    const option = CATEGORY_MEDIA_CONSTRAINTS_MAP[data.category].options.find(
+      (item) => item.expectedMediaType === data.expectedMediaType,
+    );
+    if (!option) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['expectedMediaType'],
-        message: `La categoría ${data.category} exige el tipo de medio ${canonical.expectedMediaType}.`,
+        message: `La categoría ${data.category} no admite el medio ${data.expectedMediaType}.`,
       });
+      return;
     }
     const invalidExts = data.allowedExtensions.filter(
-      (ext) => !(canonical.allowedExtensions as readonly string[]).includes(ext),
+      (ext) => !(option.allowedExtensions as readonly string[]).includes(ext),
     );
     if (invalidExts.length > 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['allowedExtensions'],
-        message: `Extensiones no permitidas para ${data.category}: ${invalidExts.join(', ')}.`,
+        message: `Extensiones no permitidas para ${data.category} / ${data.expectedMediaType}: ${invalidExts.join(', ')}.`,
       });
     }
   });
@@ -238,7 +249,7 @@ export const CreatePublicationInputSchema = z
 1. **`Gig` (`gigs`):**
    - Clave foránea `sellerId` → `User.id` (`ON DELETE RESTRICT`).
    - Restricción SQL activa `chk_gig_price_and_days`: `price_usd_in_cents BETWEEN 100 AND 50000000 AND initial_delivery_days BETWEEN 1 AND 7 AND cardinality(allowed_extensions) >= 1`.
-   - FK compuesta `(category, expected_media_type)` → `task_category_media_types`: la base rechaza combinaciones fuera de `CATEGORY_MEDIA_CONSTRAINTS_MAP`.
+   - FK compuesta `(category, expected_media_type)` → `task_category_media_types`: la base rechaza combinaciones fuera de `CATEGORY_MEDIA_CONSTRAINTS_MAP`. El seed vigente en `domain_checks.sql` solo inserta un medio por categoría. `BE-2` debe añadir las filas de esta versión: `DIGITAL_MARKETING` + `IMAGE_RASTER_VECTOR`, `DIGITAL_MARKETING` + `DOCUMENT_TEXT` y `GRAPHICS_AND_DESIGN` + `DOCUMENT_TEXT`. La fila `DIGITAL_MARKETING` + `DATA_CAMPAIGN` se conserva.
    - `defaultCriteriaJson` almacena la estructura validada de criterios y metadatos técnicos por defecto (`defaultCriteria` + `allowedExtensions`) sin duplicar tablas transaccionales hasta que nazca una `TaskOrder`.
    - Índice compuesto `@@index([category, isActive])` para filtrado O(log n) en el catálogo público.
 2. **`ClientTaskPublication` (`client_task_publications`):**
@@ -260,7 +271,7 @@ La autenticación es la de `SPEC-02` v1.5.0: registro e inicio de sesión propio
 
 | Método y Ruta | Guardas de Seguridad | Request (Params / Query / Body) | Response `200/201` | Códigos de Error Esperados |
 | :--- | :--- | :--- | :--- | :--- |
-| `GET /api/v1/marketplace/categories` | Público (con rate limit IP) | Sin parámetros | Lista estática enriquecida de las 6 categorías con `expectedMediaType`, `allowedExtensions`, `aiAuditableModality` y conteos de Gigs activos / publicaciones abiertas. | `429 TOO_MANY_REQUESTS` |
+| `GET /api/v1/marketplace/categories` | Público (con rate limit IP) | Sin parámetros | Las 6 categorías, cada una con `options[]` (`expectedMediaType`, `allowedExtensions`, `aiAuditableModality`) y conteos de Gigs activos / publicaciones abiertas. | `429 TOO_MANY_REQUESTS` |
 | `GET /api/v1/marketplace/gigs` | Público (con rate limit IP) | Query: `category?: TaskCategory`, `maxPriceCents?: number`, `maxDays?: number`, `cursor?: string`, `limit?: 1..24` | `{ items: GigCard[], nextCursor: string \| null }` (solo `isActive = true` y donde el Seller mantiene una `UserWallet` verificada activa). | `400 VALIDATION_ERROR` |
 | `GET /api/v1/marketplace/gigs/:gigId` | Público | Param: `gigId` (UUID) | `GigCard` completo incluyendo metadatos de Web Monetization resueltos en servidor. | `404 GIG_NOT_FOUND` |
 | `POST /api/v1/marketplace/gigs` | `SessionAuthGuard`, `WalletVerifiedGuard` | Body: `CreateGigInputSchema` + Header `Idempotency-Key` | `201 Created` → `GigCard` (crea automáticamente `SellerProfile` por defecto si el usuario verificado aún no lo tenía). | `401 UNAUTHENTICATED`, `403 WALLET_NOT_VERIFIED`, `422 CATEGORY_MEDIA_TYPE_MISMATCH` |
@@ -291,7 +302,7 @@ La autenticación es la de `SPEC-02` v1.5.0: registro e inicio de sesión propio
 ### 6.1. Rutas y Componentes Next.js 15 (`FE-1`)
 - `apps/web/src/app/(marketplace)/marketplace/page.tsx`: Vista principal del Marketplace con selector interactivo de las **6 categorías del MVP**, pestaña dual (`Catálogo de Gigs a Precio Fijo` vs. `Tablón de Tareas de Clientes con Tope`) y filtros por presupuesto/plazo (`1..7` días).
 - `apps/web/src/app/(marketplace)/marketplace/gigs/[gigId]/page.tsx`: Página de detalle de un Gig fijo. Muestra el precio cerrado en USD (`priceUSDInCents`), la divisa de destino del Freelancer (`seller.targetCurrency`), el desglose informativo del modelo de escrow (`96 % Freelancer / 4 % Comisión de Plataforma`, doble conversión FX asumida por el Buyer), la lista de criterios de aceptación por defecto y el distintivo de cobertura del Consejero de IA (`IMAGE` / `TEXT` vs. `Validación Determinista + Revisión Humana`).
-- `apps/web/src/app/(marketplace)/marketplace/gigs/new/page.tsx` (restringido a `Seller Mode` con wallet verificada): Formulario con React Hook Form + Zod (`CreateGigInputSchema`) que autocompleta `expectedMediaType` y restringe `allowedExtensions` según la categoría seleccionada.
+- `apps/web/src/app/(marketplace)/marketplace/gigs/new/page.tsx` (restringido a `Seller Mode` con wallet verificada): Formulario con React Hook Form + Zod (`CreateGigInputSchema`). El vendedor elige una opción de medio de la categoría y solo ve las extensiones de esa opción.
 - `apps/web/src/app/(marketplace)/marketplace/publications/new/page.tsx` (restringido a `Buyer Mode` con wallet verificada): Formulario de creación de `ClientTaskPublication` con presupuesto tope (`initialBudgetUSDInCents`), plazo de 1 a 7 días y constructor dinámico de 1 a 10 criterios de aceptación preliminares (`AcceptanceCriterionSchema`).
 - `apps/web/src/features/web-monetization/components/WebMonetizationHeadTag.tsx`: Componente Server-First que inyecta `<link rel="monetization" href={verifiedWalletAddressUrl} />` y muestra en la UI del perfil/Gig el sello interactivo *"Web Monetization Activo — Envía propinas en streaming vía Interledger"*.
 
@@ -341,11 +352,11 @@ La autenticación es la de `SPEC-02` v1.5.0: registro e inicio de sesión propio
 ## 8. Requisitos Funcionales (RF) y Escenarios BDD (`Dado / Cuando / Entonces`)
 
 ### `RF-01` — Consulta del catálogo de las 6 categorías del MVP con matriz de medios y cobertura del Consejero de IA
-- **Descripción:** El sistema debe exponer las 6 categorías oficiales del MVP junto con su `DeliverableMediaType` exclusivo, extensiones permitidas y si cuentan con auditoría semántica/visual del Consejero de IA (`IMAGE` o `TEXT`) o solo validación determinista + revisión humana.
+- **Descripción:** El sistema debe exponer las 6 categorías oficiales del MVP junto con las opciones de medio de `.agents/CONTEXT.md` §7.2 y la modalidad de IA de cada opción.
 - **Escenario 1 (Camino Feliz — Listado de las 6 categorías con su cobertura IA):**
   - **Dado** que un usuario visita el explorador del Marketplace o consulta `GET /api/v1/marketplace/categories`,
   - **Cuando** el backend responde con el catálogo de categorías del MVP,
-  - **Entonces** devuelve exactamente las 6 categorías (`DIGITAL_MARKETING`, `GRAPHICS_AND_DESIGN`, `PROGRAMMING_AND_TECH`, `TECHNICAL_WRITING_TRANS`, `VIDEO_AND_ANIMATION`, `MUSIC_AND_AUDIO`), marcando `aiAuditableModality = "IMAGE"` únicamente en `GRAPHICS_AND_DESIGN`, `aiAuditableModality = "TEXT"` únicamente en `TECHNICAL_WRITING_TRANS` y `aiAuditableModality = null` en las 4 restantes.
+  - **Entonces** devuelve exactamente las 6 categorías. `DIGITAL_MARKETING` ofrece `IMAGE`, `TEXT` y `null` según la opción. `GRAPHICS_AND_DESIGN` ofrece `IMAGE` (con `.svg`) y `TEXT` para `.pdf`. `TECHNICAL_WRITING_TRANS` ofrece `TEXT`. Programación, video y audio ofrecen `null`.
 - **Escenario 2 (Error de Validación o Violación de Regla — Intento de filtrar por categoría inexistente):**
   - **Dado** que un cliente envía una petición `GET /api/v1/marketplace/gigs?category=VOICE_OVER_AI`,
   - **Cuando** el pipe de validación Zod evalúa `TaskCategoryEnum`,
@@ -358,9 +369,9 @@ La autenticación es la de `SPEC-02` v1.5.0: registro e inicio de sesión propio
   - **Cuando** `MarketplaceService` valida el contrato `CreateGigInputSchema` y persiste la entidad,
   - **Entonces** crea el registro en `gigs` con `isActive = true`, asegura la existencia de `SellerProfile` y retorna HTTP `201 Created` con el `GigCard` y `aiAuditableModality = "IMAGE"`.
 - **Escenario 2 (Error de Validación o Violación de Regla — Incoherencia entre categoría y tipo de medio o extensión peligrosa):**
-  - **Dado** que un Freelancer verificado intenta crear un Gig en `GRAPHICS_AND_DESIGN` enviando `expectedMediaType = "CODE_ARCHIVE"` o `allowedExtensions = [".exe", ".svg"]`,
+  - **Dado** que un Freelancer verificado intenta crear un Gig en `GRAPHICS_AND_DESIGN` enviando `expectedMediaType = "CODE_ARCHIVE"` o `allowedExtensions = [".exe"]`,
   - **Cuando** el backend ejecuta la validación cruzada contra `CATEGORY_MEDIA_CONSTRAINTS_MAP`,
-  - **Entonces** rechaza la solicitud con HTTP `422 CATEGORY_MEDIA_TYPE_MISMATCH` sin insertar registros en `gigs`.
+  - **Entonces** rechaza la solicitud con HTTP `422 CATEGORY_MEDIA_TYPE_MISMATCH` sin insertar registros en `gigs`. Un Gig de la misma categoría con `allowedExtensions = [".svg"]` y `expectedMediaType = "IMAGE_RASTER_VECTOR"` sí es válido.
 - **Escenario 3 (Seguridad — Intento de publicar Gig sin wallet verificada o con monto fuera de rango seguro):**
   - **Dado** que un usuario sin `UserWallet` verificada (o que envía `priceUSDInCents = 15` centavos, menor al mínimo de `100` centavos) invoca `POST /api/v1/marketplace/gigs`,
   - **Cuando** se ejecutan `WalletVerifiedGuard` y la validación de frontera,
@@ -441,7 +452,7 @@ La autenticación es la de `SPEC-02` v1.5.0: registro e inicio de sesión propio
 
 ### 11.1. Decisiones Técnicas Cerradas en esta Especificación
 1. **Límites monetarios seguros (`100` a `50_000_000` centavos USD):** Se fija un piso de `$1.00 USD` (`100` centavos) para que el 4 % de comisión de plataforma sea siempre `>= 4` centavos en Rafiki, y un techo de `$500,000.00 USD` (`50_000_000` centavos) para impedir desbordamientos de `INT4` en PostgreSQL.
-2. **Exclusión de `.svg` en `GRAPHICS_AND_DESIGN` por seguridad:** Conforme a `CONTEXT.md` §7.2, las imágenes raster/vectoriales aceptadas en entregables de diseño son `.png`, `.jpg`, `.jpeg`, `.webp` y `.pdf`, evitando archivos `.svg` que puedan contener `<script>` embebidos o vectores XXE.
+2. **`.svg` permitido en Gráficos y Diseño:** `.agents/CONTEXT.md` §7.2 y §8.2 incluyen `.svg` en `IMAGE_RASTER_VECTOR`. El original se guarda. El preview de `SPEC-07` lo rasteriza con marca de agua y no entrega el SVG crudo como HTML.
 3. **Resolución Server-Side de `<link rel="monetization">`:** El atributo `href` se obtiene exclusivamente de la `UserWallet` activa y verificada en base de datos, nunca de un input de texto separado.
 4. **Sesión local, sin Clerk:** El Marketplace autentica con `SessionAuthGuard` de `SPEC-02` (`Authorization: Bearer` firmado con `AUTH_SESSION_SECRET`, cookie httpOnly `taskstream_session` en el BFF). El código de ausencia de sesión es `401 UNAUTHENTICATED`. `sellerId` y `buyerId` salen de `req.userId`.
 
@@ -458,4 +469,5 @@ La autenticación es la de `SPEC-02` v1.5.0: registro e inicio de sesión propio
 | `0.2.0` | `2026-10-16` | `Cursor` | Alineación con el modelo de datos v2: constantes de rango importadas de `./money`, `CHECK` de gigs y publicaciones con rango `[100, 50_000_000]`, FK compuesta categoría ↔ medio y fórmula entera `floor(total * 4 / 100)` con `::bigint` en `escrow_ledgers`. |
 | `0.3.0` | `2026-10-16` | `Cursor` | Se retira Clerk. Las mutaciones usan `SessionAuthGuard` y `req.userId` (`User.id`). El código de sesión ausente pasa de `401 UNAUTHORIZED` a `401 UNAUTHENTICATED`, igual que `SPEC-02`. |
 | `0.4.0` | `2026-10-16` | `Cursor` | Backend `MarketplaceModule` (`T-F2-BE2-01`): contratos Zod en `shared-schemas`, endpoints `/api/v1/marketplace/*`, tests HTTP RF-01..RF-04, harness FE mínimo en `/marketplace` para validar el flujo. Idempotencia en memoria (Redis/BullMQ pendiente de specs posteriores). |
-| `0.5.0` | `2026-10-17` | `Cursor` | Extensión storefront: `pageDocumentJson` + `MarketplaceMediaAsset` (máx. 6 imgs locales), `PATCH …/page`, upload/delete/get media, redirect post-create a detalle Gig/Publication, editor TipTap Editar/Vista previa + carrusel. |
+| `0.5.0` | `2026-10-17` | `Cursor` | Extensión storefront: `pageDocumentJson` + `MarketplaceMediaAsset` (máx. 6 imgs locales), `PATCH …/page`, upload/delete/get media, redirect post-create a detalle Gig/Publication, editor TipTap Editar/Vista previa + carrusel. Es presentación del Gig de `RF-02`, no un flujo de pago nuevo. |
+| `0.6.0` | `2026-10-17` | `Cursor` | La matriz vuelve a `.agents/CONTEXT.md` §7.2: varios medios por categoría, `.svg` en gráficos, IA de marketing para imagen y texto. Estado exacto `Redactada (DRAFTED)`. El mapa en código y el seed SQL quedan para `BE-2`. |
