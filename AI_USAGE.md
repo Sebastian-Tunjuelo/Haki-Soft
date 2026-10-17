@@ -136,6 +136,9 @@ A continuación se listan todos los archivos del repositorio que han sido creado
 | [`specs/SPEC-06.md`](specs/SPEC-06.md), [`specs/SPEC-07.md`](specs/SPEC-07.md), [`specs/SPEC-08.md`](specs/SPEC-08.md), [`specs/SPEC-09.md`](specs/SPEC-09.md), [`specs/SPEC-10.md`](specs/SPEC-10.md), [`specs/SPEC-11.md`](specs/SPEC-11.md), [`specs/SPEC-12.md`](specs/SPEC-12.md) | `Planeación` / `IA` | **Creado (`Cursor`)** | Prompt #024 (el usuario lo tituló #015). Specs `Redactada (DRAFTED)` del resto del MVP. No aprobadas. Sin código. |
 | [`specs/COVERAGE.md`](specs/COVERAGE.md), [`specs/README.md`](specs/README.md) | `Planeación` | **Creado / Modificado (`Cursor`)** | Matriz de cobertura e índice `SPEC-00` a `SPEC-12`. |
 | [`planning/taskboard.md`](planning/taskboard.md) | `Planeación` | **Modificado (`Cursor`)** | `T-F1-FE1-01` y `T-F1-BE2-01` dejan de pedir Clerk y quedan en la sesión local ya vigente. No se cambió su estado. |
+| [`specs/SPEC-05.md`](specs/SPEC-05.md) | `Planeación` | **Modificado (`Cursor`)** | Prompt #025 (el usuario lo tituló #016). v0.3.1, sigue `Redactada (DRAFTED)`. `resolveMvpAiAuditableModality` queda en `packages/shared-schemas`. AI-1 no crea un servicio en `apps/api`. |
+| [`planning/taskboard.md`](planning/taskboard.md) | `Planeación` | **Modificado (`Cursor`)** | `T-F4-AI1-02` implementa `advise()` en `packages/ai-advisor`. La persistencia del informe queda en `BE-2`. El estado de la tarea no cambia. |
+| [`.cursor/rules/ai-only.mdc`](.cursor/rules/ai-only.mdc) | `Gobernanza` / `IA` | **Incluido (`Cursor`)** | La regla permanente de AI-1 entra en la base común. No contradice `AGENTS.md`: el push solo ocurre con autorización explícita, y esta tarea la dio. |
 
 ---
 
