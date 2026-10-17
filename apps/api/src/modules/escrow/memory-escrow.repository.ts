@@ -226,6 +226,11 @@ export class MemoryEscrowRepository implements EscrowRepository {
         interactRedirectUri: null,
         incomingPaymentUrl: null,
         outgoingPaymentUrl: `https://ilp.interledger-test.dev/simulated/out/96/${taskId}`,
+        quoteUrl: null,
+        grantContinueUri: null,
+        grantContinueToken: null,
+        clientNonce: null,
+        metadataJson: null,
         completedAt: new Date(),
       },
       {
@@ -239,6 +244,11 @@ export class MemoryEscrowRepository implements EscrowRepository {
         interactRedirectUri: null,
         incomingPaymentUrl: null,
         outgoingPaymentUrl: `https://ilp.interledger-test.dev/simulated/out/4/${taskId}`,
+        quoteUrl: null,
+        grantContinueUri: null,
+        grantContinueToken: null,
+        clientNonce: null,
+        metadataJson: null,
         completedAt: new Date(),
       },
     );
@@ -269,6 +279,11 @@ export class MemoryEscrowRepository implements EscrowRepository {
       interactRedirectUri: null,
       incomingPaymentUrl: null,
       outgoingPaymentUrl: `https://ilp.interledger-test.dev/simulated/out/refund/${taskId}`,
+      quoteUrl: null,
+      grantContinueUri: null,
+      grantContinueToken: null,
+      clientNonce: null,
+      metadataJson: null,
       completedAt: new Date(),
     });
     order.lifecycleStatus = 'REFUNDED';
