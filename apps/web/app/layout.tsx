@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { Navbar } from '@/src/components/navbar';
 import { WorkRequestAlert } from '@/src/components/work-request-alert';
+import { DeliveryReadyAlert } from '@/src/components/delivery-ready-alert';
+import { SellerAcceptanceAlert } from '@/src/components/seller-acceptance-alert';
 import { SmoothScrollProvider } from '@/app/providers/smooth-scroll';
 import './globals.css';
 
@@ -18,6 +20,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
               <Navbar />
               <WorkRequestAlert />
+              <DeliveryReadyAlert />
+              <SellerAcceptanceAlert />
               <main className="app-container" style={{ padding: '32px 20px', flex: 1 }}>
                 {children}
               </main>
@@ -27,10 +31,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}
                 >
                   <div>
-                    <strong>TaskStream AI</strong> · Fase 1 (SPEC-02: Identidad local y SPEC-03: Motor 3D Lenis/ScrollTrigger)
+                    <strong>TaskStream AI</strong> · Marketplace con custodia Open Payments
                   </div>
                   <div>
-                    Open Payments · GNAP Subject Grant · Invariante 96% / 4% · 60–120 FPS WebGL
+                    Custodia 100% · Liquidación 96% / 4% · Interledger
                   </div>
                 </div>
               </footer>
