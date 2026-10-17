@@ -234,6 +234,9 @@ model UserWallet {
   isVerified        Boolean   @default(false) @map("is_verified")
   verifiedAt        DateTime? @map("verified_at")
   isActive          Boolean   @default(false) @map("is_active")
+  /// Saldo demo de la plataforma (centavos USD). El escrow simulado debita/acredita aquí;
+  /// no es el balance real de la Test Wallet Interledger (Open Payments real pendiente BE-1).
+  demoBalanceUSDInCents Int @default(100000) @map("demo_balance_usd_in_cents")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
