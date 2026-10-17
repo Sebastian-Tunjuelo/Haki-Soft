@@ -55,7 +55,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 }}
               >
                 <div>
-                  <strong>TaskStream AI</strong> · Marketplace con custodia Open Payments
+                  <strong>TaskStream AI</strong> · Custodia, revisión IA y liquidación Open Payments
                 </div>
                 <div>Custodia 100% · Liquidación 96% / 4% · Interledger</div>
               </div>

@@ -8,6 +8,7 @@ import {
   type AiAdvisorReport,
 } from '@taskstream/shared-schemas';
 import { AiAdvisorError } from './errors';
+import { extractAdvisorImagePayload } from './image-payload';
 import { AdvisorModelOutputSchema } from './model-output';
 import { detectPromptInjectionSignals } from './prompt-injection';
 import {
@@ -45,6 +46,35 @@ function assertModalityAllowed(input: AiAdvisorInputContract): void {
 function precheckPassed(input: AiAdvisorInputContract): boolean {
   const pre = input.deterministicPreCheckResult;
   return pre.extensionAllowed && pre.nonEmptyFile && pre.technicalConstraintsMet;
+}
+
+/**
+ * Fail-closed: cualquier criterionId desconocido o duplicado invalida toda la salida del modelo.
+ * No se filtran filas ni se inventan evaluaciones omitidas — así el informe no diverge de lo persistible
+ * (Prisma solo guarda códigos conocidos) y no se presenta un informe parcial engañoso.
+ */
+function assertCriteriaEvaluationCoherent(
+  input: AiAdvisorInputContract,
+  criteriaEvaluation: ReadonlyArray<{ criterionId: string }>,
+): void {
+  const allowed = new Set(input.orderContext.acceptanceCriteria.map((c) => c.criterionId));
+  const seen = new Set<string>();
+
+  for (const row of criteriaEvaluation) {
+    if (!allowed.has(row.criterionId)) {
+      throw new AiAdvisorError(
+        'AI_ADVISOR_SCHEMA_MISMATCH',
+        `criteriaEvaluation incluye criterionId desconocido: ${row.criterionId}.`,
+      );
+    }
+    if (seen.has(row.criterionId)) {
+      throw new AiAdvisorError(
+        'AI_ADVISOR_SCHEMA_MISMATCH',
+        `criteriaEvaluation duplica criterionId: ${row.criterionId}.`,
+      );
+    }
+    seen.add(row.criterionId);
+  }
 }
 
 function buildFailedPrecheckReport(input: AiAdvisorInputContract): AiAdvisorReport {
@@ -100,6 +130,27 @@ export async function advise(
   const wrapped = wrapUntrustedArtifact(artifactBody);
   const userPrompt = buildUserPrompt(input, wrapped);
 
+  let imagePayload = null;
+  try {
+    imagePayload = extractAdvisorImagePayload({
+      imageSignedUrlOrBase64: input.deliverableArtifact.imageSignedUrlOrBase64,
+      mimeType: input.deliverableArtifact.mimeType,
+    });
+  } catch (error) {
+    if (error instanceof AiAdvisorError) throw error;
+    throw new AiAdvisorError(
+      'AI_ADVISOR_INVALID_INPUT',
+      error instanceof Error ? error.message : 'Payload de imagen inválido.',
+    );
+  }
+
+  if (input.auditableModality === 'IMAGE' && !imagePayload) {
+    throw new AiAdvisorError(
+      'AI_ADVISOR_INVALID_INPUT',
+      'Modalidad IMAGE requiere imageSignedUrlOrBase64 (data URL) para análisis visual.',
+    );
+  }
+
   let provider = options.provider;
   if (!provider) {
     const { createDefaultAiAdvisorProvider } = await import('./provider');
@@ -112,6 +163,7 @@ export async function advise(
       system: SYSTEM_PROMPT,
       prompt: userPrompt,
       schema: AdvisorModelOutputSchema,
+      image: input.auditableModality === 'IMAGE' ? imagePayload : null,
     });
   } catch (error) {
     if (error instanceof AiAdvisorError) throw error;
@@ -120,6 +172,15 @@ export async function advise(
       error instanceof Error ? error.message : 'Proveedor de IA no disponible.',
     );
   }
+
+  if (!Array.isArray(modelOutput?.criteriaEvaluation)) {
+    throw new AiAdvisorError(
+      'AI_ADVISOR_SCHEMA_MISMATCH',
+      'La salida del proveedor no incluye criteriaEvaluation válida.',
+    );
+  }
+
+  assertCriteriaEvaluationCoherent(input, modelOutput.criteriaEvaluation);
 
   const reportCandidate = {
     taskId: input.taskOrderId,

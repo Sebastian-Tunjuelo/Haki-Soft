@@ -176,6 +176,9 @@ export function mockAiAdvisorInputContract(
       fileSizeBytes: 2048,
       sha256Checksum: 'a'.repeat(64),
       imageDimensions: { widthPx: 1200, heightPx: 800 },
+      // PNG 1×1 mínimo (data URL) para pruebas IMAGE sin red.
+      imageSignedUrlOrBase64:
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
     },
     deterministicPreCheckResult: {
       extensionAllowed: true,

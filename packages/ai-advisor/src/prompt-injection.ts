@@ -9,9 +9,18 @@ const INJECTION_PATTERNS: RegExp[] = [
   /ejecuta(r)?\s+(el\s+)?pago/i,
   /system\s*:\s*/i,
   /<\/?system>/i,
+  // Español: ignorar instrucciones/reglas (no basta con mencionar "instrucciones" de forma descriptiva).
+  /ignor[ae]\s+(todas\s+)?(las\s+)?(instrucciones?|reglas?)/i,
+  // Español: revelar el (system) prompt.
+  /revel[ae]\s+(el\s+)?(system\s+)?prompt/i,
+  // Español: liberar escrow / fondos en custodia.
+  /liber[ae]\s+(el\s+|los\s+)?(escrow|fondos?)/i,
 ];
 
-/** Heurística local; el modelo también puede marcar `promptInjectionDetected`. */
+/**
+ * Heurística local por patrones; no es una defensa completa contra prompt injection.
+ * El modelo también puede marcar `promptInjectionDetected`. Falsos negativos y positivos son posibles.
+ */
 export function detectPromptInjectionSignals(text: string): boolean {
   if (!text.trim()) return false;
   return INJECTION_PATTERNS.some((pattern) => pattern.test(text));

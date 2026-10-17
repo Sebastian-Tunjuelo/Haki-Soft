@@ -16,3 +16,14 @@ export {
   buildUserPrompt,
 } from './prompt';
 export { detectPromptInjectionSignals } from './prompt-injection';
+export {
+  extractAdvisorImagePayload,
+  MAX_ADVISOR_IMAGE_BYTES,
+  type AdvisorImagePayload,
+} from './image-payload';
+export {
+  DEFAULT_GROQ_VISION_MODEL_ID,
+  isGroqVisionModel,
+  resolveAdvisorModelId,
+} from './vision-models';
+export { pngDataUrl, solidRgbPng } from './synthetic-png';

@@ -85,7 +85,6 @@ const HUMAN_ERRORS: Record<string, string> = {
   ORDER_NOT_IN_REVIEW: 'La orden no está en revisión; no se puede abrir la ventana final.',
   NOT_IN_REVIEW: 'La orden no está en revisión (IN_REVIEW).',
   REPORT_FORBIDDEN: 'No puedes ver el informe de IA de esta orden.',
-  DELIVERABLE_NOT_FOUND: 'Entregable no encontrado.',
   NOT_ORDER_BUYER: 'Solo el contratador de esta orden puede realizar esa acción.',
   REVISION_LIMIT_REACHED: 'Ya usaste las 2 correcciones permitidas en esta orden.',
   DISPUTE_WINDOW_CLOSED: 'Ya no se puede abrir una disputa en este estado.',
