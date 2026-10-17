@@ -20,7 +20,7 @@ export default async function ModeSettingsPage() {
       <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--brand-blue)', fontSize: 13, marginBottom: 6 }}>
           <ArrowLeftRight size={16} />
-          <span>Configuración de cuenta · SPEC-02</span>
+          <span>Configuración de cuenta</span>
         </div>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: '#ffffff', marginBottom: 8 }}>
           Selector de modo: Buyer Mode / Seller Mode
