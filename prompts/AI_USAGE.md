@@ -1758,4 +1758,28 @@ Para que quedes claro yo cree las cuentas con las que realizo las pruebas con pr
 ```
 (+ imagen Saldo exacto EGG 100.00 en Test Wallet)
 
+### Prompt #067 — Relanzar proyecto completo para prueba
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`, `Herramientas / DX`
+* **Resumen de su funcionalidad:** Docker Postgres/Redis, build schemas/ai-advisor, migrate, fix compile `memory-escrow.repository.ts`, limpia `.next`, arranca Nest `:3001` y Next `:3000` (HTTP 200).
+* **Archivos creados o modificados:** `apps/api/src/modules/escrow/memory-escrow.repository.ts`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+re lanza el proyecto completo para realizar la prueba
+```
+
+### Prompt #068 — Liberación falla / custodia monto alto / «Es lo que quería»
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Con 3 wallets, la liberación OP fallaba (OutgoingPayment) y bloqueaba el accept. Se corrige payout con `receiveAmount` en asset del receptor, conversión USD cents→asset scale, se evita payout circular del 4 % si platform=escrow, y se mapean errores de token/upstream a la UI.
+* **Archivos creados o modificados:** `apps/api/src/modules/open-payments/escrow-payment.service.ts`, `apps/web/src/lib/api-client.ts`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+Ya realice el flujo con 3 cuenta, y en el momento de liber el saldo final genera problema y la billetera custodia agarro un valor demaciado alto para el establecido, estaba establecido 10$ dolares y agarro 150$, luego cuando se intento liberar el saldo genero error y no permitido darle a "Es lo que queria"
+```
+
 
