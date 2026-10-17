@@ -29,7 +29,7 @@ export default async function WalletOnboardingPage({
       <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--brand-blue)', fontSize: 13, marginBottom: 6 }}>
           <Wallet size={16} />
-          <span>Onboarding financiero · SPEC-02</span>
+          <span>Onboarding financiero</span>
         </div>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: '#ffffff', marginBottom: 8 }}>
           Vinculación y verificación de billetera multimoneda
