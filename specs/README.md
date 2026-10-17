@@ -27,7 +27,7 @@ Ninguna fase se cierra hasta que sus specs lleguen a `Aprobada`. La lógica nucl
 | `SPEC-00` | [`SPEC-00.md`](./SPEC-00.md) | Estructura `specs/` y trazabilidad SDD | Fase 0 | `AI-1` | `T-F0-04` | `Testeada (TESTED)` |
 | `SPEC-01` | [`SPEC-01.md`](./SPEC-01.md) | Contratos Zod, mocks y modelo Prisma 6 | Fase 0 | `AI-1`, `FE-1`, `BE-2` | `T-F0-05`, `T-F0-06`, `T-F1-BE2-01`, `T-F1-AI1-01` | `Testeada (TESTED)` |
 | `SPEC-02` | [`SPEC-02.md`](./SPEC-02.md) | Identidad Clerk y verificación de billetera | Fase 1 | `FE-1`, `BE-1`, `BE-2` | `T-F1-FE1-01`, `T-F1-BE1-01`, `T-F1-BE2-01` | `Redactada (DRAFTED)` |
-| `SPEC-03` | [`SPEC-03.md`](./SPEC-03.md) | Motor visual 3D ligado al scroll | Fase 1 | `FE-2` | `T-F1-FE2-01`, `T-F1-FE2-02` | `Redactada (DRAFTED)` |
+| `SPEC-03` | [`SPEC-03.md`](./SPEC-03.md) | Motor visual 3D ligado al scroll | Fase 1 | `FE-1`, `FE-2` | `T-F1-FE2-01`, `T-F1-FE2-02` | `Testeada (TESTED)` |
 | `SPEC-04` | Pendiente de redactar | Catálogo y publicación de tareas | Fase 2 | `FE-1`, `FE-2`, `BE-2` | `T-F2-FE1-01`, `T-F2-FE2-01`, `T-F2-BE2-01` | Pendiente de redactar |
 | `SPEC-05` | Pendiente de redactar | Gig fijo y bandeja de ofertas | Fase 2 | `FE-1`, `BE-1`, `AI-1` | `T-F2-BE1-01`, `T-F2-AI1-01` | Pendiente de redactar |
 | `SPEC-06` | Pendiente de redactar | Escrow 96 % / 4 % y reembolsos 100 % | Fase 3 | `BE-1`, `BE-2`, `FE-1`, `FE-2`, `AI-1` | `T-F3-BE1-01` | Pendiente de redactar |
