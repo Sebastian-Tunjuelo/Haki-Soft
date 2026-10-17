@@ -92,5 +92,8 @@ describe('SPEC-02: contrato público entre el front y la API', () => {
     expect(form).not.toContain('clientNonce');
     expect(form).not.toContain('finishNonce');
     expect(form).not.toContain("'/api/v1/me/wallet',");
+    expect(page).not.toContain('@clerk');
+    expect(source('src/lib/identity-proxy.ts')).not.toContain('@clerk');
+    expect(source('app/layout.tsx')).not.toContain('@clerk');
   });
 });

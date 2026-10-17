@@ -161,8 +161,8 @@ enum TimerJobStatus {
 
 model User {
   id           String         @id @default(uuid()) @db.Uuid
-  clerkId      String         @unique @map("clerk_id")
   email        String         @unique
+  passwordHash String         @map("password_hash")
   displayName  String         @map("display_name") @db.VarChar(100)
   avatarUrl    String?        @map("avatar_url")
   countryCode  String         @map("country_code") @db.Char(2)

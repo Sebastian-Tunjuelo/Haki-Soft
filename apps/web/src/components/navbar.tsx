@@ -1,20 +1,43 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useAuth, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
+import { usePathname, useRouter } from 'next/navigation';
 import { ShieldCheck, Wallet, ArrowLeftRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { readActiveMode, readActiveWallet } from '@/src/lib/identity-contract';
+import { readActiveMode, readActiveWallet, readSessionUser } from '@/src/lib/identity-contract';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
+  const [sessionEmail, setSessionEmail] = useState<string | null>(null);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
   const [activeMode, setActiveMode] = useState<'BUYER' | 'SELLER'>('BUYER');
   const [hasActiveWallet, setHasActiveWallet] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!isLoaded || !isSignedIn) {
+    let cancelled = false;
+    fetch('/api/v1/auth/session')
+      .then((res) => res.json())
+      .then((data: unknown) => {
+        if (cancelled) return;
+        const user = readSessionUser(data);
+        setSessionEmail(user?.email ?? null);
+        if (user) setActiveMode(user.activeMode);
+        setSessionLoaded(true);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSessionEmail(null);
+          setSessionLoaded(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!sessionLoaded || !sessionEmail) {
       setHasActiveWallet(false);
       return;
     }
@@ -39,7 +62,7 @@ export function Navbar() {
     return () => {
       cancelled = true;
     };
-  }, [pathname, isLoaded, isSignedIn]);
+  }, [pathname, sessionLoaded, sessionEmail]);
 
   return (
     <header className="app-header">
@@ -92,7 +115,7 @@ export function Navbar() {
             >
               <ArrowLeftRight size={15} />
               <span>Modo</span>
-              {isSignedIn && (
+              {sessionEmail && (
                 <span
                   className={`badge ${activeMode === 'BUYER' ? 'badge-buyer' : 'badge-seller'}`}
                   style={{ padding: '2px 6px', fontSize: 10 }}
@@ -104,9 +127,9 @@ export function Navbar() {
           </nav>
 
           <div className="header-actions">
-            {!isLoaded ? (
+            {!sessionLoaded ? (
               <div style={{ width: 80, height: 32, background: 'var(--surface)', borderRadius: 'var(--radius-sm)' }} />
-            ) : isSignedIn ? (
+            ) : sessionEmail ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span
                   style={{
@@ -118,24 +141,29 @@ export function Navbar() {
                   }}
                 >
                   <ShieldCheck size={14} style={{ color: 'var(--status-verified)' }} />
-                  Clerk v6
+                  {sessionEmail}
                 </span>
-                <UserButton
-                  appearance={{
-                    elements: {
-                      userButtonAvatarBox: { width: 32, height: 32 },
-                    },
+                <button
+                  className="btn btn-outline btn-sm"
+                  type="button"
+                  onClick={() => {
+                    void fetch('/api/v1/auth/logout', { method: 'POST' }).then(() => {
+                      setSessionEmail(null);
+                      router.refresh();
+                    });
                   }}
-                />
+                >
+                  Salir
+                </button>
               </div>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <SignInButton mode="modal">
-                  <button className="btn btn-outline btn-sm">Iniciar Sesión</button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="btn btn-primary btn-sm">Registrarse</button>
-                </SignUpButton>
+                <Link href="/sign-in" className="btn btn-outline btn-sm">
+                  Iniciar sesión
+                </Link>
+                <Link href="/sign-up" className="btn btn-primary btn-sm">
+                  Registrarse
+                </Link>
               </div>
             )}
           </div>

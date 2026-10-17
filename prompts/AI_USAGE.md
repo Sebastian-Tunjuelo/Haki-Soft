@@ -980,5 +980,61 @@ y como hago eso del clerk
 has push al repo
 ```
 
+---
+
+### Prompt #026 — Adelantar Backend hasta main
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. La rama local `Backend` no tenía commits propios respecto de `main`. Se hizo checkout y fast-forward hasta `3889a65`, el mismo commit que `main`.
+  2. El árbol de trabajo quedó en `Backend`. No se publicó al remoto.
+* **Archivos creados / modificados:**
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+pasa lo que tiene la rama main a la rama Backend y parate en ella
+```
+
+---
+
+### Prompt #027 — Retirar Clerk y dejar un registro propio
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Planeación`, `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. Se elimina Clerk (dependencias, middleware, webhook, guards y pantallas). El acceso pasa a registro e inicio de sesión con correo y contraseña. La contraseña se guarda con `scrypt` y la sesión va en una cookie httpOnly.
+  2. Se borran `.env` de la raíz y `.env.example`. Las variables de Clerk salen de los `.env` de API y web. La migración `20261016210000_local_password` queda aplicada en el Postgres local.
+* **Archivos creados / modificados:**
+  * [`apps/api/src/modules/identity/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/modules/identity), [`apps/api/prisma/schema.prisma`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/prisma/schema.prisma), [`apps/api/prisma/migrations/20261016210000_local_password/migration.sql`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/prisma/migrations/20261016210000_local_password/migration.sql) *(Modificados / creado)*
+  * [`apps/web/app/sign-in/page.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/sign-in/page.tsx), [`apps/web/app/sign-up/page.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/sign-up/page.tsx), [`apps/web/src/components/auth-form.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/components/auth-form.tsx), [`apps/web/app/api/v1/auth/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/api/v1/auth) *(Creados)*
+  * [`.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env), [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Eliminados)*
+  * [`.agents/CONTEXT.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/CONTEXT.md), [`specs/SPEC-02.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-02.md), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Bien, ahora hablando decidimos no implementar el Clerk, Por ende borra toda logica que lo implique ademas del env.example y el env original eliminalo. Consideramos que de momento con inicio de sesion proporcionado por nostros mismos mediante un registro de momento es suficiente
+```
+
+---
+
+### Prompt #028 — Restaurar los .env sin Clerk
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Gobernanza`, `Backend`, `Frontend`
+* **Resumen de su funcionalidad:**
+  1. Se reponen `.env` y `.env.example`. No se borran los archivos: solo desaparecen las variables y los comentarios de Clerk.
+  2. `apps/api/.env` y `apps/web/.env.local` conservan la base de datos, Redis y Open Payments.
+* **Archivos creados / modificados:**
+  * [`.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env), [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Restaurados)*
+  * [`apps/api/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/.env), [`apps/web/.env.local`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/.env.local) *(Modificados)*
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+A lo que me referia no es que borraras los archivos de .env, si no dentro de ellos lo que mencionara a Clerk.
+```
+
 
 

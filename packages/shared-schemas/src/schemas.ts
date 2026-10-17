@@ -301,6 +301,22 @@ export const ActiveModeSwitchSchema = z.object({
   activeMode: UserActiveModeEnum,
 });
 
+export const LocalRegisterSchema = z.object({
+  email: z.string().trim().email().max(200),
+  password: z.string().min(8).max(200),
+  displayName: z.string().trim().min(1).max(100),
+  countryCode: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z]{2}$/)
+    .optional(),
+});
+
+export const LocalLoginSchema = z.object({
+  email: z.string().trim().email().max(200),
+  password: z.string().min(1).max(200),
+});
+
 export type TaskCategory = z.infer<typeof TaskCategoryEnum>;
 export type DeliverableMediaType = z.infer<typeof DeliverableMediaTypeEnum>;
 export type MvpAiAuditableModality = z.infer<typeof MvpAiAuditableModalityEnum>;

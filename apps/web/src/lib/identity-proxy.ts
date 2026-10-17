@@ -1,4 +1,6 @@
-import { auth } from '@clerk/nextjs/server';
+import { cookies } from 'next/headers';
+
+export const SESSION_COOKIE = 'taskstream_session';
 
 function apiBase(): string {
   return (process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001').replace(
@@ -7,15 +9,12 @@ function apiBase(): string {
   );
 }
 
-export async function proxyIdentity(path: string, init?: { method?: string; body?: string }): Promise<Response> {
-  let token: string | null = null;
-  try {
-    const session = await auth();
-    token = session.userId ? await session.getToken() : null;
-  } catch {
-    token = null;
-  }
+export async function readSessionToken(): Promise<string | null> {
+  return (await cookies()).get(SESSION_COOKIE)?.value ?? null;
+}
 
+export async function proxyIdentity(path: string, init?: { method?: string; body?: string }): Promise<Response> {
+  const token = await readSessionToken();
   if (!token) {
     return Response.json({ code: 'UNAUTHENTICATED' }, { status: 401 });
   }
@@ -54,4 +53,9 @@ export function passthrough(upstream: Response, text: string): Response {
     status: upstream.status,
     headers: { 'content-type': 'application/json' },
   });
+}
+
+export async function hasLocalSession(): Promise<boolean> {
+  const result = await readMyJson('/api/v1/auth/session');
+  return result.status < 400;
 }

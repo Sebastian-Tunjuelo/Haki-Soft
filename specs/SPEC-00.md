@@ -29,7 +29,7 @@
 
 ### 1.3. Fuera de Alcance del MVP (Límites Estrictos)
 
-- No implementa pagos, Clerk, escenas 3D ni `AiAdvisorService`. Esos módulos empiezan en `SPEC-01` en adelante.
+- No implementa pagos, el registro, escenas 3D ni `AiAdvisorService`. Esos módulos empiezan en `SPEC-01` en adelante.
 - No autoriza pagos por hitos, auditoría de IA sobre video, audio o código, ni la suscripción `Buyer AI Pro Subscription`.
 - Un agente no puede marcar `Aprobada (APPROVED)` sin el líder del proyecto.
 

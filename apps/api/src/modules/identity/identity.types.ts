@@ -4,12 +4,18 @@ export type ChallengeStatus = 'PENDING_REDIRECT' | 'VERIFIED' | 'FAILED' | 'EXPI
 
 export interface StoredUser {
   id: string;
-  clerkId: string;
   email: string;
   displayName: string;
   avatarUrl: string | null;
   countryCode: string;
   activeMode: ActiveMode;
+}
+
+export interface LocalUserInput {
+  email: string;
+  passwordHash: string;
+  displayName: string;
+  countryCode: string;
 }
 
 export interface StoredWallet {
@@ -42,18 +48,11 @@ export interface StoredChallenge {
   expiresAt: Date;
 }
 
-export interface ClerkUserSyncInput {
-  clerkId: string;
-  email: string;
-  displayName: string;
-  avatarUrl: string | null;
-  countryCode: string | null;
-}
-
 export interface IdentityRepository {
-  upsertClerkUser(input: ClerkUserSyncInput): Promise<{ user: StoredUser; created: boolean }>;
-  findUserByClerkId(clerkId: string): Promise<StoredUser | null>;
-  setActiveMode(clerkId: string, activeMode: ActiveMode): Promise<StoredUser | null>;
+  createLocalUser(input: LocalUserInput): Promise<StoredUser>;
+  findUserByEmail(email: string): Promise<{ user: StoredUser; passwordHash: string } | null>;
+  findUserById(userId: string): Promise<StoredUser | null>;
+  setActiveMode(userId: string, activeMode: ActiveMode): Promise<StoredUser | null>;
   findActiveWallet(userId: string): Promise<StoredWallet | null>;
   hasVerifiedActiveWallet(userId: string): Promise<boolean>;
   saveDiscoveredWallet(input: {
@@ -124,13 +123,6 @@ export interface WalletOwnershipGateway {
     interactRef: string;
     walletAddress: string;
   }): Promise<{ subjectWalletAddress: string }>;
-}
-
-export interface ClerkWebhookVerifier {
-  verify(req: { rawBody?: Buffer; body?: unknown; headers: Record<string, unknown> }): Promise<{
-    type: string;
-    data: Record<string, unknown>;
-  }>;
 }
 
 export interface Clock {

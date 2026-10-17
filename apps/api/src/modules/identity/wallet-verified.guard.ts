@@ -4,7 +4,7 @@ import { IDENTITY_REPOSITORY } from './identity.tokens';
 import type { IdentityRepository } from './identity.types';
 
 interface AuthenticatedRequest {
-  clerkUserId?: string;
+  userId?: string;
 }
 
 @Injectable()
@@ -13,11 +13,11 @@ export class WalletVerifiedGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const clerkUserId = request.clerkUserId;
-    if (!clerkUserId) {
+    const userId = request.userId;
+    if (!userId) {
       throw new DomainError(401, 'UNAUTHENTICATED');
     }
-    const user = await this.repository.findUserByClerkId(clerkUserId);
+    const user = await this.repository.findUserById(userId);
     if (!user) {
       throw new DomainError(403, 'WALLET_NOT_VERIFIED');
     }

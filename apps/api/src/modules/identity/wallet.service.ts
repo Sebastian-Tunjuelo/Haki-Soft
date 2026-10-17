@@ -15,9 +15,9 @@ export class WalletService {
     @Inject(IdentityService) private readonly identity: IdentityService,
   ) {}
 
-  async discover(clerkUserId: string, body: unknown) {
+  async discover(userId: string, body: unknown) {
     const walletAddress = this.parseWalletAddress(body);
-    const user = await this.identity.requireUser(clerkUserId);
+    const user = await this.identity.requireUser(userId);
     const discovered = await this.gateway.discover(walletAddress);
     const saved = await this.repository.saveDiscoveredWallet({
       userId: user.id,
@@ -39,9 +39,9 @@ export class WalletService {
     };
   }
 
-  async startChallenge(clerkUserId: string, body: unknown) {
+  async startChallenge(userId: string, body: unknown) {
     const walletAddress = this.parseWalletAddress(body);
-    const user = await this.identity.requireUser(clerkUserId);
+    const user = await this.identity.requireUser(userId);
     const pending = await this.repository.findOpenChallenge(user.id);
     if (pending) {
       if (pending.expiresAt.getTime() <= this.clock.now().getTime()) {
@@ -77,8 +77,8 @@ export class WalletService {
     };
   }
 
-  async readActive(clerkUserId: string) {
-    const user = await this.identity.requireUser(clerkUserId);
+  async readActive(userId: string) {
+    const user = await this.identity.requireUser(userId);
     const wallet = await this.repository.findActiveWallet(user.id);
     if (!wallet) return { wallet: null };
     return {

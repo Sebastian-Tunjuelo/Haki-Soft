@@ -83,6 +83,30 @@ export function readWalletChallenge(body: unknown): WalletChallenge | null {
   };
 }
 
+export interface SessionUser {
+  id: string;
+  email: string;
+  displayName: string;
+  activeMode: ActiveMode;
+}
+
+export function readSessionUser(body: unknown): SessionUser | null {
+  if (!body || typeof body !== 'object' || !('user' in body)) return null;
+  const user = (body as { user?: unknown }).user;
+  if (!user || typeof user !== 'object') return null;
+  const row = user as Record<string, unknown>;
+  if (typeof row.id !== 'string' || typeof row.email !== 'string' || typeof row.displayName !== 'string') {
+    return null;
+  }
+  if (row.activeMode !== 'BUYER' && row.activeMode !== 'SELLER') return null;
+  return {
+    id: row.id,
+    email: row.email,
+    displayName: row.displayName,
+    activeMode: row.activeMode,
+  };
+}
+
 export function readActiveWallet(body: unknown): ActiveWallet | null {
   if (!body || typeof body !== 'object' || !('wallet' in body)) return null;
   const wallet = (body as { wallet?: unknown }).wallet;

@@ -12,7 +12,6 @@
     "prisma:generate": "prisma generate"
   },
   "dependencies": {
-    "@clerk/express": "2.1.80",
     "@interledger/open-payments": "7.4.0",
     "@nestjs/common": "10.4.15",
     "@nestjs/core": "10.4.15",

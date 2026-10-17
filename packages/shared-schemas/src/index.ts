@@ -25,6 +25,8 @@ export {
 export {
   AcceptanceCriterionSchema,
   ActiveModeSwitchSchema,
+  LocalLoginSchema,
+  LocalRegisterSchema,
   AiAdvisorInputContractSchema,
   AiAdvisorReportSchema,
   ClientTaskPublicationSchema,

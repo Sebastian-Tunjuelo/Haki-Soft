@@ -1,19 +1,11 @@
-import { auth } from '@clerk/nextjs/server';
 import { ModeSwitcher } from '@/src/components/mode-switcher';
 import { readActiveMode, readApiCode } from '@/src/lib/identity-contract';
-import { readMyJson } from '@/src/lib/identity-proxy';
+import { hasLocalSession, readMyJson } from '@/src/lib/identity-proxy';
 import { ArrowLeftRight, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function ModeSettingsPage() {
-  let userId: string | null = null;
-  try {
-    const session = await auth();
-    userId = session.userId;
-  } catch {
-    userId = null;
-  }
-  const isAuthenticated = Boolean(userId);
+  const isAuthenticated = await hasLocalSession();
 
   let initialMode: 'BUYER' | 'SELLER' = 'BUYER';
   let serverCode: string | null = null;
@@ -40,7 +32,7 @@ export default async function ModeSettingsPage() {
         {isAuthenticated ? (
           <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--status-verified)' }}>
             <UserCheck size={14} />
-            <span>Sesión Clerk activa</span>
+            <span>Sesión activa</span>
           </div>
         ) : (
           <div
@@ -66,7 +58,7 @@ export default async function ModeSettingsPage() {
       </div>
 
       {isAuthenticated ? (
-        <ModeSwitcher initialMode={initialMode} isClerkAuthenticated serverCode={serverCode} />
+        <ModeSwitcher initialMode={initialMode} serverCode={serverCode} />
       ) : null}
     </div>
   );

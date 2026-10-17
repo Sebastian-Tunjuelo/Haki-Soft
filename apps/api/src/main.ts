@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { clerkMiddleware } from '@clerk/express';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
@@ -24,11 +23,8 @@ function loadLocalEnv(): void {
 
 async function bootstrap(): Promise<void> {
   loadLocalEnv();
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api/v1');
-  if (process.env.CLERK_SECRET_KEY) {
-    app.use(clerkMiddleware());
-  }
   const port = Number(process.env.PORT ?? 3001);
   await app.listen(port);
 }

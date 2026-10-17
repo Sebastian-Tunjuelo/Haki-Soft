@@ -1,26 +1,22 @@
-import { createHmac } from 'node:crypto';
-import { Controller, Post, UseGuards, type CanActivate, type ExecutionContext, type INestApplication } from '@nestjs/common';
-import { Injectable } from '@nestjs/common';
+import { Controller, Post, UseGuards, type INestApplication } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { ClerkAuthGuard } from './clerk-auth.guard';
-import { ClerkSvixWebhookVerifier } from './clerk-svix-webhook.verifier';
+import { AuthController } from './auth.controller';
 import { DomainError } from './domain-error';
 import { DomainExceptionFilter } from './domain-exception.filter';
-import { ClerkWebhookController, MeController } from './identity.controller';
+import { MeController } from './identity.controller';
 import { IdentityService } from './identity.service';
-import { CLOCK, CLERK_WEBHOOK_VERIFIER, IDENTITY_REPOSITORY, WALLET_OWNERSHIP_GATEWAY } from './identity.tokens';
+import { CLOCK, IDENTITY_REPOSITORY, WALLET_OWNERSHIP_GATEWAY } from './identity.tokens';
 import type { Clock, WalletOwnershipGateway } from './identity.types';
 import { MemoryIdentityRepository } from './memory-identity.repository';
+import { SessionAuthGuard } from './session-auth.guard';
 import { SystemClock } from './system-clock';
 import { WalletCallbackController, WalletController } from './wallet.controller';
 import { WalletService } from './wallet.service';
 import { WalletVerifiedGuard } from './wallet-verified.guard';
 
-const RAW_WEBHOOK_KEY = Buffer.from('taskstream-test-webhook-key');
-const WEBHOOK_SECRET = `whsec_${RAW_WEBHOOK_KEY.toString('base64')}`;
 const HASH_OK = 'a864cb9cb67ade8df4e58d8e55c22f757270f7a9128c943c745b631ac1f7d0dd';
 const HASH_TWO = '5bc96aca7d4f1b849b81a9335014646d834df83082b112e3a3b8c087bcc95762';
 const HASH_ABORT = '51b97e0191821aa0256c997c5872cc67d1c6d1aab9aca4a0e870f4bfb6907721';
@@ -70,21 +66,8 @@ class FakeWalletOwnershipGateway implements WalletOwnershipGateway {
   }
 }
 
-@Injectable()
-class HeaderClerkAuthGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
-    const req = context.switchToHttp().getRequest<{ headers: Record<string, string | undefined>; clerkUserId?: string }>();
-    const userId = req.headers['x-clerk-user-id'];
-    if (!userId) {
-      throw new DomainError(401, 'UNAUTHENTICATED');
-    }
-    req.clerkUserId = userId;
-    return true;
-  }
-}
-
 @Controller('commerce')
-@UseGuards(ClerkAuthGuard, WalletVerifiedGuard)
+@UseGuards(SessionAuthGuard, WalletVerifiedGuard)
 class CommerceProbeController {
   @Post('publish')
   publish(): { allowed: true } {
@@ -92,44 +75,18 @@ class CommerceProbeController {
   }
 }
 
-function clerkUserEvent(type: 'user.created' | 'user.updated', email = 'ada@example.com') {
-  return {
-    type,
-    data: {
-      id: 'user_ada',
-      first_name: 'Ada',
-      last_name: 'Lovelace',
-      image_url: 'https://img.example/ada.png',
-      primary_email_address_id: 'idn_1',
-      email_addresses: [{ id: 'idn_1', email_address: email }],
-      public_metadata: { countryCode: 'co' },
-    },
-  };
-}
-
-function signPayload(payload: string, key = RAW_WEBHOOK_KEY) {
-  const id = 'msg_spec02';
-  const timestamp = Math.floor(Date.now() / 1000).toString();
-  const signature = createHmac('sha256', key).update(`${id}.${timestamp}.${payload}`).digest('base64');
-  return {
-    'svix-id': id,
-    'svix-timestamp': timestamp,
-    'svix-signature': `v1,${signature}`,
-  };
-}
-
 describe('SPEC-02 backend identity', () => {
   let app: INestApplication;
+  let token = '';
   const repository = new MemoryIdentityRepository();
   const gateway = new FakeWalletOwnershipGateway();
   const clock = new MutableClock();
 
   beforeAll(async () => {
-    process.env.CLERK_WEBHOOK_SIGNING_SECRET = WEBHOOK_SECRET;
     process.env.PUBLIC_API_URL = 'http://localhost:3001';
     const moduleRef = await Test.createTestingModule({
       controllers: [
-        ClerkWebhookController,
+        AuthController,
         MeController,
         WalletController,
         WalletCallbackController,
@@ -140,17 +97,13 @@ describe('SPEC-02 backend identity', () => {
         WalletService,
         SystemClock,
         WalletVerifiedGuard,
-        ClerkAuthGuard,
+        SessionAuthGuard,
         { provide: CLOCK, useValue: clock },
         { provide: IDENTITY_REPOSITORY, useValue: repository },
         { provide: WALLET_OWNERSHIP_GATEWAY, useValue: gateway },
-        { provide: CLERK_WEBHOOK_VERIFIER, useClass: ClerkSvixWebhookVerifier },
         { provide: APP_FILTER, useClass: DomainExceptionFilter },
       ],
-    })
-      .overrideGuard(ClerkAuthGuard)
-      .useClass(HeaderClerkAuthGuard)
-      .compile();
+    }).compile();
 
     app = moduleRef.createNestApplication({ rawBody: true });
     app.setGlobalPrefix('api/v1');
@@ -162,70 +115,85 @@ describe('SPEC-02 backend identity', () => {
     await app.close();
   });
 
-  async function postWebhook(payload: string, headers = signPayload(payload)) {
-    return request(app.getHttpServer())
-      .post('/api/v1/webhooks/clerk')
-      .set('content-type', 'application/json')
-      .set(headers)
-      .send(payload);
-  }
-
-  it('RF-07 rejects an invalid Svix signature and writes nothing', async () => {
-    const payload = JSON.stringify(clerkUserEvent('user.created'));
-    const response = await postWebhook(payload, signPayload(payload, Buffer.from('wrong-webhook-key')));
-    expect(response.status).toBe(401);
-    expect(response.body).toEqual({ code: 'CLERK_WEBHOOK_INVALID_SIGNATURE' });
+  it('registers a local buyer and rejects a duplicate or a bad password', async () => {
+    const missing = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({ email: 'ada@example.com', displayName: 'Ada' });
+    expect(missing.status).toBe(400);
+    expect(missing.body).toEqual({ code: 'AUTH_INPUT_INVALID' });
     expect(repository.userCount()).toBe(0);
-  });
 
-  it('RF-07 upserts a Clerk user as BUYER and stays idempotent', async () => {
-    const created = JSON.stringify(clerkUserEvent('user.created'));
-    const first = await postWebhook(created);
-    expect(first.status).toBe(200);
-    expect(first.body).toEqual({ code: 'CLERK_USER_SYNCED', clerkId: 'user_ada', activeMode: 'BUYER' });
+    const first = await request(app.getHttpServer()).post('/api/v1/auth/register').send({
+      email: 'Ada@Example.com',
+      password: 'password-ada',
+      displayName: 'Ada Lovelace',
+      countryCode: 'co',
+    });
+    expect(first.status).toBe(201);
+    expect(first.body.user).toMatchObject({
+      email: 'ada@example.com',
+      displayName: 'Ada Lovelace',
+      countryCode: 'CO',
+      activeMode: 'BUYER',
+    });
+    expect(first.body.user.passwordHash).toBeUndefined();
+    expect(typeof first.body.token).toBe('string');
+    token = first.body.token;
 
-    const updated = JSON.stringify(clerkUserEvent('user.updated', 'ada.updated@example.com'));
-    const second = await postWebhook(updated);
-    expect(second.status).toBe(200);
-    expect(second.body).toEqual({ code: 'CLERK_USER_ALREADY_SYNCED', clerkId: 'user_ada' });
+    const duplicate = await request(app.getHttpServer()).post('/api/v1/auth/register').send({
+      email: 'ada@example.com',
+      password: 'password-ada',
+      displayName: 'Otra Ada',
+    });
+    expect(duplicate.status).toBe(409);
+    expect(duplicate.body).toEqual({ code: 'EMAIL_ALREADY_REGISTERED' });
     expect(repository.userCount()).toBe(1);
-    const user = await repository.findUserByClerkId('user_ada');
-    expect(user?.email).toBe('ada.updated@example.com');
-    expect(user?.countryCode).toBe('CO');
-    expect(user?.activeMode).toBe('BUYER');
+
+    const badPassword = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'ada@example.com', password: 'not-the-password' });
+    expect(badPassword.status).toBe(401);
+    expect(badPassword.body).toEqual({ code: 'INVALID_CREDENTIALS' });
+
+    const login = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ email: 'ada@example.com', password: 'password-ada' });
+    expect(login.status).toBe(200);
+    expect(login.body.user.email).toBe('ada@example.com');
+    token = login.body.token;
   });
 
   it('RF-02 persists Seller mode for the same user', async () => {
-    const before = await repository.findUserByClerkId('user_ada');
+    const before = (await repository.findUserByEmail('ada@example.com'))?.user;
     const unauthenticated = await request(app.getHttpServer()).post('/api/v1/me/mode').send({ activeMode: 'SELLER' });
     expect(unauthenticated.status).toBe(401);
     expect(unauthenticated.body).toEqual({ code: 'UNAUTHENTICATED' });
 
     const switched = await request(app.getHttpServer())
       .post('/api/v1/me/mode')
-      .set('x-clerk-user-id', 'user_ada')
+      .set('Authorization', `Bearer ${token}`)
       .send({ activeMode: 'SELLER' });
     expect(switched.status).toBe(201);
     expect(switched.body).toEqual({ activeMode: 'SELLER' });
 
-    const read = await request(app.getHttpServer()).get('/api/v1/me/mode').set('x-clerk-user-id', 'user_ada');
+    const read = await request(app.getHttpServer()).get('/api/v1/me/mode').set('Authorization', `Bearer ${token}`);
     expect(read.status).toBe(200);
     expect(read.body).toEqual({ activeMode: 'SELLER' });
-    const after = await repository.findUserByClerkId('user_ada');
+    const after = (await repository.findUserByEmail('ada@example.com'))?.user;
     expect(after?.id).toBe(before?.id);
   });
 
   it('RF-04 rejects a non-https wallet and stores discovery metadata', async () => {
     const invalid = await request(app.getHttpServer())
       .post('/api/v1/me/wallet/discovery')
-      .set('x-clerk-user-id', 'user_ada')
+      .set('Authorization', `Bearer ${token}`)
       .send({ walletAddress: 'http://ilp.interledger-test.dev/ada' });
     expect(invalid.status).toBe(400);
     expect(invalid.body).toEqual({ code: 'WALLET_ADDRESS_INVALID' });
 
     const discovered = await request(app.getHttpServer())
       .post('/api/v1/me/wallet/discovery')
-      .set('x-clerk-user-id', 'user_ada')
+      .set('Authorization', `Bearer ${token}`)
       .send({ walletAddress: WALLET_A });
     expect(discovered.status).toBe(201);
     expect(discovered.body).toEqual({
@@ -240,7 +208,7 @@ describe('SPEC-02 backend identity', () => {
   it('RF-08 blocks publish until a wallet is verified and active', async () => {
     const blocked = await request(app.getHttpServer())
       .post('/api/v1/commerce/publish')
-      .set('x-clerk-user-id', 'user_ada');
+      .set('Authorization', `Bearer ${token}`);
     expect(blocked.status).toBe(403);
     expect(blocked.body).toEqual({ code: 'WALLET_NOT_VERIFIED' });
   });
@@ -248,7 +216,7 @@ describe('SPEC-02 backend identity', () => {
   it('RF-05 fails the challenge on a bad hash and does not continue the grant', async () => {
     const started = await request(app.getHttpServer())
       .post('/api/v1/me/wallet/challenges')
-      .set('x-clerk-user-id', 'user_ada')
+      .set('Authorization', `Bearer ${token}`)
       .send({ walletAddress: WALLET_A });
     expect(started.status).toBe(201);
     expect(started.body.status).toBe('PENDING_REDIRECT');
@@ -257,7 +225,7 @@ describe('SPEC-02 backend identity', () => {
 
     const again = await request(app.getHttpServer())
       .post('/api/v1/me/wallet/challenges')
-      .set('x-clerk-user-id', 'user_ada')
+      .set('Authorization', `Bearer ${token}`)
       .send({ walletAddress: WALLET_A });
     expect(again.status).toBe(409);
     expect(again.body).toEqual({ code: 'ACTIVE_WALLET_CHALLENGE_PENDING' });
@@ -270,17 +238,17 @@ describe('SPEC-02 backend identity', () => {
     expect(mismatch.status).toBe(400);
     expect(mismatch.body).toEqual({ code: 'GNAP_HASH_MISMATCH' });
     expect(gateway.continueCalls).toBe(0);
-    expect(repository.walletsOf((await repository.findUserByClerkId('user_ada'))!.id).some((wallet) => wallet.isVerified)).toBe(
+    expect(repository.walletsOf((await repository.findUserByEmail('ada@example.com'))!.user.id).some((wallet) => wallet.isVerified)).toBe(
       false,
     );
   });
 
   it('RF-05 and RF-06 verify one wallet and replace it with the next in one step', async () => {
-    const user = (await repository.findUserByClerkId('user_ada'))!;
+    const user = (await repository.findUserByEmail('ada@example.com'))!.user;
     const failed = repository.walletsOf(user.id)[0];
     const restarted = await request(app.getHttpServer())
       .post('/api/v1/me/wallet/challenges')
-      .set('x-clerk-user-id', 'user_ada')
+      .set('Authorization', `Bearer ${token}`)
       .send({ walletAddress: WALLET_A });
     expect(restarted.status).toBe(201);
 
@@ -295,7 +263,7 @@ describe('SPEC-02 backend identity', () => {
 
     const allowed = await request(app.getHttpServer())
       .post('/api/v1/commerce/publish')
-      .set('x-clerk-user-id', 'user_ada');
+      .set('Authorization', `Bearer ${token}`);
     expect(allowed.status).toBe(201);
     expect(allowed.body).toEqual({ allowed: true });
 
@@ -309,13 +277,13 @@ describe('SPEC-02 backend identity', () => {
 
     await request(app.getHttpServer())
       .post('/api/v1/me/wallet/discovery')
-      .set('x-clerk-user-id', 'user_ada')
+      .set('Authorization', `Bearer ${token}`)
       .send({ walletAddress: WALLET_B })
       .expect(201);
     gateway.nextExpiresAt = new Date('2020-01-01T00:00:00.000Z');
     const expiring = await request(app.getHttpServer())
       .post('/api/v1/me/wallet/challenges')
-      .set('x-clerk-user-id', 'user_ada')
+      .set('Authorization', `Bearer ${token}`)
       .send({ walletAddress: WALLET_B });
     const expired = await request(app.getHttpServer()).get('/api/v1/auth/wallet/callback').query({
       challengeId: expiring.body.challengeId,
@@ -331,7 +299,7 @@ describe('SPEC-02 backend identity', () => {
     gateway.nextExpiresAt = new Date('2030-01-01T00:00:00.000Z');
     const replacement = await request(app.getHttpServer())
       .post('/api/v1/me/wallet/challenges')
-      .set('x-clerk-user-id', 'user_ada')
+      .set('Authorization', `Bearer ${token}`)
       .send({ walletAddress: WALLET_B });
     const replaced = await request(app.getHttpServer()).get('/api/v1/auth/wallet/callback').query({
       challengeId: replacement.body.challengeId,
@@ -347,12 +315,12 @@ describe('SPEC-02 backend identity', () => {
     repository.abortNextReplacement = true;
     const third = await request(app.getHttpServer())
       .post('/api/v1/me/wallet/discovery')
-      .set('x-clerk-user-id', 'user_ada')
+      .set('Authorization', `Bearer ${token}`)
       .send({ walletAddress: 'https://ilp.interledger-test.dev/rollback' });
     expect(third.status).toBe(201);
     const pendingRollback = await request(app.getHttpServer())
       .post('/api/v1/me/wallet/challenges')
-      .set('x-clerk-user-id', 'user_ada')
+      .set('Authorization', `Bearer ${token}`)
       .send({ walletAddress: 'https://ilp.interledger-test.dev/rollback' });
     const aborted = await request(app.getHttpServer()).get('/api/v1/auth/wallet/callback').query({
       challengeId: pendingRollback.body.challengeId,

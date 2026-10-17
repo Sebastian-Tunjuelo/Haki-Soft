@@ -1,4 +1,4 @@
-# SPEC-02: Identidad Clerk y verificación de billetera multimoneda
+# SPEC-02: Identidad local y verificación de billetera multimoneda
 
 | Metadato | Valor |
 | :--- | :--- |
@@ -18,15 +18,15 @@
 
 ### 1.1. Objetivo en el Aplicativo Final (MVP / Demo)
 
-Sin una billetera verificada no hay encargo, oferta ni cobro. Esta spec une la cuenta Clerk (Google o GitHub) con una sola wallet activa del continente americano. El mismo usuario alterna `Buyer Mode` y `Seller Mode`. La prueba de posesión es un `Subject Grant` de Open Payments, sin mover dinero, y el callback solo se acepta si el hash SHA-256 coincide. Así la demo puede mostrar un contratista en COP y un freelancer en USD antes de fondear el escrow.
+Sin una billetera verificada no hay encargo, oferta ni cobro. Esta spec une el registro propio (correo y contraseña) con una sola wallet activa del continente americano. El mismo usuario alterna `Buyer Mode` y `Seller Mode`. La prueba de posesión es un `Subject Grant` de Open Payments, sin mover dinero, y el callback solo se acepta si el hash SHA-256 coincide. Así la demo puede mostrar un contratista en COP y un freelancer en USD antes de fondear el escrow.
 
 ### 1.2. En Alcance del MVP
 
-- Login Clerk v6 en `apps/web` y protección de rutas de cuenta (`T-F1-FE1-01`).
+- Registro e inicio de sesión propios en `apps/web` y protección de rutas de cuenta (`T-F1-FE1-01`).
 - Selector `Buyer Mode / Seller Mode` que persiste `User.activeMode`.
 - Formulario de `walletAddress` HTTPS contra un adaptador mock mientras `BE-1` cierra el endpoint real.
 - Descubrimiento `UnauthenticatedClient.walletAddress.get` y verificación `Subject Grant` + hash en `open-payments.service.ts` (`T-F1-BE1-01`). La custodia de la clave `Ed25519` sigue siendo manual `🛡️`.
-- Webhook de Clerk que crea o actualiza `User` en PostgreSQL (`T-F1-BE2-01`).
+- `POST /api/v1/auth/register` crea el `User` en PostgreSQL con hash de contraseña (`T-F1-BE2-01`).
 - Reemplazo de la wallet activa: la nueva verificada apaga la anterior en la misma transacción.
 
 ### 1.3. Fuera de Alcance del MVP (Límites Estrictos)
@@ -42,7 +42,7 @@ Sin una billetera verificada no hay encargo, oferta ni cobro. Esta spec une la c
 
 - **Referencias SSoT:** `.agents/CONTEXT.md` (§4, §5.5 filas 1–4), `planning/architecture-overview.md` (§5.3 `User`, `UserWallet`, `WalletVerificationChallenge`) y `planning/taskboard.md` (§3 regla 6).
 - **Invariantes del Módulo:**
-  1. Una cuenta Clerk, un `User`, exactamente una wallet con `isVerified = true` e `isActive = true`.
+  1. Una cuenta local, un `User`, exactamente una wallet con `isVerified = true` e `isActive = true`.
   2. Verificar una wallet nueva desactiva la anterior. No puede quedar el usuario sin el intento en curso ni con dos activas.
   3. `isVerified = false` bloquea publicar, ofertar, contratar y cobrar (`WALLET_NOT_VERIFIED`).
   4. El hash del callback es `SHA-256(clientNonce + "\n" + finishNonce + "\n" + interact_ref + "\n" + authServerUrl)`, calculado con `gnapInteractHash` de `SPEC-01` y comparado en `WalletService` con `timingSafeEqual` antes de llamar al puerto de `BE-1`.
@@ -57,7 +57,7 @@ Sin una billetera verificada no hay encargo, oferta ni cobro. Esta spec une la c
 | **`FE-1`** | Pantallas de login, selector de modo y formulario de wallet (`T-F1-FE1-01`). | MSW responde el descubrimiento y el estado `PENDING_REDIRECT` / `VERIFIED` | No |
 | **`FE-2`** | Sin entregable directo en esta spec; consume `UserActiveMode` si una escena futura distingue modos. | No bloquea a `FE-1` | No |
 | **`BE-1`** | `OpenPaymentsService` queda registrado como `WalletOwnershipGateway`: `walletAddress.get`, `grant.request` y `grant.continue` (`T-F1-BE1-01`). El equipo carga las credenciales de la Test Wallet fuera del repo y ejecuta `TEST-03`. | Sandbox Test Wallet / Rafiki | `🛡️` solo la custodia de la clave y `escrow-payment.service.ts` |
-| **`BE-2`** | Webhook Clerk → `User` y transacción de reemplazo de wallet activa (`T-F1-BE2-01`). | Persiste retos `WalletVerificationChallenge` que `BE-1` rellena | No |
+| **`BE-2`** | Registro local → `User` y transacción de reemplazo de wallet activa (`T-F1-BE2-01`). | Persiste retos `WalletVerificationChallenge` que `BE-1` rellena | No |
 | **`AI-1`** | Sin entregable de producto. Aporta `WalletLinkRequestSchema`, `ActiveModeSwitchSchema` y `gnapInteractHash` ya definidos en `SPEC-01`. | Fixtures de wallets de prueba | No |
 
 ---
@@ -98,7 +98,7 @@ El mock de `FE-1` devuelve `PENDING_REDIRECT` y una URL de retorno local. No sim
 
 ### 4.2. Entidades en PostgreSQL + Prisma 6 (3NF Libre de *God-Entities*) y Restricciones `CHECK` SQL
 
-Tablas ya creadas en `SPEC-01`: `User` (`clerkId` único, `activeMode`, `platformRole`), `UserWallet`, `WalletVerificationChallenge`.
+Tablas ya creadas en `SPEC-01`: `User` (`email` único, `passwordHash`, `activeMode`, `platformRole`), `UserWallet`, `WalletVerificationChallenge`. La migración `20261016210000_local_password` sustituye `clerk_id` por `password_hash`.
 
 El índice parcial `user_wallets_one_active_per_user` es la barrera de base. `BE-2` actualiza la fila previa a `isActive = false` antes de activar la nueva, en una transacción. La fila en verificación nace con `isActive = false`; solo el callback exitoso la vuelve la única activa.
 
@@ -114,15 +114,17 @@ No se añaden columnas de saldo a `User`. El dinero vive en `EscrowLedger` desde
 
 | Método | Ruta | Rol | Cuerpo / respuesta | Errores |
 | :--- | :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/webhooks/clerk` | Público con firma Svix | Eventos `user.created` y `user.updated`. Upsert de `User` por `clerkId`. | `401 CLERK_WEBHOOK_INVALID_SIGNATURE` |
-| `POST` | `/api/v1/me/mode` | Sesión Clerk | `ActiveModeSwitchSchema` → `{ activeMode }` | `401 UNAUTHENTICATED`, `404 USER_NOT_SYNCED`, `400 ACTIVE_MODE_INVALID` |
-| `GET` | `/api/v1/me/mode` | Sesión Clerk | `{ activeMode }` | `401 UNAUTHENTICATED`, `404 USER_NOT_SYNCED` |
-| `POST` | `/api/v1/me/wallet/discovery` | Sesión Clerk | `WalletLinkRequestSchema` → `WalletDiscovery` | `400 WALLET_ADDRESS_INVALID`, `404 WALLET_ADDRESS_NOT_FOUND`, `409 WALLET_ADDRESS_IN_USE`, `502 OPEN_PAYMENTS_UPSTREAM` |
-| `POST` | `/api/v1/me/wallet/challenges` | Sesión Clerk | Inicia `Subject Grant` y devuelve `WalletChallenge` | `409 ACTIVE_WALLET_CHALLENGE_PENDING`, `503 OPEN_PAYMENTS_CLIENT_NOT_CONFIGURED`, `502 OPEN_PAYMENTS_GRANT_NOT_PENDING`, `502 OPEN_PAYMENTS_FINISH_NONCE_MISSING`, `502 OPEN_PAYMENTS_UPSTREAM` |
+| `POST` | `/api/v1/auth/register` | Público | `LocalRegisterSchema` → `{ user }` y cookie de sesión. El token no sale al navegador. | `400 AUTH_INPUT_INVALID`, `409 EMAIL_ALREADY_REGISTERED` |
+| `POST` | `/api/v1/auth/login` | Público | `LocalLoginSchema` → `{ user }` y cookie de sesión. | `400 AUTH_INPUT_INVALID`, `401 INVALID_CREDENTIALS` |
+| `GET` | `/api/v1/auth/session` | Sesión local | `{ user }` | `401 UNAUTHENTICATED` |
+| `POST` | `/api/v1/me/mode` | Sesión local | `ActiveModeSwitchSchema` → `{ activeMode }` | `401 UNAUTHENTICATED`, `404 USER_NOT_SYNCED`, `400 ACTIVE_MODE_INVALID` |
+| `GET` | `/api/v1/me/mode` | Sesión local | `{ activeMode }` | `401 UNAUTHENTICATED`, `404 USER_NOT_SYNCED` |
+| `POST` | `/api/v1/me/wallet/discovery` | Sesión local | `WalletLinkRequestSchema` → `WalletDiscovery` | `400 WALLET_ADDRESS_INVALID`, `404 WALLET_ADDRESS_NOT_FOUND`, `409 WALLET_ADDRESS_IN_USE`, `502 OPEN_PAYMENTS_UPSTREAM` |
+| `POST` | `/api/v1/me/wallet/challenges` | Sesión local | Inicia `Subject Grant` y devuelve `WalletChallenge` | `409 ACTIVE_WALLET_CHALLENGE_PENDING`, `503 OPEN_PAYMENTS_CLIENT_NOT_CONFIGURED`, `502 OPEN_PAYMENTS_GRANT_NOT_PENDING`, `502 OPEN_PAYMENTS_FINISH_NONCE_MISSING`, `502 OPEN_PAYMENTS_UPSTREAM` |
 | `GET` | `/api/v1/auth/wallet/callback` | Público (retorno del IdP) | Query `challengeId`, `interact_ref`, `hash`. Verifica hash y, solo si coincide, llama al puerto `continueSubjectGrant`. | `400 GNAP_HASH_MISMATCH`, `400 GNAP_SUBJECT_NOT_CONFIRMED`, `410 WALLET_CHALLENGE_EXPIRED` |
-| `GET` | `/api/v1/me/wallet` | Sesión Clerk | Wallet activa o `null` | `401 UNAUTHENTICATED` |
+| `GET` | `/api/v1/me/wallet` | Sesión local | Wallet activa o `null` | `401 UNAUTHENTICATED` |
 
-El webhook no pasa por `auth.protect()`. La única comprobación es `verifyWebhook` de `@clerk/express/webhooks` con `CLERK_WEBHOOK_SIGNING_SECRET`, sobre el cuerpo crudo. La ruta de Next que reciba el mismo evento, si se usa, sigue la misma regla.
+La sesión es un token HMAC (`Authorization: Bearer`) que el BFF de Next guarda en la cookie httpOnly `taskstream_session`. La contraseña se guarda con `scrypt` y no se devuelve.
 
 `continueAccessToken`, `clientNonce` y `finishNonce` no se devuelven al navegador. El `finish` URI incluye `challengeId` para localizar el reto. Sin las tres variables del cliente de plataforma, el descubrimiento sigue funcionando y el alta del reto responde `503 OPEN_PAYMENTS_CLIENT_NOT_CONFIGURED`.
 
@@ -149,13 +151,13 @@ La clave del cliente de plataforma firma la petición HTTP del grant. No crea un
 
 | Ruta | Comportamiento |
 | :--- | :--- |
-| `/sign-in`, `/sign-up` | Componentes de Clerk. Google y GitHub. |
+| `/sign-in`, `/sign-up` | Formularios propios de correo y contraseña. |
 | `/onboarding/wallet` | Formulario de URL. Estados: vacío, descubriendo, redirigiendo, verificado, error de hash, expirado. |
-| `/settings/mode` | Dos acciones: `Buyer Mode` y `Seller Mode`. El modo vigente se lee del servidor (`await auth()`), no de un estado global de módulo. |
+| `/settings/mode` | Dos acciones: `Buyer Mode` y `Seller Mode`. El modo vigente se lee de la API autenticada, no de un estado global de módulo. |
 
-Cada página y cada Server Action comprueban la sesión dentro del propio handler. El middleware de Clerk queda mínimo (`clerkMiddleware()` en `middleware.ts`, porque la app es Next.js 15).
+Cada página comprueba la cookie de sesión dentro de su propio handler.
 
-Las rutas de Next `/api/v1/me/mode`, `/api/v1/me/wallet`, `/api/v1/me/wallet/discovery` y `/api/v1/me/wallet/challenges` reenvían la sesión Clerk (`Authorization: Bearer`) a NestJS. Sin `userId` la página no monta el formulario. La UI no calcula el hash ni muestra `clientNonce` ni `finishNonce`. En `PENDING_REDIRECT` el navegador abre `interactRedirectUri`. El callback canónico sigue en NestJS.
+Las rutas de Next `/api/v1/me/mode`, `/api/v1/me/wallet`, `/api/v1/me/wallet/discovery` y `/api/v1/me/wallet/challenges` reenvían la sesión local (`Authorization: Bearer`) a NestJS. Sin sesión la página no monta el formulario. La UI no calcula el hash ni muestra `clientNonce` ni `finishNonce`. En `PENDING_REDIRECT` el navegador abre `interactRedirectUri`. El callback canónico sigue en NestJS.
 
 ### 6.2. Escenas 3D Vinculadas al Scroll y Visores `Protected Preview` (`FE-2`)
 
@@ -165,20 +167,20 @@ No aplica en esta especificación. La verificación de billetera no monta `<Canv
 
 ## 7. Seguridad, Idempotencia Financiera y Defensa Anti-Prompt Injection
 
-- **Autenticación y Autorización:** Clerk v6 identifica al usuario. El `userId` de la sesión debe coincidir con `User.clerkId` antes de cambiar modo o wallet. Un usuario no lee ni reemplaza la wallet de otro (`403 WALLET_FORBIDDEN`).
-- **Idempotencia e Integridad Criptográfica:** el `clientNonce` es único en `WalletVerificationChallenge`. Reusar un `interact_ref` ya consumido responde `409 GNAP_INTERACT_ALREADY_USED` y no vuelve a marcar la wallet. El hash se compara en tiempo constante dentro de `WalletService`. `🛡️` La custodia de `OPEN_PAYMENTS_PRIVATE_KEY` y `escrow-payment.service.ts` siguen en el equipo. Secretos (`CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SIGNING_SECRET`, `OPEN_PAYMENTS_PRIVATE_KEY`) no se commitean.
+- **Autenticación y Autorización:** la sesión local identifica al usuario por `User.id`. Un usuario no lee ni reemplaza la wallet de otro (`403 WALLET_FORBIDDEN`).
+- **Idempotencia e Integridad Criptográfica:** el `clientNonce` es único en `WalletVerificationChallenge`. Reusar un `interact_ref` ya consumido responde `409 GNAP_INTERACT_ALREADY_USED` y no vuelve a marcar la wallet. El hash se compara en tiempo constante dentro de `WalletService`. `🛡️` La custodia de `OPEN_PAYMENTS_PRIVATE_KEY` y `escrow-payment.service.ts` siguen en el equipo. `OPEN_PAYMENTS_PRIVATE_KEY` y `AUTH_SESSION_SECRET` no se commitean.
 
 ---
 
 ## 8. Requisitos Funcionales (RF) y Escenarios BDD (`Dado / Cuando / Entonces`)
 
-### `RF-01` — Inicio de sesión Clerk
+### `RF-01` — Registro e inicio de sesión propios
 - **Origen:** `T-F1-FE1-01` / `.agents/CONTEXT.md` §4
-- **Rol(es):** `FE-1`
+- **Rol(es):** `FE-1`, `BE-2`
 - **Criterios de Aceptación (BDD):**
   - **Dado** un visitante sin sesión
-  - **Cuando** inicia sesión con Google o GitHub
-  - **Entonces** Clerk emite sesión y la ruta `/onboarding/wallet` deja de responder como anónimo
+  - **Cuando** se registra con correo, nombre y contraseña y luego inicia sesión
+  - **Entonces** la API emite sesión y la ruta `/onboarding/wallet` deja de responder como anónimo
 
 ### `RF-02` — Selector Buyer Mode / Seller Mode
 - **Origen:** `T-F1-FE1-01` / `.agents/CONTEXT.md` §8.1
@@ -220,14 +222,15 @@ No aplica en esta especificación. La verificación de billetera no monta `<Canv
   - **Cuando** verifica otra dirección
   - **Entonces** la anterior queda `isActive = false` y la nueva es la única activa, en la misma transacción
 
-### `RF-07` — Webhook de sincronización Clerk
+### `RF-07` — Registro local de usuario
 - **Origen:** `T-F1-BE2-01`
 - **Rol(es):** `BE-2`
 - **Criterios de Aceptación (BDD):**
-  - **Dado** un evento `user.created` con firma válida
-  - **Cuando** llega a `POST /api/v1/webhooks/clerk`
-  - **Entonces** existe un `User` con ese `clerkId`, email y `activeMode = BUYER`
-  - **Y** un evento con firma inválida responde `401` y no escribe filas
+  - **Dado** un correo que no existe
+  - **Cuando** llega a `POST /api/v1/auth/register` con contraseña válida
+  - **Entonces** existe un `User` con ese email, `activeMode = BUYER` y la contraseña solo como hash
+  - **Y** un segundo registro con el mismo correo responde `409` y no crea otra fila
+  - **Y** un login con contraseña incorrecta responde `401` y no escribe filas
 
 ### `RF-08` — Bloqueo sin wallet verificada
 - **Origen:** `.agents/CONTEXT.md` §4
@@ -247,9 +250,9 @@ No aplica en esta especificación. La verificación de billetera no monta `<Canv
 | `TEST-02` | `RF-02` | `Integración` | `POST /api/v1/me/mode` persiste `SELLER` y un segundo GET lo devuelve. | `FE-1`, `BE-2` |
 | `TEST-03` | `RF-04`, `RF-05` | `Integración` | Contra la Test Wallet, el hash correcto verifica y el hash alterado deja `FAILED` sin `grant.continue`. Requiere las tres variables del cliente de plataforma fuera del repo. | `BE-1` |
 | `TEST-04` | `RF-06`, `RF-08` | `Integración` | La segunda verificación deja una sola fila activa. Publicar sin wallet verificada devuelve `WALLET_NOT_VERIFIED`. | `BE-2` |
-| `TEST-05` | `RF-07` | `Integración` | Firma Svix válida hace upsert; firma inválida no inserta. | `BE-2` |
+| `TEST-05` | `RF-07` | `Integración` | El registro crea un comprador; el correo repetido no inserta; la contraseña incorrecta no abre sesión. | `BE-2` |
 
-Las pruebas de backend de `BE-2` están en `apps/api/src/modules/identity/identity.http.spec.ts` y cubren el webhook, el modo, el hash del callback contra un puerto falso, el reemplazo de la wallet activa y `WALLET_NOT_VERIFIED`. `apps/api/src/modules/open-payments/open-payments.service.spec.ts` cubre el cuerpo del Subject Grant, el nonce de `interact.finish`, el `subject` confirmado y el `503` sin credenciales, sin red. `TEST-01` sigue en el frontend. `TEST-03` contra la Test Wallet queda pendiente de las credenciales reales.
+Las pruebas de backend de `BE-2` están en `apps/api/src/modules/identity/identity.http.spec.ts` y cubren el registro, el modo, el hash del callback contra un puerto falso, el reemplazo de la wallet activa y `WALLET_NOT_VERIFIED`. `apps/api/src/modules/open-payments/open-payments.service.spec.ts` cubre el cuerpo del Subject Grant, el nonce de `interact.finish`, el `subject` confirmado y el `503` sin credenciales, sin red. `TEST-01` sigue en el frontend. `TEST-03` contra la Test Wallet queda pendiente de las credenciales reales.
 
 ---
 
@@ -261,12 +264,11 @@ Las pruebas de backend de `BE-2` están en `apps/api/src/modules/identity/identi
 | El IdP no vuelve y `expiresAt` pasó | `WALLET_CHALLENGE_EXPIRED` | El reto queda `EXPIRED`. La wallet anterior, si existía, sigue activa. |
 | Hash distinto | `GNAP_HASH_MISMATCH` | Estado `FAILED`. No se llama `grant.continue`. |
 | Caída entre desactivar la wallet vieja e insertar la nueva | `ACTIVE_WALLET_REPLACEMENT_ABORTED` | Rollback de la transacción. Sigue habiendo exactamente una activa. |
-| Webhook repetido del mismo `clerkId` | `CLERK_USER_ALREADY_SYNCED` | Upsert idempotente. No duplica `User`. |
+| Correo ya registrado | `EMAIL_ALREADY_REGISTERED` | `409`. No pisa la otra cuenta. |
 | `interact_ref` ya usado | `GNAP_INTERACT_ALREADY_USED` | No se vuelve a verificar ni se rota la wallet. |
-| Firma de webhook ausente o inválida | `CLERK_WEBHOOK_INVALID_SIGNATURE` | `401` y cero escrituras. |
-| Evento `user.created` sin email | `CLERK_USER_EMAIL_REQUIRED` | `400` y cero escrituras. |
-| El email ya pertenece a otro `clerkId` | `CLERK_EMAIL_CONFLICT` | `409`. No pisa la otra cuenta. |
-| Sesión sin fila `User` | `USER_NOT_SYNCED` | `404`. El webhook todavía no sincronizó esa cuenta. |
+| Cuerpo de registro o login inválido | `AUTH_INPUT_INVALID` | `400` y cero escrituras. |
+| Contraseña incorrecta o correo desconocido | `INVALID_CREDENTIALS` | `401`. No revela cuál de los dos falló. |
+| Sesión sin fila `User` | `USER_NOT_SYNCED` | `404`. La cuenta ya no existe. |
 | `activeMode` fuera de `BUYER` / `SELLER` | `ACTIVE_MODE_INVALID` | `400`. No cambia el modo. |
 | La URL ya está ligada a otro usuario | `WALLET_ADDRESS_IN_USE` | `409`. No se transfiere la wallet. |
 | Callback sin `challengeId`, `interact_ref` o `hash` | `WALLET_CALLBACK_QUERY_INVALID` | `400`. |
@@ -287,10 +289,10 @@ Decisiones operativas:
 
 1. `open-payments.service.ts` implementa el puerto de titularidad. `escrow-payment.service.ts` y la custodia de `OPEN_PAYMENTS_PRIVATE_KEY` siguen `🛡️` y fuera del repositorio.
 2. El callback canónico es `GET /api/v1/auth/wallet/callback` en NestJS. La UI de Next solo redirige al usuario hacia el `interactRedirectUri` del proveedor.
-3. El modo por defecto al sincronizar un usuario nuevo es `BUYER`.
-4. `verifyWebhook` es la verificación del webhook. No se añade `auth.protect()` a esa ruta.
+3. El modo por defecto al registrar un usuario nuevo es `BUYER`.
+4. La contraseña no se guarda en claro. La sesión se firma con `AUTH_SESSION_SECRET` (en local, un secreto de desarrollo si la variable no está).
 5. El cliente GNAP es la wallet de plataforma, no la wallet del usuario. El SDK 7.4.0 no permite pasar `client` en `grant.request`: lo toma de `OPEN_PAYMENTS_CLIENT_WALLET_ADDRESS`.
-6. `GET /api/v1/me/mode` devuelve el modo persistido. El callback canónico añade `challengeId` en el `finish` URI para encontrar el reto. El modo por defecto y `verifyWebhook` no cambian.
+6. `GET /api/v1/me/mode` devuelve el modo persistido. El callback canónico añade `challengeId` en el `finish` URI para encontrar el reto.
 
 ---
 
@@ -303,3 +305,4 @@ Decisiones operativas:
 | `1.2.0` | `2026-10-16` | `Redactada (DRAFTED)` | `Cursor` | `OpenPaymentsService` como `WalletOwnershipGateway`: descubrimiento público y Subject Grant. Caducidad local de 10 minutos. Sigue `Redactada` porque falta el frontend y `TEST-03` en vivo. |
 | `1.3.0` | `2026-10-16` | `En Implementación` | `Antigravity` + equipo | Implementación frontend FE-1 y FE-2 (T-F1-FE1-01): Clerk v6 (/sign-in, /sign-up), middleware, selector interactivo Buyer/Seller (/settings/mode), ciclo de vida 6 estados y verificación GNAP (/onboarding/wallet) con adaptadores mock. |
 | `1.4.0` | `2026-10-16` | `Implementada (IMPLEMENTED)` | `Cursor` | El BFF de Next reenvía modo, descubrimiento, reto y lectura de wallet a Nest con el JWT de Clerk. La UI abre `interactRedirectUri` y deja de simular el hash. SPEC-03 permanece sin llamadas a `/api/v1`. |
+| `1.5.0` | `2026-10-16` | `Implementada (IMPLEMENTED)` | `Cursor` | Se retira Clerk. El acceso pasa a registro e inicio de sesión propios, con hash `scrypt` y sesión HMAC. |

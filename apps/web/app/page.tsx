@@ -329,7 +329,7 @@ export default function HomePage() {
                 <span className="badge badge-verified">TESTED</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: 8 }}>
-                <span style={{ fontSize: 13, color: '#ffffff' }}>SPEC-02: Identidad Clerk & Wallet</span>
+                <span style={{ fontSize: 13, color: '#ffffff' }}>SPEC-02: Identidad local y billetera</span>
                 <span className="badge badge-buyer">IMPLEMENTED (FE)</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(56, 189, 248, 0.08)', borderRadius: 8, border: '1px solid rgba(56, 189, 248, 0.2)' }}>

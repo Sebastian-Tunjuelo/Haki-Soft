@@ -7,18 +7,15 @@ import { ShoppingBag, Briefcase, CheckCircle2, ShieldAlert, Sparkles } from 'luc
 
 interface ModeSwitcherProps {
   initialMode?: ActiveMode;
-  isClerkAuthenticated: boolean;
   serverCode?: string | null;
 }
 
-export function ModeSwitcher({ initialMode = 'BUYER', isClerkAuthenticated, serverCode = null }: ModeSwitcherProps) {
+export function ModeSwitcher({ initialMode = 'BUYER', serverCode = null }: ModeSwitcherProps) {
   const [activeMode, setActiveMode] = useState<ActiveMode>(initialMode);
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(
     serverCode ? { message: serverCode, type: 'error' } : null,
   );
-
-  if (!isClerkAuthenticated) return null;
 
   const handleSwitchMode = async (targetMode: ActiveMode) => {
     if (targetMode === activeMode) return;
@@ -255,7 +252,7 @@ export function ModeSwitcher({ initialMode = 'BUYER', isClerkAuthenticated, serv
             Invariante de Identidad Unificada (SPEC-02 §2)
           </h4>
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            Una misma cuenta Clerk mantiene un solo usuario unificado en PostgreSQL. Alternar entre Buyer y Seller no altera ni transfiere la titularidad de órdenes que ya se encuentren en ejecución o con fondos depositados en el escrow.
+            Una misma cuenta mantiene un solo usuario en PostgreSQL. Alternar entre Buyer y Seller no altera ni transfiere la titularidad de órdenes que ya se encuentren en ejecución o con fondos depositados en el escrow.
           </p>
         </div>
       </div>

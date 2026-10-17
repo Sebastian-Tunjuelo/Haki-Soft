@@ -3,8 +3,8 @@ import { Prisma } from '@prisma/client';
 import { DomainError } from './domain-error';
 import type {
   ActiveMode,
-  ClerkUserSyncInput,
   IdentityRepository,
+  LocalUserInput,
   StoredChallenge,
   StoredUser,
   StoredWallet,
@@ -15,48 +15,37 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class PrismaIdentityRepository implements IdentityRepository {
   constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
 
-  async upsertClerkUser(input: ClerkUserSyncInput): Promise<{ user: StoredUser; created: boolean }> {
-    const db = this.db();
+  async createLocalUser(input: LocalUserInput): Promise<StoredUser> {
     try {
-      const existing = await db.user.findUnique({ where: { clerkId: input.clerkId } });
-      if (!existing) {
-        const created = await db.user.create({
-          data: {
-            clerkId: input.clerkId,
-            email: input.email,
-            displayName: input.displayName,
-            avatarUrl: input.avatarUrl,
-            countryCode: input.countryCode ?? 'ZZ',
-            activeMode: 'BUYER',
-          },
-        });
-        return { user: this.toUser(created), created: true };
-      }
-      const updated = await db.user.update({
-        where: { clerkId: input.clerkId },
+      const created = await this.db().user.create({
         data: {
           email: input.email,
+          passwordHash: input.passwordHash,
           displayName: input.displayName,
-          avatarUrl: input.avatarUrl,
-          ...(input.countryCode ? { countryCode: input.countryCode } : {}),
+          countryCode: input.countryCode,
+          activeMode: 'BUYER',
         },
       });
-      return { user: this.toUser(updated), created: false };
+      return this.toUser(created);
     } catch (error) {
       this.rethrowEmailConflict(error);
     }
   }
 
-  async findUserByClerkId(clerkId: string): Promise<StoredUser | null> {
-    const user = await this.db().user.findUnique({ where: { clerkId } });
+  async findUserByEmail(email: string): Promise<{ user: StoredUser; passwordHash: string } | null> {
+    const user = await this.db().user.findUnique({ where: { email } });
+    return user ? { user: this.toUser(user), passwordHash: user.passwordHash } : null;
+  }
+
+  async findUserById(userId: string): Promise<StoredUser | null> {
+    const user = await this.db().user.findUnique({ where: { id: userId } });
     return user ? this.toUser(user) : null;
   }
 
-  async setActiveMode(clerkId: string, activeMode: ActiveMode): Promise<StoredUser | null> {
-    const db = this.db();
-    const existing = await db.user.findUnique({ where: { clerkId } });
+  async setActiveMode(userId: string, activeMode: ActiveMode): Promise<StoredUser | null> {
+    const existing = await this.db().user.findUnique({ where: { id: userId } });
     if (!existing) return null;
-    const updated = await db.user.update({ where: { clerkId }, data: { activeMode } });
+    const updated = await this.db().user.update({ where: { id: userId }, data: { activeMode } });
     return this.toUser(updated);
   }
 
@@ -236,14 +225,13 @@ export class PrismaIdentityRepository implements IdentityRepository {
 
   private rethrowEmailConflict(error: unknown): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      throw new DomainError(409, 'CLERK_EMAIL_CONFLICT');
+      throw new DomainError(409, 'EMAIL_ALREADY_REGISTERED');
     }
     throw error;
   }
 
   private toUser(user: {
     id: string;
-    clerkId: string;
     email: string;
     displayName: string;
     avatarUrl: string | null;
@@ -252,7 +240,6 @@ export class PrismaIdentityRepository implements IdentityRepository {
   }): StoredUser {
     return {
       id: user.id,
-      clerkId: user.clerkId,
       email: user.email,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,

@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { DomainError } from './domain-error';
 import type {
   ActiveMode,
-  ClerkUserSyncInput,
   IdentityRepository,
+  LocalUserInput,
   StoredChallenge,
   StoredUser,
   StoredWallet,
@@ -11,13 +11,14 @@ import type {
 
 interface MemoryState {
   users: StoredUser[];
+  passwords: Map<string, string>;
   wallets: StoredWallet[];
   challenges: StoredChallenge[];
 }
 
 export class MemoryIdentityRepository implements IdentityRepository {
   abortNextReplacement = false;
-  private state: MemoryState = { users: [], wallets: [], challenges: [] };
+  private state: MemoryState = { users: [], passwords: new Map(), wallets: [], challenges: [] };
 
   walletsOf(userId: string): StoredWallet[] {
     return this.state.wallets.filter((wallet) => wallet.userId === userId).map((wallet) => ({ ...wallet }));
@@ -27,41 +28,37 @@ export class MemoryIdentityRepository implements IdentityRepository {
     return this.state.users.length;
   }
 
-  async upsertClerkUser(input: ClerkUserSyncInput): Promise<{ user: StoredUser; created: boolean }> {
-    const emailOwner = this.state.users.find((user) => user.email === input.email && user.clerkId !== input.clerkId);
+  async createLocalUser(input: LocalUserInput): Promise<StoredUser> {
+    const emailOwner = this.state.users.find((user) => user.email === input.email);
     if (emailOwner) {
-      throw new DomainError(409, 'CLERK_EMAIL_CONFLICT');
+      throw new DomainError(409, 'EMAIL_ALREADY_REGISTERED');
     }
-    const existing = this.state.users.find((user) => user.clerkId === input.clerkId);
-    if (!existing) {
-      const user: StoredUser = {
-        id: randomUUID(),
-        clerkId: input.clerkId,
-        email: input.email,
-        displayName: input.displayName,
-        avatarUrl: input.avatarUrl,
-        countryCode: input.countryCode ?? 'ZZ',
-        activeMode: 'BUYER',
-      };
-      this.state.users.push(user);
-      return { user: { ...user }, created: true };
-    }
-    existing.email = input.email;
-    existing.displayName = input.displayName;
-    existing.avatarUrl = input.avatarUrl;
-    if (input.countryCode) {
-      existing.countryCode = input.countryCode;
-    }
-    return { user: { ...existing }, created: false };
+    const user: StoredUser = {
+      id: randomUUID(),
+      email: input.email,
+      displayName: input.displayName,
+      avatarUrl: null,
+      countryCode: input.countryCode,
+      activeMode: 'BUYER',
+    };
+    this.state.users.push(user);
+    this.state.passwords.set(user.id, input.passwordHash);
+    return { ...user };
   }
 
-  async findUserByClerkId(clerkId: string): Promise<StoredUser | null> {
-    const user = this.state.users.find((item) => item.clerkId === clerkId);
+  async findUserByEmail(email: string): Promise<{ user: StoredUser; passwordHash: string } | null> {
+    const user = this.state.users.find((item) => item.email === email);
+    if (!user) return null;
+    return { user: { ...user }, passwordHash: this.state.passwords.get(user.id) ?? '' };
+  }
+
+  async findUserById(userId: string): Promise<StoredUser | null> {
+    const user = this.state.users.find((item) => item.id === userId);
     return user ? { ...user } : null;
   }
 
-  async setActiveMode(clerkId: string, activeMode: ActiveMode): Promise<StoredUser | null> {
-    const user = this.state.users.find((item) => item.clerkId === clerkId);
+  async setActiveMode(userId: string, activeMode: ActiveMode): Promise<StoredUser | null> {
+    const user = this.state.users.find((item) => item.id === userId);
     if (!user) return null;
     user.activeMode = activeMode;
     return { ...user };

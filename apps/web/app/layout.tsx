@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { ClerkProvider } from '@clerk/nextjs';
 import { Navbar } from '@/src/components/navbar';
 import { SmoothScrollProvider } from '@/app/providers/smooth-scroll';
 import './globals.css';
@@ -12,8 +11,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <ClerkProvider dynamic>
-      <html lang="es">
+    <html lang="es">
         <body>
           <SmoothScrollProvider>
             <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -27,7 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}
                 >
                   <div>
-                    <strong>TaskStream AI</strong> · Fase 1 (SPEC-02: Identidad Clerk & SPEC-03: Motor 3D Lenis/ScrollTrigger)
+                    <strong>TaskStream AI</strong> · Fase 1 (SPEC-02: Identidad local y SPEC-03: Motor 3D Lenis/ScrollTrigger)
                   </div>
                   <div>
                     Open Payments · GNAP Subject Grant · Invariante 96% / 4% · 60–120 FPS WebGL
@@ -37,7 +35,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </div>
           </SmoothScrollProvider>
         </body>
-      </html>
-    </ClerkProvider>
+    </html>
   );
 }

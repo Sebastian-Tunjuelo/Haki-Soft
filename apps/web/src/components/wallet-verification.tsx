@@ -22,7 +22,6 @@ import {
 } from 'lucide-react';
 
 interface WalletVerificationProps {
-  isClerkAuthenticated: boolean;
   initialWallet?: ActiveWallet | null;
   serverCode?: string | null;
 }
@@ -42,7 +41,6 @@ function initialStep(wallet: ActiveWallet | null | undefined): VerificationStep 
 }
 
 export function WalletVerification({
-  isClerkAuthenticated,
   initialWallet = null,
   serverCode = null,
 }: WalletVerificationProps) {
@@ -55,8 +53,6 @@ export function WalletVerification({
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(serverCode);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  if (!isClerkAuthenticated) return null;
 
   const loadWalletState = async () => {
     const res = await fetch('/api/v1/me/wallet');

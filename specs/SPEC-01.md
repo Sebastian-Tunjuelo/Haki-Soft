@@ -31,7 +31,7 @@
 
 ### 1.3. Fuera de Alcance del MVP (Límites Estrictos)
 
-- No se implementa el webhook de Clerk ni el login. Eso es `SPEC-02`, aunque `T-F1-BE2-01` también lo nombre: aquí solo queda el modelo `User` listo para sincronizarse.
+- No se implementa el registro ni el login. Eso es `SPEC-02`, aunque `T-F1-BE2-01` también lo nombre: aquí solo queda el modelo `User`.
 - No se escribe `open-payments.service.ts` ni `escrow-payment.service.ts`.
 - No hay hitos de pago, ni `REFUNDED_AND_REOPENED`, ni auditoría de IA para video, audio, código o datos tabulares, ni suscripción `Buyer AI Pro Subscription`.
 - `maxFileSizeBytes` permanece `null` en el MVP.
@@ -110,7 +110,7 @@ No existe el estado `REFUNDED_AND_REOPENED`.
 | :--- | :--- | :--- | :--- | :--- |
 | `GET` | `/api/v1/health` | Público | `{ status: "ok", service: "taskstream-api", databaseConfigured, sampleSplit }` | Ninguno en el camino feliz |
 
-`sampleSplit` de 10000 centavos devuelve 9600 y 400. El webhook de Clerk (`user.created`, `user.updated`) se especifica en `SPEC-02` y persiste sobre este `User`.
+`sampleSplit` de 10000 centavos devuelve 9600 y 400. El registro local se especifica en `SPEC-02` y persiste sobre este `User`.
 
 ### 5.2. Workers BullMQ, Cloudflare R2, Open Payments o `AiAdvisorService`
 
@@ -268,7 +268,7 @@ Decisiones operativas:
 
 1. El `CHECK` de reparto exige la fórmula de `taskboard.md` §3 regla 8, más estricta que la sola suma de `architecture-overview.md` §5.4. La suma sigue cumpliéndose.
 2. `chk_task_order_single_origin` concreta la regla de Gig fijo versus publicación. No está en el SQL de §5.4; se añade aquí para que la base no acepte órdenes huérfanas.
-3. `T-F1-BE2-01` se parte: el esquema y los `CHECK` son de esta spec; el webhook de Clerk se implementa con `SPEC-02` y no en este turno.
+3. `T-F1-BE2-01` se parte: el esquema y los `CHECK` son de esta spec; el registro local se implementa con `SPEC-02` y no en este turno.
 4. Prisma permanece en la línea 6 (`prisma-client-js` y `url` en el datasource), como fija `.agents/CONTEXT.md` §11.
 5. Zod permanece en 3.23.8 para coincidir con los ejemplos de §8.2.
 
