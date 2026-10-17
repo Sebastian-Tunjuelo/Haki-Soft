@@ -93,10 +93,22 @@ export class MarketplaceService {
 
   async getGig(gigId: string): Promise<GigCard> {
     const gig = await this.marketplace.findGigById(gigId);
-    if (!gig) {
+    if (!gig || !gig.isActive) {
       throw new DomainError(404, 'GIG_NOT_FOUND');
     }
     return this.toGigCard(gig);
+  }
+
+  /** Soft-delete: el Gig deja de listarse y contratar; órdenes históricas no se tocan. */
+  async deleteGig(userId: string, gigId: string): Promise<{ ok: true; gigId: string }> {
+    const existing = await this.marketplace.findGigById(gigId);
+    if (!existing) throw new DomainError(404, 'GIG_NOT_FOUND');
+    if (existing.sellerId !== userId) throw new DomainError(403, 'FORBIDDEN_GIG_OWNERSHIP');
+    if (!existing.isActive) return { ok: true, gigId };
+    const result = await this.marketplace.updateGig(gigId, userId, { isActive: false });
+    if (result === 'NOT_FOUND') throw new DomainError(404, 'GIG_NOT_FOUND');
+    if (result === 'FORBIDDEN') throw new DomainError(403, 'FORBIDDEN_GIG_OWNERSHIP');
+    return { ok: true, gigId };
   }
 
   async createGig(userId: string, body: unknown, idempotencyKey: string | undefined): Promise<GigCard> {

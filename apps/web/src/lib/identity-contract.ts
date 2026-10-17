@@ -20,6 +20,8 @@ export interface ActiveWallet {
   assetScale: number;
   isVerified: boolean;
   isActive: boolean;
+  /** Saldo demo TaskStream (centavos USD); no es el balance ILP real. */
+  demoBalanceUSDInCents: number;
 }
 
 const CHALLENGE_STATUSES = new Set<WalletChallenge['status']>([
@@ -83,11 +85,14 @@ export function readWalletChallenge(body: unknown): WalletChallenge | null {
   };
 }
 
+export type PlatformRole = 'USER' | 'ADMIN';
+
 export interface SessionUser {
   id: string;
   email: string;
   displayName: string;
   activeMode: ActiveMode;
+  platformRole: PlatformRole;
 }
 
 export function readSessionUser(body: unknown): SessionUser | null {
@@ -99,11 +104,13 @@ export function readSessionUser(body: unknown): SessionUser | null {
     return null;
   }
   if (row.activeMode !== 'BUYER' && row.activeMode !== 'SELLER') return null;
+  const platformRole: PlatformRole = row.platformRole === 'ADMIN' ? 'ADMIN' : 'USER';
   return {
     id: row.id,
     email: row.email,
     displayName: row.displayName,
     activeMode: row.activeMode,
+    platformRole,
   };
 }
 
@@ -116,11 +123,16 @@ export function readActiveWallet(body: unknown): ActiveWallet | null {
   if (typeof row.assetCode !== 'string' || row.assetCode.length === 0) return null;
   if (typeof row.assetScale !== 'number' || !Number.isInteger(row.assetScale) || row.assetScale < 0) return null;
   if (typeof row.isVerified !== 'boolean' || typeof row.isActive !== 'boolean') return null;
+  const demoBalanceUSDInCents =
+    typeof row.demoBalanceUSDInCents === 'number' && Number.isInteger(row.demoBalanceUSDInCents)
+      ? row.demoBalanceUSDInCents
+      : 0;
   return {
     walletAddress: row.walletAddress,
     assetCode: row.assetCode,
     assetScale: row.assetScale,
     isVerified: row.isVerified,
     isActive: row.isActive,
+    demoBalanceUSDInCents,
   };
 }

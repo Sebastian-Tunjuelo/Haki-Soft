@@ -1,0 +1,33 @@
+{
+  "name": "@taskstream/ai-advisor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Consejero de IA consultivo para entregables de imagen y texto (SPEC-08).",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/groq": "1.2.9",
+    "@taskstream/shared-schemas": "workspace:*",
+    "ai": "4.3.19",
+    "zod": "3.25.76"
+  },
+  "peerDependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "22.13.14",
+    "typescript": "5.7.3",
+    "vitest": "3.2.4"
+  }
+}

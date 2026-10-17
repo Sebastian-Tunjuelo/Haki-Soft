@@ -293,6 +293,35 @@ select option {
   gap: 12px;
 }
 
+.header-auth-cluster {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--surface-elevated);
+  border-color: var(--text-muted);
+}
+
+.theme-toggle svg {
+  display: block;
+}
+
 /* Cards & Surfaces */
 .card {
   background: var(--surface);

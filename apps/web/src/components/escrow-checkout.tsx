@@ -5,9 +5,14 @@ import Link from 'next/link';
 import { EscrowFundingViewSchema, type EscrowFundingView } from '@taskstream/shared-schemas';
 import { api, formatUsd, humanError } from '@/src/lib/api-client';
 
-const STATUS_LABEL: Record<EscrowFundingView['lifecycleStatus'], string> = {
+const STATUS_LABEL: Partial<Record<EscrowFundingView['lifecycleStatus'], string>> = {
   PENDING_ESCROW_FUNDING: 'Esperando respuesta del emprendedor',
   ESCROW_LOCKED: 'Fondos en custodia',
+  ESCROW_EXTENDED: 'Plazo extendido · fondos en custodia',
+  IN_REVIEW: 'Entrega en revisión (72 h)',
+  REVISION_REQUESTED: 'Corrección solicitada',
+  FINAL_CLAIM_WINDOW_30M: 'Ventana final de reclamación',
+  DISPUTED: 'En disputa administrativa',
   COMPLETED: 'Completado · 96 % liberado',
   REFUNDED: 'Reembolsado al comprador',
   CANCELLED: 'Solicitud cerrada · el dinero no se envió',
@@ -46,6 +51,14 @@ export function EscrowCheckout({ taskId }: { taskId: string }) {
     void load();
   }, [load]);
 
+  // Mientras espera aceptación del emprendedor, refrescar solo para que el contratador
+  // vea el paso a custodia sin pulsar «Actualizar».
+  useEffect(() => {
+    if (view?.lifecycleStatus !== 'PENDING_ESCROW_FUNDING') return;
+    const poll = setInterval(() => void load(), 3000);
+    return () => clearInterval(poll);
+  }, [view?.lifecycleStatus, load]);
+
   async function run(action: () => Promise<void>) {
     setBusy(true);
     setError(null);
@@ -68,6 +81,13 @@ export function EscrowCheckout({ taskId }: { taskId: string }) {
       }
       const parsed = EscrowFundingViewSchema.safeParse(result.body);
       if (parsed.success) setView(parsed.data);
+      if (parsed.success && parsed.data.interactRedirectUri && parsed.data.lifecycleStatus === 'PENDING_ESCROW_FUNDING') {
+        setMessage(
+          'Aceptaste el encargo. El contratador debe autorizar el pago real en la Test Wallet para entrar a custodia.',
+        );
+        window.location.assign(`/orders/${taskId}/workspace`);
+        return;
+      }
       setMessage('Aceptaste el encargo. El pago quedó en custodia. Abriendo el espacio de trabajo…');
       window.location.assign(`/orders/${taskId}/workspace`);
     });
@@ -99,41 +119,28 @@ export function EscrowCheckout({ taskId }: { taskId: string }) {
     });
   }
 
-  async function release() {
-    await run(async () => {
-      const result = await api(`/api/v1/orders/${taskId}/escrow/simulate-release`, { method: 'POST' });
-      if (result.status !== 200 && result.status !== 201) {
-        setError(humanError(result.status, result.body));
-        return;
-      }
-      const parsed = EscrowFundingViewSchema.safeParse(result.body);
-      if (parsed.success) setView(parsed.data);
-      setMessage('Pago liberado: 96 % al freelancer y 4 % a la plataforma.');
-    });
-  }
-
-  async function refund() {
-    await run(async () => {
-      const result = await api(`/api/v1/orders/${taskId}/escrow/simulate-refund`, { method: 'POST' });
-      if (result.status !== 200 && result.status !== 201) {
-        setError(humanError(result.status, result.body));
-        return;
-      }
-      const parsed = EscrowFundingViewSchema.safeParse(result.body);
-      if (parsed.success) setView(parsed.data);
-      setMessage('Reembolso completo al comprador. La actividad queda cerrada.');
-    });
-  }
-
   const status = view?.lifecycleStatus ?? null;
   const pending = status === 'PENDING_ESCROW_FUNDING';
-  const locked = status === 'ESCROW_LOCKED';
+  const activeCustody =
+    status === 'ESCROW_LOCKED' ||
+    status === 'ESCROW_EXTENDED' ||
+    status === 'EXTENSION_REQUESTED' ||
+    status === 'IN_REVIEW' ||
+    status === 'REVISION_REQUESTED' ||
+    status === 'FINAL_CLAIM_WINDOW_30M' ||
+    status === 'DISPUTED';
   const cancelled = status === 'CANCELLED';
-  const terminal = status === 'COMPLETED' || status === 'REFUNDED' || cancelled;
+  const terminal =
+    status === 'COMPLETED' ||
+    status === 'REFUNDED' ||
+    status === 'AUTO_REFUNDED_INITIAL_EXPIRED' ||
+    status === 'AUTO_REFUNDED_EXTENDED_EXPIRED' ||
+    status === 'AUTO_REFUNDED_BY_TIMEOUT' ||
+    cancelled;
   const isBuyer = view?.viewerRole === 'buyer';
   const isSeller = view?.viewerRole === 'seller';
 
-  const step = cancelled ? 0 : pending ? 1 : locked ? 2 : 3;
+  const step = cancelled ? 0 : pending ? 1 : activeCustody ? 2 : terminal ? 3 : 1;
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px 48px', display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -177,7 +184,7 @@ export function EscrowCheckout({ taskId }: { taskId: string }) {
         <section style={panel}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
             <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Resumen</h2>
-            <span style={badge(status!)}>{STATUS_LABEL[status!]}</span>
+            <span style={badge(status!)}>{STATUS_LABEL[status!] ?? status}</span>
           </div>
 
           <dl style={moneyGrid}>
@@ -200,7 +207,19 @@ export function EscrowCheckout({ taskId }: { taskId: string }) {
       ) : null}
 
       <section style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-        {pending && isBuyer ? (
+        {pending && isBuyer && view?.sellerConfirmed && view.interactRedirectUri ? (
+          <div style={{ ...panel, width: '100%', background: 'rgba(34, 197, 94, 0.08)', borderColor: 'rgba(34, 197, 94, 0.35)' }}>
+            <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Autoriza el pago en la Test Wallet</h3>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.5 }}>
+              El emprendedor ya aceptó. Para mover fondos reales (p. ej. EGG) desde tu billetera a custodia, abre Interledger
+              Test Wallet y confirma el grant. Al volver, el saldo de la testnet bajará.
+            </p>
+            <a className="btn btn-primary" href={view.interactRedirectUri}>
+              Abrir autorización Open Payments
+            </a>
+          </div>
+        ) : null}
+        {pending && isBuyer && !view?.sellerConfirmed ? (
           <div style={{ ...panel, width: '100%', background: 'rgba(245, 158, 11, 0.08)', borderColor: 'rgba(245, 158, 11, 0.35)' }}>
             <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Tu solicitud fue enviada</h3>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.5 }}>
@@ -222,12 +241,21 @@ export function EscrowCheckout({ taskId }: { taskId: string }) {
           </div>
         ) : null}
 
-        {pending && isSeller ? (
+        {pending && isSeller && view?.sellerConfirmed ? (
+          <div style={{ ...panel, width: '100%' }}>
+            <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Esperando fondeo del contratador</h3>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.5 }}>
+              Ya aceptaste. El contratador debe autorizar el pago en la Test Wallet para que los fondos entren a custodia.
+            </p>
+          </div>
+        ) : null}
+
+        {pending && isSeller && !view?.sellerConfirmed ? (
           <div style={{ ...panel, width: '100%' }}>
             <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Nueva solicitud de trabajo</h3>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.5 }}>
-              Si aceptas, el pago del contratador entra a custodia al instante y queda vinculado a este encargo. Si
-              rechazas, el dinero nunca se manda.
+              Si aceptas, el pago del contratador entra a custodia al instante y queda vinculado a este encargo. De lo
+              contrario se realizara la devolución del dinero.
             </p>
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void acceptAsSeller()}>
@@ -240,7 +268,7 @@ export function EscrowCheckout({ taskId }: { taskId: string }) {
           </div>
         ) : null}
 
-        {locked ? (
+        {activeCustody ? (
           <>
             <p style={{ margin: 0, width: '100%', color: 'var(--status-verified)', fontSize: 14 }}>
               Fondos en escrow. Las partes ya están vinculadas. Usa el espacio de trabajo para chat, anexos y el
@@ -249,12 +277,6 @@ export function EscrowCheckout({ taskId }: { taskId: string }) {
             <Link href={`/orders/${taskId}/workspace`} className="btn btn-primary">
               Abrir espacio de trabajo
             </Link>
-            <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void release()}>
-              Liberar 96 % / 4 %
-            </button>
-            <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void refund()}>
-              Reembolsar 100 %
-            </button>
           </>
         ) : null}
 
@@ -265,15 +287,22 @@ export function EscrowCheckout({ taskId }: { taskId: string }) {
           </p>
         ) : null}
 
-        {terminal ? (
+        {terminal && !cancelled ? (
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <Link href={`/orders/${taskId}/deliverables`} className="btn btn-secondary">
+              Ver entregables
+            </Link>
+            <Link href="/activity" className="btn btn-primary">
+              Ir a actividad
+            </Link>
+          </div>
+        ) : null}
+
+        {cancelled ? (
           <Link href="/marketplace" className="btn btn-primary">
             Ir al marketplace
           </Link>
         ) : null}
-
-        <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void load()}>
-          Actualizar
-        </button>
       </section>
     </div>
   );

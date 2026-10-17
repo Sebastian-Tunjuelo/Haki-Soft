@@ -23,6 +23,7 @@ import { ESCROW_PAYMENT_GATEWAY, ESCROW_REPOSITORY } from './escrow.tokens';
 import { MemoryEscrowRepository } from './memory-escrow.repository';
 import { OrderWorkspaceService } from './order-workspace.service';
 import { SellerNotificationHub } from './seller-notification.hub';
+import { EscrowPaymentService } from '../open-payments/escrow-payment.service';
 import { SimulatedEscrowPaymentGateway } from './simulated-escrow-payment.gateway';
 
 const WALLET_A = 'https://ilp.interledger-test.dev/buyer-escrow';
@@ -74,6 +75,7 @@ describe('SPEC-06 escrow HTTP', () => {
     process.env.PUBLIC_WEB_URL = 'http://localhost:3000';
     process.env.AUTH_SESSION_SECRET = 'test-session-secret-spec-06';
     delete process.env.RAFIKI_WEBHOOK_SHARED_SECRET;
+    delete process.env.OPEN_PAYMENTS_REAL;
 
     identityRepo = new MemoryIdentityRepository();
     escrowRepo = new MemoryEscrowRepository();
@@ -92,6 +94,24 @@ describe('SPEC-06 escrow HTTP', () => {
         OrderWorkspaceService,
         SellerNotificationHub,
         SimulatedEscrowPaymentGateway,
+        {
+          provide: EscrowPaymentService,
+          useValue: {
+            isRealEnabled: () => false,
+            disburse96And4: async () => {
+              throw new Error('not used in simulated tests');
+            },
+            refund100ToBuyer: async () => {
+              throw new Error('not used in simulated tests');
+            },
+            beginBuyerFunding: async () => {
+              throw new Error('not used in simulated tests');
+            },
+            finalizeBuyerFunding: async () => {
+              throw new Error('not used in simulated tests');
+            },
+          },
+        },
         { provide: CLOCK, useValue: clock },
         { provide: IDENTITY_REPOSITORY, useValue: identityRepo },
         { provide: WALLET_OWNERSHIP_GATEWAY, useValue: gateway },

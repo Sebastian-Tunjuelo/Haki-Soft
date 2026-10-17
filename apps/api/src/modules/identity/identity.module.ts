@@ -30,6 +30,6 @@ import { WalletVerifiedGuard } from './wallet-verified.guard';
     WalletVerifiedGuard,
     { provide: APP_FILTER, useClass: DomainExceptionFilter },
   ],
-  exports: [SessionAuthGuard, WalletVerifiedGuard, IDENTITY_REPOSITORY],
+  exports: [SessionAuthGuard, WalletVerifiedGuard, IDENTITY_REPOSITORY, IdentityService],
 })
 export class IdentityModule {}

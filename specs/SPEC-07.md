@@ -5,7 +5,8 @@
 | **ID de Especificación** | `SPEC-07` |
 | **Archivo** | `specs/SPEC-07.md` |
 | **Fase de Desarrollo** | `Fase 4 — Storage R2 y Protected Preview` |
-| **Estado del Ciclo SDD** | `Redactada (DRAFTED)` |
+| **Estado del Ciclo SDD** | `Implementada (IMPLEMENTED)` |
+| **Notas de implementación** | Upload local, preview con marca y guard del original. R2, `sharp` y los seis visores de `T-F4-FE2-01` siguen diferidos. No pasa a `Testeada`. |
 | **Roles Responsables** | `BE-2`, `FE-2`, `BE-1` |
 | **Tareas Asociadas (`taskboard.md`)** | `T-F4-BE2-01`, `T-F4-BE2-02`, `T-F4-FE2-01`, `T-F4-BE1-01` |
 | **Intervención Manual / IA Mínima-Nula** | `No aplica` |
@@ -44,6 +45,7 @@ El Freelancer sube el original directo a R2. Durante las 32 horas de `IN_REVIEW`
   2. `revision` es un entero `0..2`, alineado con el máximo de dos correcciones.
   3. Un objeto de 0 bytes no genera preview (`EMPTY_DELIVERABLE`).
   4. La extensión debe pertenecer a `expectedMediaType` de la orden. Si no, no hay URL de subida.
+  5. Un original `.svg` de `IMAGE_RASTER_VECTOR` se acepta. El preview es un raster con marca de agua. No se sirve el SVG crudo como HTML.
 
 ---
 
@@ -207,3 +209,5 @@ Sin preguntas abiertas bloqueantes para construir presign, preview y visores. El
 | Versión | Fecha | Estado | Autor / Herramienta | Resumen de Cambios |
 | :--- | :--- | :--- | :--- | :--- |
 | `0.1.0` | `2026-10-16` | `Redactada (DRAFTED)` | `Cursor` | Redacción inicial de `SPEC-07`: R2, seis previews, guard del original y pre-check puro para `AI-1`. |
+| `0.2.0` | `2026-10-17` | `Implementada (IMPLEMENTED)` | `Cursor` | Backend `DeliverablesModule`: upload local (multipart), complete → preview SVG con marca + `IN_REVIEW`, guard `ORIGINAL_LOCKED`, simular `FINAL_CLAIM_WINDOW_30M`. Contratos Zod + `assertDeliverablePrecheck`. Harness `/orders/[taskId]/deliverables`. Tests HTTP RF-01..RF-03. Sin R2/sharp reales ni seis visores FE-2. |
+| `0.2.1` | `2026-10-17` | `Implementada (IMPLEMENTED)` | `Cursor` | Celda de estado exacta. El original `.svg` de imagen se acepta y el preview se rasteriza. R2, `sharp` y `T-F4-FE2-01` siguen diferidos. |

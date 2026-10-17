@@ -42,7 +42,6 @@ Este archivo contiene el **registro histÃ³rico, secuencial e Ã­ntegro (sin o
 | **Prompt #032** | `2026-10-17` | `Cursor` | `Backend`, `Gobernanza` | Desbloquear migración Prisma fallida (seed antes de FK) y aplicar storefront; cerrar plan. | `20261017000000_decouple_task_order/migration.sql`, AI_USAGE, prompts |
 | **Prompt #033** | `2026-10-17` | `Cursor` | `Backend`, `Frontend`, `Tests`, `Gobernanza` | Validar SPEC-04; implementar SPEC-05 backend + harness mínimo (misma estructura que 04). | `negotiations.ts`, `apps/api/.../negotiations/*`, harness FE, SPEC-05, taskboard |
 | **Prompt #034** | `2026-10-17` | `Cursor` | `Frontend`, `Backend`, `Gobernanza` | UX storefront SPEC-04: portada horizontal full-bleed, overlays, categoría/presupuesto editables, plazo 7d fijo. | `cover-banner.tsx`, `storefront-page.tsx`, marketplace update publication |
-| **Prompt #044** | `2026-10-17` | `Cursor` | `Frontend`, `Gobernanza` | Pull `origin/main` → `frontend` con marketplace/escrow/activity; conserva UI login/home/tema. | `apps/web/*`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md` |
 
 ---
 
@@ -1450,15 +1449,337 @@ IDEA 3: La idea al aceptar se genera una pestaña en la cual se tendra un chat e
 Refererente a la idea 3 implementa para tener este flujo listo, si en algun spec futuro se menciona simplemente se adelanto dicho trabajo.
 ```
 
-### Prompt #044 — Merge origin/main en frontend + UI local
+### Prompt #044 — Eliminar Gig propio con confirmación
 
-* **Resumen de funcionalidad:** Integra en `frontend` lo nuevo de `main` (marketplace, negociaciones, escrow, activity, WelcomeWallet, WorkRequestAlert). Resuelve conflictos conservando el design system local (AuthShell, tema claro/oscuro, hero wallet, tokens Headshotly + amarillo).
-* **Área:** `Frontend` / `Gobernanza`.
-* **Archivos:** `apps/web/app/layout.tsx`, `apps/web/app/sign-up/page.tsx`, `apps/web/app/onboarding/wallet/page.tsx`, `apps/web/src/components/auth-form.tsx`, `apps/web/app/globals.css`, componentes login/home/theme, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`.
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Endpoint DELETE desactiva el Gig (`isActive=false`); UI en storefront del dueño con modal de confirmación; deja de listarse/contratarse.
+* **Archivos creados o modificados:** `marketplace.controller.ts`, `marketplace.service.ts`, `storefront-page.tsx`, `api-client.ts`, AI_USAGE/prompts
 * **Texto literal del prompt enviado:**
 
 ```
-Hay nuevo push a main, traigamos pull de main a la rama front. Con todo lo nuevo
+Cosas a solucionar:
+
+Referentete a los Gig, Permitir que cada usuario pueda eliminar sus gig, con mensaje de confirmacion.
+```
+
+### Prompt #045 — SPEC-07 Originales y Protected Preview
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Tests`, `Gobernanza`, `IA`
+* **Resumen de su funcionalidad:** Implementa SPEC-07 (backend): upload de originales, preview con marca de agua, guard del original en `IN_REVIEW`, desbloqueo en `FINAL_CLAIM_WINDOW_30M` (simulado), `assertDeliverablePrecheck`, harness FE mínimo `/orders/[taskId]/deliverables` para validar el flujo. Sin R2/sharp reales ni seis visores FE-2.
+* **Archivos creados o modificados:** `packages/shared-schemas/src/deliverables.ts`, `deliverables.test.ts`, `apps/api/src/modules/deliverables/*`, `app.module.ts`, `deliverables-harness.tsx`, `orders/[taskId]/deliverables/page.tsx`, BFF `orders/[...path]`, `api-client.ts`, `order-workspace.tsx`, `SPEC-07.md`, `specs/README.md`, `COVERAGE.md`, `taskboard.md`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+Realiza el Spec 07:
+
+-Inicia el spec pero solo uno a la vez, solo realiza las tareas de Backed y realiza un front simple de ser necesario para poder visualizar dicho flujo solo si este lo necesita, para poder probar que cada spec cumpla con lo planeado, ademas indicame el flujo implementado de ser el caso para realizar dicho flujo y validar que funcione.
+```
+
+### Prompt #046 — Copia solicitud de trabajo (devolución)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Actualiza el texto de “Nueva solicitud de trabajo” para indicar devolución del dinero si no se acepta.
+* **Archivos creados o modificados:** `escrow-checkout.tsx`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+Corregir mensaje:
+
+Nueva solicitud de trabajo
+"Si aceptas, el pago del contratador entra a custodia al instante y queda vinculado a este encargo. Si rechazas, el dinero nunca se manda."
+
+dicho texto cambialo:
+"Si aceptas, el pago del contratador entra a custodia al instante y queda vinculado a este encargo. De lo contrario se realizara la devolución del dinero."
+```
+
+### Prompt #047 — Fix entregables (CHECK + mensaje engañoso)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** El upload fallaba por `chk_deliverable_file_integrity` (size 0 en pendiente). Migración permite PENDING_PROCESSING con 0 bytes; el UI dejaba de mostrar “API no contactable” ante un 500 real.
+* **Archivos creados o modificados:** `migrations/20261017060000_deliverable_pending_upload`, `domain_checks.sql`, `deliverables.service.ts`, `api-client.ts`, `deliverables-harness.tsx`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+referente al apartao de entregables:
+
+me genera dilemas
+[captura: Entregables SPEC-07 con error "No pudimos contactar al servidor. ¿Está la API en marcha?"]
+```
+
+### Prompt #048 — Preview real + modal grande
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** El preview deja de ser un SVG genérico y embebe la imagen subida con marca de agua; la UI abre un emergente centrado grande (en lugar de pestaña nueva).
+* **Archivos creados o modificados:** `object-storage.ts`, `deliverables.service.ts`, `deliverables-harness.tsx`, `deliverables.http.spec.ts`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+La imagen subida al "Subir entrega (Seller)" cuando se realiza la previa, la idea es que sea un emergente en medio de la pantalla con un tamaño relativamente grande, ademas la imagen que añadi dentro de este y subi no era equivalente con que mostro al previsualizar
+```
+
+### Prompt #049 — Fix login/register (API crash IN_REVIEW)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Tras SPEC-07, órdenes en `IN_REVIEW` rompían `SellerActivityItemSchema` y tumbaron Nest → login/register 502. Se alineó el enum de lifecycle y se endureció el listado de actividad.
+* **Archivos creados o modificados:** `packages/shared-schemas/src/escrow.ts`, `schemas.ts`, `escrow.service.ts`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+Tras la ultima correcion, no esta permitiendo realizar login ni register
+```
+
+### Prompt #050 — SPEC-09 + Consola Admin (fase beta)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Tests`, `Gobernanza`, `IA`
+* **Resumen de su funcionalidad:** Implementa SPEC-09 beta (reloj 32h al completar, accept/revision/dispute, aviso Buyer) y SPEC-10 beta (consola `/admin/disputes`, seed ADMIN, resolve 100% o 96/4 vía simuladores). Sin BullMQ/Resend ni tocar escrow-payment protegido. Relajación: disputa desde IN_REVIEW.
+* **Archivos creados o modificados:** `packages/shared-schemas/src/review.ts`, `apps/api/src/modules/deliverables/*`, `seed-admin-user.mjs`, harness/aviso/admin FE, BFF admin + delivery-notices, `SPEC-09`/`SPEC-10`/`COVERAGE`/`taskboard`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+SPEC-09 + Consola Admin (fase beta)
+
+Implement the plan as specified, it is attached for your reference. Do NOT edit the plan file itself.
+
+To-do's from the plan have already been created. Do not create them again. Mark them as in_progress as you work, starting with the first one. Don't stop until you have completed all the to-dos.
+```
+
+### Prompt #051 — Escrow auto-refresh + Actividad historia
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Backend`, `Gobernanza`
+* **Resumen de su funcionalidad:** La pestaña de custodia se actualiza sola al aceptar el emprendedor; en fondos en custodia solo queda «Abrir espacio de trabajo»; Actividad lista buyer+seller con En curso e Historia (mensajes/entregables).
+* **Archivos creados o modificados:** `escrow-checkout.tsx`, `activity-inbox.tsx`, `prisma/memory-escrow.repository`, `escrow.service`, `escrow.ts` schema, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+Correcciones:
+
+Por parte del contratista:
+Cuando el emprendedor acepta el encargo dicha pestaña no se actualiza al instante, depende del boton actualizar.
+
+-Tras esto como se evidencia en la imagen 2:
+Solo deberia ser abrir espacio de trabajo, El boton "Liberar" no va aqui, "Reembolsar" tampoco, "Actualizar" tampoco
+
+-Imagen 3: Por ejemplo sara se supone tiene un encargo abierto, pero por alguna razon dentro de actividades no le sale el chat o la actividad, De hecho si una actividad se finaliza sin importar el por que, Esta debe quedar en una seccion de la propia pestaña llamada "historia", donde se vea el contenido de esta, donde puede ser entregables, mensajes, etc.
+```
+
+### Prompt #052 — Revisión 72h + limpia UI demo
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `IA`, `Gobernanza`
+* **Resumen de su funcionalidad:** Reloj de revisión pasa de 32h a 72h (3 días); se elimina Modo del navbar; se quitan textos visibles de SPEC/Fase en home, layout, marketplace y páginas de demo.
+* **Archivos creados o modificados:** `packages/shared-schemas/src/review.ts`, navbar, layout, page, mode/wallet pages, copy UI 72h, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+Correcciones:
+
+- Por ejemplo: Tras entregar una tarea el tiempo era de 72 horas, es decir 3 dias como acordamos, te indique mal con las 32 horas, me confundi.
+- El boton de "Modo" en el Navdar no deberia existir.
+- Ademas del fornted, Quiero que elimines todo lo textos tipo "Spec-0x" o todo tipo fase 1 o 2, Ten en cuenta que este tipo de textos son mas documentales que para una demo.
+```
+
+### Prompt #053 — Formato countdown días+horas
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Los plazos largos (p. ej. 7d) se muestran como «6 días 23 h» en lugar de un total en horas.
+* **Archivos creados o modificados:** `apps/web/src/lib/format-countdown.ts`, `order-workspace.tsx`, `deliverables-harness.tsx`, `work-request-alert.tsx`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+Referente a algunos tiempos que se ven dentro de la pagina: Por ejemplo hay una apartado que son 7 dias, se ve en horas, en vez de 6dias 24horas, este formato es mas comodo visualmente.
+```
+
+### Prompt #054 — Landing main estilo PruebaAdd
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Reemplaza el home técnico por una landing con estructura visual de `PruebaAdd/headshotly-landing.html` (hero, pasos, features, FAQ, CTA) adaptada a TaskStream AI.
+* **Archivos creados o modificados:** `home-landing.tsx`, `home-landing.module.css`, `app/page.tsx`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+Ahora quiero que tomes el diseño de PruebaAdd y lo apliques para el main actual
+```
+
+### Prompt #055 — Réplica directa PruebaAdd en home (Navbar intacto)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Sustituye la landing adaptada por una réplica visual directa de `PruebaAdd/headshotly-landing.html` (hero, logos, how-it-works, before/after, features, pricing, band, testimonials, tabla, FAQ, CTA final, tema claro/oscuro). Se conserva el Navbar actual de la app; no se usa el `<nav>` de PruebaAdd.
+* **Archivos creados o modificados:** `apps/web/src/components/home-landing.tsx`, `apps/web/src/components/home-landing.module.css`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+No, Me referia que replicaras directamente el diseño de PruebaAdd en el home, Y conserva de la version actual el Navdar esta bien.
+```
+
+### Prompt #056 — Toggle tema en Navbar (izq. de Salir)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Mueve el botón día/noche al Navbar, a la izquierda de «Salir», con gap uniforme; la landing sincroniza el tema vía `home-theme.ts`.
+* **Archivos creados o modificados:** `apps/web/src/components/navbar.tsx`, `apps/web/app/globals.css`, `apps/web/src/lib/home-theme.ts`, `apps/web/src/components/home-landing.tsx`, `home-landing.module.css`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+El boton de cambiar tema entre dia y noche añalo arriba a la derecha del navdar a la izquierda del boton salir, con sus respectivos espaciado entre los botones
+```
+
+### Prompt #057 — Fix error toggle tema (Next/Strict Mode)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Corrige fallo del toggle (solo una vez / error): se eliminó el side-effect dentro de `setState` y el CustomEvent; tema con store en memoria + `useSyncExternalStore`.
+* **Archivos creados o modificados:** `apps/web/src/lib/home-theme.ts`, `apps/web/src/lib/use-home-theme.ts`, `navbar.tsx`, `home-landing.tsx`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+El boton de cambio de tema genera error con N, A veces no funciona o solo cambia una vez y salta el error
+```
+
+### Prompt #058 — Estado SPEC-08 y punto de desarrollo
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Planeación`, `IA`, `Gobernanza`
+* **Resumen de su funcionalidad:** Revisión de `SPEC-08`, taskboard, COVERAGE y código: qué ya existe (contratos/mocks/Prisma) y qué falta (`packages/ai-advisor`, puerto BE-2, panel FE, tests) para completar la spec; contexto de fase del MVP.
+* **Archivos creados o modificados:** `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md` (solo trazabilidad)
+* **Texto literal del prompt enviado:**
+
+```
+verifica que falta para completar la spec 8 y en que punto del desarrollo estamos
+```
+
+### Prompt #059 — Implementar SPEC-08 (packages/ai-advisor)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `IA`, `Planeación`, `Gobernanza`, `Tests`
+* **Resumen de su funcionalidad:** Crea `@taskstream/ai-advisor` con `advise()`, validación de modalidad, pre-check, encapsulado anti-injection, proveedor Groq diferido + fake; 6 tests en verde. Documenta pendientes BE-2/FE-1. No modifica `apps/api` ni `apps/web` (frontera AI-1).
+* **Archivos creados o modificados:** `packages/ai-advisor/**`, `specs/SPEC-08.md`, `specs/COVERAGE.md`, `specs/README.md`, `planning/taskboard.md`, `.env.example`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+si continua con la spec 8
+```
+
+### Prompt #060 — SPEC-08 BE+FE (puerto + panel)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `IA`, `Gobernanza`, `Tests`
+* **Resumen de su funcionalidad:** Tras preview READY se genera informe (`advise`); `GET .../ai-report` (null si no auditable); persistencia memory/Prisma; panel FE en entregables; tests HTTP RF-01/RF-03. SPEC-08 → IMPLEMENTED beta.
+* **Archivos creados o modificados:** `apps/api/src/modules/deliverables/*`, `apps/web/src/components/ai-advisor-panel.tsx`, `deliverables-harness.tsx`, specs/taskboard/COVERAGE, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+hazlo
+```
+
+### Prompt #061 — Auditar SPEC-00 a SPEC-08
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Planeación`, `Gobernanza`
+* **Resumen de su funcionalidad:** Auditoría documental de SPEC-00 a SPEC-08 contra el validador y `.agents/CONTEXT.md`. No modificó archivos.
+* **Archivos creados o modificados:** Ninguno
+* **Texto literal del prompt enviado:**
+
+```
+verifica las specs hasta la 8
+```
+
+### Prompt #062 — Corregir SPEC-00 a SPEC-07
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Planeación`, `Gobernanza`
+* **Resumen de su funcionalidad:** Aplica la auditoría en SPEC-00 a SPEC-07. SPEC-08 no se modifica. La matriz de SPEC-04 vuelve a `CONTEXT.md` §7.2 y el estado de esa spec regresa a `Redactada (DRAFTED)` hasta que BE-2 actualice el mapa y el seed. `check-spec.mjs` queda en 0 errores. Graphify no está en el repositorio.
+* **Archivos creados o modificados:** `specs/SPEC-00.md`, `specs/SPEC-01.md`, `specs/SPEC-02.md`, `specs/SPEC-03.md`, `specs/SPEC-04.md`, `specs/SPEC-05.md`, `specs/SPEC-06.md`, `specs/SPEC-07.md`, `specs/README.md`, `specs/COVERAGE.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+okey evalua esas specs sin contar la 8 y actualizalas tu
+```
+
+### Prompt #063 — Flujo aceptación + ventana 30 m + refresco vivo
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`, `Tests`
+* **Resumen de su funcionalidad:** Al subir entrega el contratador ve refresco casi al instante (poll + evento). Al aceptar: lifecycle `FINAL_CLAIM_WINDOW_30M`, notificación al emprendedor con monto a liberar si no hay apelación; UI sin plazo de revisión ni Consejero IA; solo entregas + contador 30 m / apelación admin; liberación al vencer.
+* **Archivos creados o modificados:** `packages/shared-schemas/src/review.ts`, `seller-acceptance.hub.ts`, `deliverables.service.ts`, `deliverables.controller.ts`, `deliverables.module.ts`, `deliverables.http.spec.ts`, BFF `acceptance-notices`, `seller-acceptance-alert.tsx`, `delivery-ready-alert.tsx`, `deliverables-harness.tsx`, `activity-inbox.tsx`, `layout.tsx`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+Correciones: Por parte de emprendedor, cuando se sube la actividad al contratador la interfaz donde esta dicha actividad debe de actualizarse al instante.
+
+- Si el usuario contratador acepta el trabajo, se debe de notificar al usuario empresario que su trabajo fu aceptado y cuanto se le liberara a su cuenta si no se genera apelacion.
+- imagen: cuando el contratador acepta y se inicia el proceso de liberacion de trabajo dicha interfaz debe de adaptarse: lo de "plazo pendiente" fuera, "Consejero de ia" fuera, Quedaria solo la parte de entregas y sale el contador que indica: "Tras aceptacion de trabajo tiene un tiempo de 30 minutos para consolidar si el trabajo es realmente lo deseado, de lo contrario generar una apelacion", si pasa dicho tiempo se liberan fondos al emprendedor, si se genera apelacion se levanta un ticket a admin para mediar.
+```
+
+### Prompt #064 — Liberación inmediata al aceptar (sin 30 m)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`, `Tests`
+* **Resumen de su funcionalidad:** Para mostrar el flujo de dinero, la ventana de 30 m post-aceptación no se aplica: al aceptar se llama `simulateRelease` (96/4), estado `COMPLETED`, se notifica al emprendedor el monto liberado y se quita la UI de consolidación/apelación 30 m.
+* **Archivos creados o modificados:** `packages/shared-schemas/src/review.ts`, `deliverables.service.ts`, `deliverables.http.spec.ts`, `deliverables-harness.tsx`, `seller-acceptance-alert.tsx`, `activity-inbox.tsx`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+Referente a la politica de los 30m post entrega no lo tendremos en cuenta para poder mostrar el flujo del dinero, es decir que tras aceptar que el trabajo es el deseado se debe liberar el dinero del usuario hacia el emprendedor.
+```
+
+### Prompt #065 — Saldo demo al fondear / liberar
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** El escrow simulado no movía saldos ILP reales. Se añade `demoBalanceUSDInCents` en `UserWallet` ($1000 inicial): al aceptar el emprendedor se debita al contratador; al aceptar la entrega se acredita 96 % al emprendedor. Visible en Navbar y Billetera.
+* **Archivos creados o modificados:** `schema.prisma`, migración `20261017140000_wallet_demo_balance`, identity types/repos, `wallet.service.ts`, `escrow.service.ts`, `identity-contract.ts`, `navbar.tsx`, `wallet-verification.tsx`, `api-client.ts`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+Realice el flujo completo, Y no se realizo el movimiento de dinero, en la que pago no disminuyo y en que le pagaron no aumento su dinero
+```
+
+### Prompt #066 — Open Payments real (Test Wallet / EGG)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** El usuario autorizó consumo real de la API Open Payments con wallets propias de la testnet (EGG). Se implementa `escrow-payment.service.ts`: fondeo con grant interactivo del buyer y desembolso 96/4 con `OPEN_PAYMENTS_ESCROW_ACCESS_TOKEN`. UI de autorización en checkout.
+* **Archivos creados o modificados:** `apps/api/src/modules/open-payments/escrow-payment.service.ts`, escrow service/controller/module/repos/types/tests, `escrow-checkout.tsx`, `api-client.ts`, `.env.example`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+Para que quedes claro yo cree las cuentas con las que realizo las pruebas con propios fondos de la testnet, lo que quiero es que funciones real consumiendo la api
+```
+(+ imagen Saldo exacto EGG 100.00 en Test Wallet)
+
+### Prompt #067 — Relanzar proyecto completo para prueba
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`, `Herramientas / DX`
+* **Resumen de su funcionalidad:** Docker Postgres/Redis, build schemas/ai-advisor, migrate, fix compile `memory-escrow.repository.ts`, limpia `.next`, arranca Nest `:3001` y Next `:3000` (HTTP 200).
+* **Archivos creados o modificados:** `apps/api/src/modules/escrow/memory-escrow.repository.ts`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+re lanza el proyecto completo para realizar la prueba
+```
+
+### Prompt #068 — Liberación falla / custodia monto alto / «Es lo que quería»
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Con 3 wallets, la liberación OP fallaba (OutgoingPayment) y bloqueaba el accept. Se corrige payout con `receiveAmount` en asset del receptor, conversión USD cents→asset scale, se evita payout circular del 4 % si platform=escrow, y se mapean errores de token/upstream a la UI.
+* **Archivos creados o modificados:** `apps/api/src/modules/open-payments/escrow-payment.service.ts`, `apps/web/src/lib/api-client.ts`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+Ya realice el flujo con 3 cuenta, y en el momento de liber el saldo final genera problema y la billetera custodia agarro un valor demaciado alto para el establecido, estaba establecido 10$ dolares y agarro 150$, luego cuando se intento liberar el saldo genero error y no permitido darle a "Es lo que queria"
 ```
 
 

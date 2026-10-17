@@ -8,6 +8,8 @@ import {
   MessageEvent,
   Param,
   Post,
+  Query,
+  Redirect,
   Req,
   Sse,
   UseGuards,
@@ -116,6 +118,20 @@ export class EscrowController {
   @UseGuards(SessionAuthGuard, WalletVerifiedGuard)
   fundEscrow(@Req() request: AuthenticatedRequest, @Param('taskId') taskId: string) {
     return this.escrow.fundEscrow(request.userId!, taskId);
+  }
+
+  /**
+   * Finish URI GNAP del fondeo real (buyer autoriza en Test Wallet).
+   * Sin sesión de cookie: Rafiki redirige aquí con interact_ref + hash.
+   */
+  @Get('orders/:taskId/escrow/funding/callback')
+  @Redirect()
+  async fundingCallback(
+    @Param('taskId') taskId: string,
+    @Query() query: Record<string, unknown>,
+  ) {
+    const result = await this.escrow.completeFundingCallback(taskId, query);
+    return { url: result.redirectTo, statusCode: 303 };
   }
 
   @Post('webhooks/rafiki')

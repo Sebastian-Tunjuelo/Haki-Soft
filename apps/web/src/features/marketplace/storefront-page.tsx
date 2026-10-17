@@ -46,6 +46,8 @@ export function StorefrontPage({
   const [uploading, setUploading] = useState(false);
   const [hiring, setHiring] = useState(false);
   const [hireConfirmOpen, setHireConfirmOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [hireBrief, setHireBrief] = useState(
     'Quiero contratar este Gig con el alcance publicado y entrega dentro del plazo máximo.',
   );
@@ -293,6 +295,27 @@ export function StorefrontPage({
     await loadReviews();
   }
 
+  async function deleteGig() {
+    if (kind !== 'gig' || !isOwner) return;
+    const gig = entity as StorefrontGig;
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/v1/marketplace/gigs/${gig.gigId}`, { method: 'DELETE' });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(humanError(res.status, payload));
+        return;
+      }
+      setDeleteConfirmOpen(false);
+      router.push('/marketplace');
+    } catch {
+      setError(humanError(0, { code: 'API_UNREACHABLE' }));
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   async function hireGig() {
     if (kind !== 'gig' || isOwner) return;
     const gig = entity as StorefrontGig;
@@ -355,6 +378,38 @@ export function StorefrontPage({
         onConfirm={() => void hireGig()}
         onCancel={() => setHireConfirmOpen(false)}
       />
+      {kind === 'gig' && deleteConfirmOpen ? (
+        <div role="dialog" aria-modal="true" aria-labelledby="delete-gig-title" style={modalOverlay}>
+          <div style={modalCard}>
+            <h2 id="delete-gig-title" style={{ margin: 0, fontSize: '1.2rem' }}>
+              ¿Eliminar este Gig?
+            </h2>
+            <p style={{ margin: '12px 0 0', color: 'var(--text-secondary)', lineHeight: 1.5, fontSize: 14 }}>
+              «{(entity as StorefrontGig).title}» dejará de aparecer en el marketplace y nadie podrá contratarlo.
+              Las órdenes ya creadas no se cancelan. Esta acción no se puede deshacer desde aquí.
+            </p>
+            <div style={{ display: 'flex', gap: 10, marginTop: 22, flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="btn btn-primary"
+                disabled={deleting}
+                onClick={() => void deleteGig()}
+                style={{ background: 'var(--status-failed)', borderColor: 'var(--status-failed)' }}
+              >
+                {deleting ? 'Eliminando…' : 'Sí, eliminar'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={deleting}
+                onClick={() => setDeleteConfirmOpen(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <CoverBanner
         cover={cover}
         editable={editable}
@@ -389,6 +444,17 @@ export function StorefrontPage({
                   onClick={() => void savePage()}
                 >
                   {saving ? 'Guardando…' : 'Guardar'}
+                </button>
+              ) : null}
+              {kind === 'gig' ? (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ ...overlayControl, color: 'var(--status-failed)', borderColor: 'rgba(239, 68, 68, 0.45)' }}
+                  disabled={deleting}
+                  onClick={() => setDeleteConfirmOpen(true)}
+                >
+                  Eliminar
                 </button>
               ) : null}
             </div>
@@ -707,4 +773,24 @@ const optionStyle: CSSProperties = {
 
 const overlayControl: CSSProperties = {
   boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+};
+
+const modalOverlay: CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  zIndex: 10000,
+  background: 'rgba(2, 6, 23, 0.72)',
+  display: 'grid',
+  placeItems: 'center',
+  padding: 20,
+};
+
+const modalCard: CSSProperties = {
+  width: '100%',
+  maxWidth: 440,
+  borderRadius: 16,
+  border: '1px solid var(--border)',
+  background: 'var(--surface-elevated)',
+  padding: 24,
+  boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
 };

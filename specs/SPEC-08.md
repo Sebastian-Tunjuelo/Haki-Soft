@@ -5,9 +5,9 @@
 | **ID de Especificación** | `SPEC-08` |
 | **Archivo** | `specs/SPEC-08.md` |
 | **Fase de Desarrollo** | `Fase 4 — Consejero de IA para imagen y texto` |
-| **Estado del Ciclo SDD** | `Redactada (DRAFTED)` |
+| **Estado del Ciclo SDD** | `Implementada (IMPLEMENTED)` beta |
 | **Roles Responsables** | `AI-1`, `FE-1`, `BE-2` |
-| **Tareas Asociadas (`taskboard.md`)** | `T-F4-AI1-01`, `T-F4-AI1-02`, `T-F4-FE1-01` |
+| **Tareas Asociadas (`taskboard.md`)** | `T-F4-AI1-01`/`02` `[DONE]`, `T-F4-FE1-01` `[DONE_BETA]` |
 | **Intervención Manual / IA Mínima-Nula** | `No aplica` |
 | **Dependencias SDD** | `SPEC-01`, `SPEC-05`, `SPEC-07` |
 | **Aprobada por / fecha** | `—` |
@@ -199,3 +199,5 @@ Sin preguntas abiertas bloqueantes sobre el alcance: solo imagen y texto, inform
 | Versión | Fecha | Estado | Autor / Herramienta | Resumen de Cambios |
 | :--- | :--- | :--- | :--- | :--- |
 | `0.1.0` | `2026-10-16` | `Redactada (DRAFTED)` | `Cursor` | Redacción inicial de `SPEC-08`: `advise` en `packages/ai-advisor`, contratos de `CONTEXT.md` §8.2 y panel de `FE-1` con mocks. |
+| `0.2.0` | `2026-10-17` | `Redactada (DRAFTED)` + `AI-1` beta | `Cursor` | Implementado `packages/ai-advisor` (`advise`, anti-injection, pre-check, proveedor Groq diferido + fake). Tests RF-01/02/03/04 en verde. Pendiente: adaptador `BE-2` (`GET .../ai-report`) y panel `FE-1`. |
+| `0.3.0` | `2026-10-17` | `Implementada (IMPLEMENTED)` beta | `Cursor` | Puerto BE: `advise` tras preview + persistencia + `GET .../ai-report` (null en no auditables). Panel FE en entregables. Fake sin `GROQ_API_KEY`. Tests HTTP RF-01/RF-03. |

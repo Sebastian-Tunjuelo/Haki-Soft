@@ -5,7 +5,7 @@
 | **ID de Especificación** | `SPEC-09` |
 | **Archivo** | `specs/SPEC-09.md` |
 | **Fase de Desarrollo** | `Fase 5 — Relojes, correcciones y ventana final` |
-| **Estado del Ciclo SDD** | `Redactada (DRAFTED)` |
+| **Estado del Ciclo SDD** | `Implementada (IMPLEMENTED)` — beta: reloj 32h al completar, accept/revision/dispute + aviso Buyer; sin BullMQ/Resend/extensión +7d |
 | **Roles Responsables** | `BE-2`, `BE-1`, `FE-1` |
 | **Tareas Asociadas (`taskboard.md`)** | `T-F5-BE2-01`, `T-F5-BE1-01`, `T-F5-BE2-02`, `T-F5-FE1-01` |
 | **Intervención Manual / IA Mínima-Nula** | `Sí (🛡️ el reembolso lo ejecuta escrow-payment.service.ts)` |
@@ -223,3 +223,4 @@ No aplica en esta especificación. El visor ya está especificado en `SPEC-07`.
 | Versión | Fecha | Estado | Autor / Herramienta | Resumen de Cambios |
 | :--- | :--- | :--- | :--- | :--- |
 | `0.1.0` | `2026-10-16` | `Redactada (DRAFTED)` | `Cursor` | Redacción inicial de `SPEC-09`: cinco relojes, extensión única, dos correcciones y avisos, con `DEC-OPEN-03` sin cerrar. |
+| `0.2.0` | `2026-10-17` | `Implementada (IMPLEMENTED)` beta | `Cursor` | Reloj `DELIVERY_REVIEW_32H` al complete; `GET /orders/:id/clock`; accept → `simulateRelease`+COMPLETED; revision máx. 2; dispute desde `IN_REVIEW` (relajación beta); aviso Buyer `DELIVERY_READY`. Sin BullMQ, Resend ni extensión +7d/24h. |
