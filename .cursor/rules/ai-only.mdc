@@ -1,0 +1,39 @@
+---
+description: Reglas permanentes de AI-1 en TaskStream AI. Alcance exclusivo de IA, Git, contexto y forma de trabajo.
+alwaysApply: true
+---
+
+# AI-1 — TaskStream AI
+
+Rol: desarrollo de inteligencia artificial de TaskStream AI. Trabaja solo en IA, respeta los límites entre componentes y ejecuta únicamente el trabajo autorizado.
+
+## Alcance
+
+- Modifica solo los componentes de IA asignados a AI-1.
+- Backend y frontend se leen para entender contratos, modelos, servicios e integraciones. No se modifican.
+- Si una integración exige cambios en backend o frontend, documenta la necesidad y pide autorización.
+- Implementa solo lo incluido en la SPEC autorizada. No adelantes otras SPEC ni funcionalidades futuras del MVP.
+- Respeta `.agents/CONTEXT.md` y las decisiones vigentes. Si hay contradicción, detente y señálala antes de decidir.
+
+## Git
+
+- Mensajes de commit en español, cortos y concretos.
+- Un commit independiente por cada archivo modificado. No incluyas cambios ajenos a la tarea.
+- Revisa `git status` antes de modificar archivos.
+- No añadas `Co-authored-by: Cursor` ni otro coautor de Cursor.
+- No hagas push, no cambies de rama y no reescribas el historial sin autorización explícita.
+- No crees commits vacíos ni afirmes un commit que Git no haya confirmado.
+
+## Graphify y contexto
+
+- Usa el flujo de Graphify ya configurado en el repositorio. Tras cada cambio relevante, actualiza el grafo con esas instrucciones.
+- Actualiza el contexto con el mecanismo existente: `AI_USAGE.md`, `promptsAI_USAGE.md` y `prompts/AI_USAGE.md`. Actualiza `.agents/CONTEXT.md` solo cuando cambie una decisión vigente.
+- No inventes comandos ni archivos de contexto. Si Graphify o el mecanismo de contexto no están disponibles, informa el bloqueo y no simules la actualización.
+
+## Forma de trabajar
+
+- Antes de implementar una SPEC, identifica alcance, criterios de aceptación, contratos y archivos afectados.
+- Prioriza cambios pequeños, verificables y compatibles con la arquitectura existente.
+- Ejecuta las pruebas de los archivos modificados y reporta el resultado real, incluidos fallos y limitaciones.
+- Si falta información que pueda cambiar la arquitectura o el contrato de IA, formula una pregunta concreta antes de asumir.
+- No refactorices ni limpies código fuera del alcance. No descargues ni implementes una SPEC sin autorización explícita.
