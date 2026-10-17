@@ -23,6 +23,10 @@ Este archivo contiene el **registro histórico, secuencial e íntegro (sin omisi
 | **Prompt #011** | `2026-10-16` | `Cursor` | `Planeación`, `Gobernanza`, `Frontend`, `Backend`, `IA`, `Tests` | Redactar e implementar SPEC-00 y SPEC-01; redactar SPEC-02 y SPEC-03 sin implementar integraciones externas. | `specs/_template.md`, `specs/README.md`, `specs/SPEC-00.md`, `specs/SPEC-01.md`, `specs/SPEC-02.md`, `specs/SPEC-03.md`, `packages/shared-schemas/`, `apps/web/`, `apps/api/`, `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `pnpm-lock.yaml`, `.gitignore`, `.env.example`, `planning/taskboard.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md` |
 | **Prompt #012** | `2026-10-16` | `Antigravity` | `Herramientas / DX`, `Backend`, `Gobernanza` | Aprovisionamiento e integración en el proyecto `Haki-Soft` del CLI interactivo oficial de Open Payments (`tools/open-payments-cli`) y del servidor MCP (`tools/open-payments-mcp`) con compilación TypeScript, configuración `.env.example`, desacoplamiento Git y manual operativo `tools/README.md`. | [`tools/README.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/README.md), [`tools/open-payments-cli/.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/.env.example), [`tools/open-payments-cli/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli), [`tools/open-payments-mcp/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-mcp), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 | **Prompt #013** | `2026-10-16` | `Antigravity` | `Gobernanza`, `Frontend`, `Backend`, `Planeación` | Incorporación e instalación multi-agente (`.agents`, `.kiro`, `.claude`) de 6 skills de alta adopción para potenciar el soporte de Zod (`zod-validation-utilities`, `zod-schema-validation`), redacción y síntesis de specs (`to-spec`) y diseño frontend (`frontend-design`, `shadcn-ui`, `tailwind-css-patterns`), más su articulación con `taskstream-spec`. | Directorios de *skills* en `.agents/skills/`, `.kiro/skills/`, `.claude/skills/`, [`taskstream-spec/SKILL.md`](file:///c:/Users/maico/Desktop/Haki-Soft/.agents/skills/taskstream-spec/SKILL.md), [`skills-lock.json`](file:///c:/Users/maico/Desktop/Haki-Soft/skills-lock.json), [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #014** | `2026-10-16` | `Antigravity` | `Frontend`, `Gobernanza`, `Backend`, `Planeación` | Implementación de `SPEC-02` ejerciendo roles FE-1 y FE-2 (Clerk v6, selector de modo y verificación de billetera panamericana con Subject Grant y hash SHA-256). | [`apps/web/middleware.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/middleware.ts), [`apps/web/app/`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app), [`apps/web/src/`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src), [`planning/taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Soft/planning/taskboard.md), [`specs/SPEC-02.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/SPEC-02.md), [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #015** | `2026-10-16` | `Antigravity` | `Frontend`, `Planeación`, `Gobernanza`, `Tests` | Solicitud de implementación de `SPEC-03` desde los roles FE-1 y FE-2 (motor 3D y scroll). Análisis inicial de requerimientos e inspección de contexto sin alteración de archivos. | Ninguno (análisis e inspección de especificaciones) |
+| **Prompt #016** | `2026-10-16` | `Antigravity` | `Gobernanza` | Solicitud de pausa inmediata por el usuario; detención inmediata de tareas sin modificaciones y reporte de estado. | Ninguno (pausa inmediata confirmada) |
+| **Prompt #017** | `2026-10-16` | `Antigravity` | `Frontend`, `Planeación`, `Gobernanza`, `Tests` | Implementación completa de `SPEC-03` desde FE-1 y FE-2: `SmoothScrollProvider` (Lenis + GSAP ticker con `lagSmoothing(0)`), escena `HeroScene` en Three.js/R3F con mutación de refs (zero-setState), `HeroSceneLoader` aislado (`ssr: false`), composición de landing por FE-1, suite Vitest con 8/8 pruebas verdes y actualización de `taskboard.md` y `SPEC-03.md` a `[DONE]` / `TESTED`. | [`apps/web/app/providers/smooth-scroll.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/providers/smooth-scroll.tsx), [`apps/web/app/scenes/`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/scenes), [`apps/web/app/layout.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/layout.tsx), [`apps/web/app/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/page.tsx), [`apps/web/vitest.config.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/vitest.config.ts), [`apps/web/src/tests/spec-03-scroll-canvas.test.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/tests/spec-03-scroll-canvas.test.ts), [`planning/taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Soft/planning/taskboard.md), [`specs/SPEC-03.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/SPEC-03.md), [`specs/README.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/README.md), [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 
 ---
 
@@ -722,5 +726,83 @@ Añade skills adicionales para apoyar a zod, redactar specs y frontend design
 ```text
 Implementa la spec 02 ejerciendo los dos roles de frontend. Guiate a través de los diferentes documentos de planeación y apoyandote de las skills de diseño. Recuerda delimitarte a unicamente la spec, no implementar caracteristicas extra. Mantén lo que es seguridad, buenas prácticas de programación y en general realiza una implementación óptima y eficaz de las vistas, recuerda hacerlo interactivo, en caso de requerir animación 3D o utilización de la tecnología scroll trigger, añadelo al proyecto sin errores de compilación ni de ningun tipo
 ```
+
+---
+
+### Prompt #015 — Solicitud de Implementación de SPEC-03 desde los Dos Roles de Frontend (FE-1 y FE-2)
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Frontend`, `Planeación`, `Gobernanza`, `Tests`
+* **Resumen de su funcionalidad:**
+  1. Solicitud de implementación de `SPEC-03` ejerciendo ambos roles frontend (`FE-1` y `FE-2`) bajo la metodología SDD Evolutivo + BDD, sincronización del motor 3D y actualización de planeación.
+  2. Análisis preliminar de requerimientos, dependencias y contratos visuales previo a la ejecución.
+* **Archivos creados / modificados:**
+  * Ninguno durante este turno (fase de análisis e inspección de especificaciones).
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Implementa la spec 3 desde los dos roles de frontend, siguiendo el mismo flujo de desarrollo. Recuerda utilizar las skills necesarias para el desarrollo de esta spec y modifica los archivos necesarios para que la spec se vea implementada en la planeación 
+```
+
+---
+
+### Prompt #016 — Pausa Momentánea de Ejecución Solicitada por el Usuario
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. El usuario envía el comando de pausa.
+  2. La IA detiene la ejecución inmediatamente sin realizar modificaciones de archivos y confirma el estado en espera de instrucciones.
+* **Archivos creados / modificados:**
+  * Ninguno (pausa confirmada de inmediato).
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+pausa
+```
+
+---
+
+### Prompt #017 — Continuación y Culminación de la Implementación de SPEC-03 (FE-1 / FE-2)
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Frontend`, `Planeación`, `Gobernanza`, `Tests`
+* **Resumen de su funcionalidad:**
+  1. **Rol FE-2 (Motor 3D, Lenis y GSAP ScrollTrigger):**
+     - Instalación y configuración de dependencias de renderizado 3D y física de scroll en `apps/web`: `gsap` (3.12.5+), `@gsap/react` (2.1.1), `lenis` (1.1.18+), `three` (0.170.0), `@react-three/fiber` (9.0.0+), `@react-three/drei` (10.0.0+) y `@types/three`.
+     - Creación de `apps/web/app/providers/smooth-scroll.tsx`: sincronización estricta de Lenis con el ticker de GSAP (`lagSmoothing(0)`), actualización de eventos `lenis.on('scroll', ScrollTrigger.update)`, soporte de accesibilidad `prefers-reduced-motion` y reversión/destrucción completa de triggers y ticker al desmontar ruta.
+     - Creación de `apps/web/app/scenes/hero-scene.tsx`: escena 3D WebGL con núcleo de custodia Escrow y canales orbitales Interledger, mutación directa sobre `useRef` con ScrollTrigger scrub (invariante crítica de CERO llamadas a `setState` en scroll), función pura `isWebGLAvailable()` y fallback HTML determinista ante `WEBGL_UNAVAILABLE`.
+     - Creación de `apps/web/app/scenes/hero-scene-loader.tsx`: dynamic import aislado con `ssr: false` y placeholder de 480px para prevenir Cumulative Layout Shift (CLS).
+  2. **Rol FE-1 (Layout, Landing Page, Accesibilidad y Semántica):**
+     - Integración del `SmoothScrollProvider` en `apps/web/app/layout.tsx`.
+     - Maquetación y composición rica de la landing en `apps/web/app/page.tsx` con integración armónica de la escena 3D, timeline cronológico de escrow con plazos inmutables (7d, 24h, 32h, 30m) y desglose matemático exacto de la invariante 96% / 4% con `splitSingleBlockEscrow`.
+  3. **Pruebas y Calidad (FE-2 / Tests):**
+     - Configuración de Vitest (`apps/web/vitest.config.ts`) y script de pruebas en `package.json`.
+     - Creación de suite BDD de pruebas unitarias y de integración (`apps/web/src/tests/spec-03-scroll-canvas.test.ts`) cubriendo `TEST-01` a `TEST-04` y `RF-01` a `RF-06` (8/8 pruebas verdes).
+  4. **Planeación y Gobernanza:**
+     - Actualización de `planning/taskboard.md` marcando tareas `T-F1-FE2-01` y `T-F1-FE2-02` como `[DONE]`.
+     - Transición de estado en `specs/SPEC-03.md` y `specs/README.md` a `Testeada (TESTED)` y registro de versión 1.1.0 en §12.
+     - Actualización y sincronización estricta de trazabilidad en `AI_USAGE.md`, `promptsAI_USAGE.md` y `prompts/AI_USAGE.md`.
+* **Archivos creados / modificados:**
+  * [`apps/web/app/providers/smooth-scroll.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/providers/smooth-scroll.tsx) *(Creado)*
+  * [`apps/web/app/scenes/hero-scene.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/scenes/hero-scene.tsx) *(Creado)*
+  * [`apps/web/app/scenes/hero-scene-loader.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/scenes/hero-scene-loader.tsx) *(Creado)*
+  * [`apps/web/vitest.config.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/vitest.config.ts) *(Creado)*
+  * [`apps/web/src/tests/spec-03-scroll-canvas.test.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/tests/spec-03-scroll-canvas.test.ts) *(Creado)*
+  * [`apps/web/app/layout.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/layout.tsx) *(Modificado)*
+  * [`apps/web/app/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/page.tsx) *(Modificado)*
+  * [`apps/web/package.json`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/package.json) *(Modificado)*
+  * [`planning/taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Soft/planning/taskboard.md) *(Modificado)*
+  * [`specs/SPEC-03.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/SPEC-03.md) *(Modificado)*
+  * [`specs/README.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/README.md) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Continua implementando
+```
+
 
 
