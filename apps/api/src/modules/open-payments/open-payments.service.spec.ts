@@ -1,9 +1,13 @@
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { OpenPaymentsClientError, type AuthenticatedClient, type UnauthenticatedClient } from '@interledger/open-payments';
 import { describe, expect, it } from 'vitest';
 import { DomainError } from '../identity/domain-error';
 import type { Clock } from '../identity/identity.types';
 import {
   OpenPaymentsService,
+  readPlatformPrivateKey,
   SdkOpenPaymentsClientFactory,
   SUBJECT_GRANT_TTL_MS,
   type OpenPaymentsClientFactory,
@@ -196,15 +200,33 @@ describe('OpenPaymentsService', () => {
     ).rejects.toEqual(new DomainError(400, 'GNAP_SUBJECT_NOT_CONFIRMED'));
   });
 
+  it('signs with the local key file and does not use an inline private key', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'taskstream-key-'));
+    const filePath = join(directory, 'hack.key');
+    writeFileSync(filePath, '-----BEGIN PRIVATE KEY-----\\nfrom-file\\n-----END PRIVATE KEY-----');
+    try {
+      const key = readPlatformPrivateKey({
+        OPEN_PAYMENTS_PRIVATE_KEY: 'burned-inline-key',
+        OPEN_PAYMENTS_PRIVATE_KEY_PATH: filePath,
+      });
+      expect(key).toContain('from-file');
+      expect(key).not.toContain('burned-inline-key');
+    } finally {
+      rmSync(directory, { recursive: true, force: true });
+    }
+  });
+
   it('refuses to sign a grant when the platform client is not configured', async () => {
     const previous = {
       wallet: process.env.OPEN_PAYMENTS_CLIENT_WALLET_ADDRESS,
       keyId: process.env.OPEN_PAYMENTS_KEY_ID,
       privateKey: process.env.OPEN_PAYMENTS_PRIVATE_KEY,
+      privateKeyPath: process.env.OPEN_PAYMENTS_PRIVATE_KEY_PATH,
     };
     delete process.env.OPEN_PAYMENTS_CLIENT_WALLET_ADDRESS;
     delete process.env.OPEN_PAYMENTS_KEY_ID;
     delete process.env.OPEN_PAYMENTS_PRIVATE_KEY;
+    delete process.env.OPEN_PAYMENTS_PRIVATE_KEY_PATH;
     try {
       await expect(new SdkOpenPaymentsClientFactory().authenticated()).rejects.toEqual(
         new DomainError(503, 'OPEN_PAYMENTS_CLIENT_NOT_CONFIGURED'),
@@ -213,6 +235,7 @@ describe('OpenPaymentsService', () => {
       restoreEnv('OPEN_PAYMENTS_CLIENT_WALLET_ADDRESS', previous.wallet);
       restoreEnv('OPEN_PAYMENTS_KEY_ID', previous.keyId);
       restoreEnv('OPEN_PAYMENTS_PRIVATE_KEY', previous.privateKey);
+      restoreEnv('OPEN_PAYMENTS_PRIVATE_KEY_PATH', previous.privateKeyPath);
     }
   });
 });

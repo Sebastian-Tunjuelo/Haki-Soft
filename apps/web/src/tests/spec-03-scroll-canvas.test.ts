@@ -88,6 +88,18 @@ describe('SPEC-03: Arquitectura Visual 3D y Scroll Suave (FE-1 / FE-2)', () => {
       expect(JSON.stringify(fallback)).toContain('Modo Estático Activo (WebGL no requerido)');
     });
 
+    it('la hero no llama a la API: el progreso es el scroll del documento', () => {
+      for (const relativePath of [
+        'app/scenes/hero-scene.tsx',
+        'app/scenes/hero-scene-loader.tsx',
+        'app/providers/smooth-scroll.tsx',
+      ]) {
+        const text = fs.readFileSync(path.resolve(__dirname, '../../', relativePath), 'utf8');
+        expect(text).not.toContain('/api/v1');
+        expect(text).not.toContain('fetch(');
+      }
+    });
+
     it('la escena respeta prefers-reduced-motion: reduce desactivando scrub y manteniendo la rotación inicial', () => {
       const sceneSourcePath = path.resolve(__dirname, '../../app/scenes/hero-scene.tsx');
       const source = fs.readFileSync(sceneSourcePath, 'utf8');

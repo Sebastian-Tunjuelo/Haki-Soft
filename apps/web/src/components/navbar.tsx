@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs';
 import { ShieldCheck, Wallet, ArrowLeftRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { readActiveMode, readActiveWallet } from '@/src/lib/identity-contract';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -13,21 +14,32 @@ export function Navbar() {
   const [hasActiveWallet, setHasActiveWallet] = useState<boolean>(false);
 
   useEffect(() => {
-    // Sincronizar modo y estado de wallet
+    if (!isLoaded || !isSignedIn) {
+      setHasActiveWallet(false);
+      return;
+    }
+
+    let cancelled = false;
     fetch('/api/v1/me/mode')
       .then((res) => res.json())
-      .then((data) => {
-        if (data?.activeMode) setActiveMode(data.activeMode);
+      .then((data: unknown) => {
+        const mode = readActiveMode(data);
+        if (!cancelled && mode) setActiveMode(mode);
       })
       .catch(() => {});
 
     fetch('/api/v1/me/wallet')
       .then((res) => res.json())
-      .then((data) => {
-        if (data?.activeWallet) setHasActiveWallet(true);
+      .then((data: unknown) => {
+        const wallet = readActiveWallet(data);
+        if (!cancelled) setHasActiveWallet(Boolean(wallet?.isVerified && wallet.isActive));
       })
       .catch(() => {});
-  }, [pathname]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, isLoaded, isSignedIn]);
 
   return (
     <header className="app-header">
@@ -80,12 +92,14 @@ export function Navbar() {
             >
               <ArrowLeftRight size={15} />
               <span>Modo</span>
-              <span
-                className={`badge ${activeMode === 'BUYER' ? 'badge-buyer' : 'badge-seller'}`}
-                style={{ padding: '2px 6px', fontSize: 10 }}
-              >
-                {activeMode}
-              </span>
+              {isSignedIn && (
+                <span
+                  className={`badge ${activeMode === 'BUYER' ? 'badge-buyer' : 'badge-seller'}`}
+                  style={{ padding: '2px 6px', fontSize: 10 }}
+                >
+                  {activeMode}
+                </span>
+              )}
             </Link>
           </nav>
 

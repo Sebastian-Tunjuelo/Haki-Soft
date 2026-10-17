@@ -12,14 +12,6 @@ import { SessionStore } from "./session-store.js";
 import type { Amount, GrantSession, JsonObject } from "./types.js";
 import { assertHttpsUrl, findOutgoingDebitAmount, sanitizeError, validateAmount } from "./validation.js";
 
-// Hardcoded credentials for local testing (do NOT use in production)
-const HARDCODED_CLIENT_ADDRESS = "https://ilp.interledger-test.dev/wmtest";
-const HARDCODED_KEY_ID = "a43b2479-0254-434b-9152-f216da2ccef3";
-// Replace the string below with your test private key PEM. Keep this file strictly local.
-const HARDCODED_PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
-REPLACE_WITH_YOUR_TEST_PRIVATE_KEY_CONTENT
------END PRIVATE KEY-----`;
-
 export class OpenPaymentsService {
   private client?: AuthenticatedClient;
 

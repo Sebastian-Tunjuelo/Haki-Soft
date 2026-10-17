@@ -28,8 +28,8 @@ Ninguna fase se cierra hasta que sus specs lleguen a `Aprobada`. La lógica nucl
 | `SPEC-01` | [`SPEC-01.md`](./SPEC-01.md) | Contratos Zod, mocks y modelo Prisma 6 | Fase 0 | `AI-1`, `FE-1`, `BE-2` | `T-F0-05`, `T-F0-06`, `T-F1-BE2-01`, `T-F1-AI1-01` | `Testeada (TESTED)` |
 | `SPEC-02` | [`SPEC-02.md`](./SPEC-02.md) | Identidad Clerk y verificación de billetera | Fase 1 | `FE-1`, `BE-1`, `BE-2` | `T-F1-FE1-01`, `T-F1-BE1-01`, `T-F1-BE2-01` | `Redactada (DRAFTED)` |
 | `SPEC-03` | [`SPEC-03.md`](./SPEC-03.md) | Motor visual 3D ligado al scroll | Fase 1 | `FE-1`, `FE-2` | `T-F1-FE2-01`, `T-F1-FE2-02` | `Testeada (TESTED)` |
-| `SPEC-04` | Pendiente de redactar | Catálogo y publicación de tareas | Fase 2 | `FE-1`, `FE-2`, `BE-2` | `T-F2-FE1-01`, `T-F2-FE2-01`, `T-F2-BE2-01` | Pendiente de redactar |
-| `SPEC-05` | Pendiente de redactar | Gig fijo y bandeja de ofertas | Fase 2 | `FE-1`, `BE-1`, `AI-1` | `T-F2-BE1-01`, `T-F2-AI1-01` | Pendiente de redactar |
+| `SPEC-04` | [`SPEC-04.md`](./SPEC-04.md) | Catálogo de 6 categorías del MVP, Gigs a precio fijo, Web Monetization y tablón de tareas | Fase 2 | `FE-1`, `FE-2`, `BE-2` | `T-F2-FE1-01`, `T-F2-FE1-03`, `T-F2-FE2-01`, `T-F2-BE2-01` | `Redactada (DRAFTED)` |
+| `SPEC-05` | [`SPEC-05.md`](./SPEC-05.md) | Contratación de Gig fijo, bandeja de ofertas a la baja, aceptación mutua y clasificador de modalidad IA | Fase 2 | `FE-1`, `BE-1`, `AI-1` | `T-F2-FE1-02`, `T-F2-BE1-01`, `T-F2-AI1-01` | `Redactada (DRAFTED)` |
 | `SPEC-06` | Pendiente de redactar | Escrow 96 % / 4 % y reembolsos 100 % | Fase 3 | `BE-1`, `BE-2`, `FE-1`, `FE-2`, `AI-1` | `T-F3-BE1-01` | Pendiente de redactar |
 | `SPEC-07` | Pendiente de redactar | R2 y Protected Preview | Fase 4 | `BE-2`, `FE-2`, `BE-1` | `T-F4-BE2-01`, `T-F4-FE2-01` | Pendiente de redactar |
 | `SPEC-08` | Pendiente de redactar | Consejero de IA para imagen y texto | Fase 4 | `AI-1`, `FE-1` | `T-F4-AI1-01` | Pendiente de redactar |

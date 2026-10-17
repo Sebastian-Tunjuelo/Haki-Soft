@@ -1,56 +1,55 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { UserActiveModeEnum } from '@taskstream/shared-schemas';
-import { ShoppingBag, Briefcase, CheckCircle2, ShieldAlert, ArrowRight, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
+import { ActiveModeSwitchSchema } from '@taskstream/shared-schemas';
+import { readActiveMode, readApiCode, type ActiveMode } from '@/src/lib/identity-contract';
+import { ShoppingBag, Briefcase, CheckCircle2, ShieldAlert, Sparkles } from 'lucide-react';
 
 interface ModeSwitcherProps {
-  initialMode?: 'BUYER' | 'SELLER';
+  initialMode?: ActiveMode;
   isClerkAuthenticated: boolean;
+  serverCode?: string | null;
 }
 
-export function ModeSwitcher({ initialMode = 'BUYER', isClerkAuthenticated }: ModeSwitcherProps) {
-  const [activeMode, setActiveMode] = useState<'BUYER' | 'SELLER'>(initialMode);
+export function ModeSwitcher({ initialMode = 'BUYER', isClerkAuthenticated, serverCode = null }: ModeSwitcherProps) {
+  const [activeMode, setActiveMode] = useState<ActiveMode>(initialMode);
   const [isLoading, setIsLoading] = useState(false);
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(
+    serverCode ? { message: serverCode, type: 'error' } : null,
+  );
 
-  useEffect(() => {
-    fetch('/api/v1/me/mode')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.activeMode) {
-          setActiveMode(data.activeMode);
-        }
-      })
-      .catch(() => {});
-  }, []);
+  if (!isClerkAuthenticated) return null;
 
-  const handleSwitchMode = async (targetMode: 'BUYER' | 'SELLER') => {
+  const handleSwitchMode = async (targetMode: ActiveMode) => {
     if (targetMode === activeMode) return;
 
     setIsLoading(true);
     setNotification(null);
 
     try {
-      // Validar con ActiveModeSwitchSchema de shared-schemas
-      const parsed = UserActiveModeEnum.safeParse(targetMode);
+      const parsed = ActiveModeSwitchSchema.safeParse({ activeMode: targetMode });
       if (!parsed.success) {
-        throw new Error('Modo no válido');
+        throw new Error('ACTIVE_MODE_INVALID');
       }
 
       const res = await fetch('/api/v1/me/mode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ activeMode: targetMode }),
+        body: JSON.stringify(parsed.data),
       });
 
-      const data = await res.json();
+      const data: unknown = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Error al cambiar de modo');
+        throw new Error(readApiCode(data) ?? 'USER_NOT_SYNCED');
       }
 
-      setActiveMode(data.activeMode);
+      const nextMode = readActiveMode(data);
+      if (!nextMode) {
+        throw new Error('ACTIVE_MODE_INVALID');
+      }
+
+      setActiveMode(nextMode);
       setNotification({
         message: `Modo cambiado exitosamente a ${targetMode === 'BUYER' ? 'Buyer (Contratante)' : 'Seller (Freelancer)'}.`,
         type: 'success',

@@ -11,7 +11,6 @@ import {
   getMockActiveWallet,
   getMockUserMode,
   setMockUserMode,
-  completeMockVerification,
 } from '../lib/wallet-mock-store';
 
 const api = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -69,22 +68,25 @@ export const handlers = [
     }
     const discovery = discoverMockWallet(parsed.data.walletAddress);
     const challenge = createMockChallenge(discovery);
-    return HttpResponse.json(challenge);
+    return HttpResponse.json({
+      challengeId: challenge.challengeId,
+      interactRedirectUri: challenge.interactRedirectUri,
+      status: 'PENDING_REDIRECT' as const,
+    });
   }),
 
-  // Fase 1 (SPEC-02): Consulta de Wallet Activa
   http.get(`${api}/api/v1/me/wallet`, () => {
-    return HttpResponse.json(getMockActiveWallet());
-  }),
-
-  // Fase 1 (SPEC-02): Mock Callback / Verificación
-  http.post(`${api}/api/v1/me/wallet`, async ({ request }) => {
-    const body = (await request.json()) as { walletAddress: string; hash: string };
-    const discovery = discoverMockWallet(body.walletAddress);
-    const result = completeMockVerification(discovery, body.hash);
-    if (!result.success) {
-      return HttpResponse.json({ code: result.code }, { status: 400 });
-    }
-    return HttpResponse.json({ success: true, wallet: result.wallet });
+    const stored = getMockActiveWallet();
+    if (!stored.activeWallet) return HttpResponse.json({ wallet: null });
+    const wallet = stored.activeWallet;
+    return HttpResponse.json({
+      wallet: {
+        walletAddress: wallet.walletAddress,
+        assetCode: wallet.assetCode,
+        assetScale: wallet.assetScale,
+        isVerified: wallet.isVerified,
+        isActive: wallet.isActive,
+      },
+    });
   }),
 ];

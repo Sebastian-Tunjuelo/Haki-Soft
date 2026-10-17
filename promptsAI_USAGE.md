@@ -804,5 +804,124 @@ pausa
 Continua implementando
 ```
 
+---
+
+### Prompt #018 — Integración del frontend con el backend según SPEC-02 y SPEC-03
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Tests`, `Planeación`, `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. **SPEC-02:** las rutas `/api/v1/me/*` de Next dejan el almacén en memoria y reenvían la sesión Clerk a Nest. La pantalla de billetera abre `interactRedirectUri` y ya no simula el hash ni muestra nonces. Sin sesión no se monta el formulario ni el selector de modo.
+  2. **SPEC-03:** se verifica que la hero, el loader y el proveedor de scroll no llaman a `/api/v1`. No hay integración de API porque la spec lo prohíbe. El estado sigue `Testeada (TESTED)`.
+  3. SPEC-02 pasa a `Implementada (IMPLEMENTED)`. No se tocó `open-payments.service.ts` ni `escrow-payment.service.ts`.
+* **Archivos creados / modificados:**
+  * [`apps/web/src/lib/identity-contract.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/lib/identity-contract.ts) *(Creado)*
+  * [`apps/web/src/lib/identity-proxy.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/lib/identity-proxy.ts) *(Creado)*
+  * [`apps/web/src/tests/spec-02-identity-client.test.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/tests/spec-02-identity-client.test.ts) *(Creado)*
+  * [`apps/web/app/api/v1/me/mode/route.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/api/v1/me/mode/route.ts) *(Modificado)*
+  * [`apps/web/app/api/v1/me/wallet/route.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/api/v1/me/wallet/route.ts) *(Modificado)*
+  * [`apps/web/app/api/v1/me/wallet/discovery/route.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/api/v1/me/wallet/discovery/route.ts) *(Modificado)*
+  * [`apps/web/app/api/v1/me/wallet/challenges/route.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/api/v1/me/wallet/challenges/route.ts) *(Modificado)*
+  * [`apps/web/src/components/wallet-verification.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/components/wallet-verification.tsx) *(Modificado)*
+  * [`apps/web/src/components/mode-switcher.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/components/mode-switcher.tsx) *(Modificado)*
+  * [`apps/web/src/components/navbar.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/components/navbar.tsx) *(Modificado)*
+  * [`apps/web/app/onboarding/wallet/page.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/onboarding/wallet/page.tsx) *(Modificado)*
+  * [`apps/web/app/settings/mode/page.tsx`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/app/settings/mode/page.tsx) *(Modificado)*
+  * [`apps/web/src/mocks/handlers.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/mocks/handlers.ts) *(Modificado)*
+  * [`apps/web/src/tests/spec-03-scroll-canvas.test.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/src/tests/spec-03-scroll-canvas.test.ts) *(Modificado)*
+  * [`specs/SPEC-02.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-02.md) *(Modificado)*
+  * [`specs/SPEC-03.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-03.md) *(Modificado)*
+  * [`specs/README.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/README.md) *(Modificado)*
+  * [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+verifica o integra el front con el backend segun las specs 2 y 3
+```
+
+---
+
+### Prompt #019 — Entorno local, Docker de comprobación y pagos sin clave privada en el código
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Herramientas / DX`, `Tests`, `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. Configura `.env` local (gitignored) con Postgres de Docker, Redis y la wallet/Key ID de la Test Wallet visibles en Developer Keys. La clave privada queda vacía: no estaba en la pantalla y no se escribe en el repositorio.
+  2. Crea `docker-compose.yml` (Postgres en 5433 y Redis en 6379). Los contenedores quedaron sanos y `prisma migrate deploy` aplicó las dos migraciones.
+  3. El cliente de Open Payments firma solo si hay un archivo local de clave. El grant y el pago los confirma la API de testnet. Se elimina el PEM que estaba escrito en el fuente del MCP.
+* **Archivos creados / modificados:**
+  * [`docker-compose.yml`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/docker-compose.yml) *(Creado)*
+  * [`.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env), [`apps/api/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/.env), [`apps/web/.env.local`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/web/.env.local) *(Creados, no versionados)*
+  * [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example), [`.gitignore`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.gitignore), [`package.json`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/package.json) *(Modificados)*
+  * [`apps/api/src/main.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/main.ts) *(Modificado)*
+  * [`apps/api/src/modules/open-payments/open-payments.service.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/modules/open-payments/open-payments.service.ts) *(Modificado)*
+  * [`apps/api/src/modules/open-payments/open-payments.service.spec.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/src/modules/open-payments/open-payments.service.spec.ts) *(Modificado)*
+  * [`tools/open-payments-mcp/src/open-payments-service.ts`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-mcp/src/open-payments-service.ts) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+configura el .env ademas de que para comprobar todo el proyecto crea el docker que necesita el proyecto para hacer las comprobaciones. ademas como aclaracion, cuando se va a realizar algun tipo de pago, no debe ser con la key privada quemada, la idea para ver el flujo real dentro de la testnet, debe de consumir la api, ahi se valida o consume key, o como corresponda el flujo para confirmar pago, que no dependa de quemar la key.
+```
+
+---
+
+### Prompt #020 — Captura de la clave pública de Developer Keys
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. El usuario envía la pantalla Developer Keys con "Show" abierto sobre la clave "hack".
+  2. Se identifica el PEM como clave pública Ed25519. No se escribe en `.env` ni en el código, porque no firma peticiones ni confirma pagos en la Test Wallet.
+* **Archivos creados / modificados:**
+  * [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+[Imagen: Interledger Test Wallet, Developer Keys, cuenta EUR $ilp.interledger-test.dev/633c95b8, clave "hack" creada el 16 de octubre de 2026, Key ID 2f149a29-10ac-4a84-a9b3-f1e4393457ee, bloque "Public key" visible con un PEM BEGIN PUBLIC KEY.]
+```
+
+---
+
+### Prompt #021 — Clave privada descargada de hack2
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. El usuario muestra la generación de una clave nueva y la pantalla de "hack2" con su Key ID. El PEM privado no se transcribe en el repositorio ni en esta bitácora.
+  2. El archivo descargado se mueve a `secrets/hack2.key`, ignorado por git. `.env` local apunta a esa ruta y al Key ID `927b39ea-a362-4484-879e-a8e9bf0ae16f`. La copia en el Escritorio de OneDrive se elimina para que no se sincronice.
+* **Archivos creados / modificados:**
+  * [`secrets/hack2.key`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/secrets/hack2.key) *(Creado, gitignored)*
+  * [`.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env), [`apps/api/.env`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/apps/api/.env) *(Modificados, gitignored)*
+  * [`.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.env.example) *(Modificado: solo el Key ID público)*
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+[Imágenes: modal de éxito de la Test Wallet indicando que la clave privada se descargó como private (1).key; pantalla Developer Keys con la clave hack2, Key ID 927b39ea-a362-4484-879e-a8e9bf0ae16f y su clave pública. El PEM privado no se copia en este registro.]
+```
+
+---
+
+### Prompt #022 — Cerrar lo pendiente antes del push
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Tests`, `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. Se vuelven a ejecutar las pruebas de identidad del web (13) y las del cliente Open Payments (7). SPEC-04 y SPEC-05 superan el validador SDD en estado `Redactada`.
+  2. No se hace un Subject Grant contra la testnet ni se lee el PEM. `.env`, `apps/api/.env`, `apps/web/.env.local` y `secrets/hack2.key` siguen fuera de git. Las claves de Clerk no se inventan.
+* **Archivos creados / modificados:**
+  * [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificados)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+completa lo que te falte antes de hacer push
+```
+
 
 

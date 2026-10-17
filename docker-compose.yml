@@ -1,0 +1,37 @@
+# Infraestructura local para comprobar TaskStream AI.
+# Postgres: Prisma. Redis: colas BullMQ de los plazos (7d, 24h, +7d, 32h, 30m).
+# No incluye la clave privada de Open Payments. Esa firma vive fuera del contenedor.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: taskstream
+      POSTGRES_PASSWORD: taskstream
+      POSTGRES_DB: taskstream
+    # 5433 en el host: en esta máquina el 5432 ya lo usa un Postgres local.
+    ports:
+      - "5433:5432"
+    volumes:
+      - taskstream_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskstream -d taskstream"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - taskstream_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  taskstream_postgres:
+  taskstream_redis:

@@ -1,31 +1,46 @@
 import { auth } from '@clerk/nextjs/server';
 import { ModeSwitcher } from '@/src/components/mode-switcher';
+import { readActiveMode, readApiCode } from '@/src/lib/identity-contract';
+import { readMyJson } from '@/src/lib/identity-proxy';
 import { ArrowLeftRight, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function ModeSettingsPage() {
-  const { userId } = await auth();
+  let userId: string | null = null;
+  try {
+    const session = await auth();
+    userId = session.userId;
+  } catch {
+    userId = null;
+  }
   const isAuthenticated = Boolean(userId);
+
+  let initialMode: 'BUYER' | 'SELLER' = 'BUYER';
+  let serverCode: string | null = null;
+  if (isAuthenticated) {
+    const result = await readMyJson('/api/v1/me/mode');
+    initialMode = readActiveMode(result.body) ?? 'BUYER';
+    if (result.status >= 400) serverCode = readApiCode(result.body);
+  }
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      {/* Header de la Vista */}
       <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--brand-blue)', fontSize: 13, marginBottom: 6 }}>
           <ArrowLeftRight size={16} />
-          <span>Configuración de Cuenta · SPEC-02 §6.1</span>
+          <span>Configuración de cuenta · SPEC-02</span>
         </div>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: '#ffffff', marginBottom: 8 }}>
-          Selector de Modo: Buyer Mode / Seller Mode
+          Selector de modo: Buyer Mode / Seller Mode
         </h1>
         <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-          TaskStream AI unifica la cuenta: una misma identidad Clerk puede contratar talento o prestar servicios profesionales en toda América. Alterna el modo activo según tu rol actual sin afectar tus órdenes vigentes.
+          El modo vigente se lee de la API autenticada. Cambiarlo no transfiere órdenes que ya están en curso.
         </p>
 
         {isAuthenticated ? (
           <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--status-verified)' }}>
             <UserCheck size={14} />
-            <span>Sesión activa verificada en Clerk: <code>{userId}</code></span>
+            <span>Sesión Clerk activa</span>
           </div>
         ) : (
           <div
@@ -42,16 +57,17 @@ export default async function ModeSettingsPage() {
               color: 'var(--text-muted)',
             }}
           >
-            <span>Modo de previsualización local (sin sesión Clerk activa).</span>
+            <span>Sin sesión no se muestra el selector de modo.</span>
             <Link href="/sign-in" className="btn btn-primary btn-sm" style={{ fontSize: 11, padding: '4px 10px' }}>
-              Iniciar Sesión
+              Iniciar sesión
             </Link>
           </div>
         )}
       </div>
 
-      {/* Componente Interactivo FE-1 / FE-2 */}
-      <ModeSwitcher initialMode="BUYER" isClerkAuthenticated={isAuthenticated} />
+      {isAuthenticated ? (
+        <ModeSwitcher initialMode={initialMode} isClerkAuthenticated serverCode={serverCode} />
+      ) : null}
     </div>
   );
 }

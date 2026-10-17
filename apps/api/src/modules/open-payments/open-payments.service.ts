@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { Inject, Injectable } from '@nestjs/common';
 import {
   createAuthenticatedClient,
@@ -48,7 +49,7 @@ export class SdkOpenPaymentsClientFactory implements OpenPaymentsClientFactory {
   authenticated(): Promise<AuthenticatedClient> {
     const walletAddressUrl = process.env.OPEN_PAYMENTS_CLIENT_WALLET_ADDRESS?.trim() ?? '';
     const keyId = process.env.OPEN_PAYMENTS_KEY_ID?.trim() ?? '';
-    const privateKey = normalizePrivateKey(process.env.OPEN_PAYMENTS_PRIVATE_KEY ?? '');
+    const privateKey = readPlatformPrivateKey();
     if (!walletAddressUrl || !keyId || !privateKey) {
       return Promise.reject(new DomainError(503, 'OPEN_PAYMENTS_CLIENT_NOT_CONFIGURED'));
     }
@@ -163,6 +164,23 @@ function readFinishNonce(grant: PendingGrant): string | null {
     if (typeof nonce === 'string' && nonce.length > 0) return nonce;
   }
   return null;
+}
+
+/**
+ * La clave solo firma la petición HTTP hacia la Test Wallet.
+ * El grant y el pago los emite la API de Open Payments; no hay token ni PEM en el código.
+ * Si existe `OPEN_PAYMENTS_PRIVATE_KEY_PATH`, ese archivo local gana sobre el valor en línea.
+ */
+export function readPlatformPrivateKey(env: NodeJS.ProcessEnv = process.env): string {
+  const filePath = env.OPEN_PAYMENTS_PRIVATE_KEY_PATH?.trim() ?? '';
+  if (filePath) {
+    try {
+      return normalizePrivateKey(readFileSync(filePath, 'utf8'));
+    } catch {
+      return '';
+    }
+  }
+  return normalizePrivateKey(env.OPEN_PAYMENTS_PRIVATE_KEY ?? '');
 }
 
 function normalizePrivateKey(value: string): string {

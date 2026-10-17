@@ -5,7 +5,7 @@
 | **ID de Especificación** | `SPEC-02` |
 | **Archivo** | `specs/SPEC-02.md` |
 | **Fase de Desarrollo** | `Fase 1 — Identidad multimoneda en América y motor 3D` |
-| **Estado del Ciclo SDD** | `Redactada (DRAFTED)` |
+| **Estado del Ciclo SDD** | `Implementada (IMPLEMENTED)` |
 | **Roles Responsables** | `FE-1`, `BE-1`, `BE-2` |
 | **Tareas Asociadas (`taskboard.md`)** | `T-F1-FE1-01`, `T-F1-BE1-01`, `T-F1-BE2-01` |
 | **Intervención Manual / IA Mínima-Nula** | `Sí (🛡️ custodia de claves y escrow-payment.service.ts)` |
@@ -155,7 +155,7 @@ La clave del cliente de plataforma firma la petición HTTP del grant. No crea un
 
 Cada página y cada Server Action comprueban la sesión dentro del propio handler. El middleware de Clerk queda mínimo (`clerkMiddleware()` en `middleware.ts`, porque la app es Next.js 15).
 
-El formulario de `FE-1` puede seguir apuntando al handler MSW hasta que la pantalla exista. El intercambio de adaptador no cambia los tipos Zod. El endpoint real ya está en NestJS.
+Las rutas de Next `/api/v1/me/mode`, `/api/v1/me/wallet`, `/api/v1/me/wallet/discovery` y `/api/v1/me/wallet/challenges` reenvían la sesión Clerk (`Authorization: Bearer`) a NestJS. Sin `userId` la página no monta el formulario. La UI no calcula el hash ni muestra `clientNonce` ni `finishNonce`. En `PENDING_REDIRECT` el navegador abre `interactRedirectUri`. El callback canónico sigue en NestJS.
 
 ### 6.2. Escenas 3D Vinculadas al Scroll y Visores `Protected Preview` (`FE-2`)
 
@@ -302,3 +302,4 @@ Decisiones operativas:
 | `1.1.0` | `2026-10-16` | `Redactada (DRAFTED)` | `Cursor` | Backend `BE-2`: webhook Svix, modo, descubrimiento persistido, reto, callback con hash y reemplazo atómico de la wallet activa. `open-payments.service.ts` sigue sin generarse. |
 | `1.2.0` | `2026-10-16` | `Redactada (DRAFTED)` | `Cursor` | `OpenPaymentsService` como `WalletOwnershipGateway`: descubrimiento público y Subject Grant. Caducidad local de 10 minutos. Sigue `Redactada` porque falta el frontend y `TEST-03` en vivo. |
 | `1.3.0` | `2026-10-16` | `En Implementación` | `Antigravity` + equipo | Implementación frontend FE-1 y FE-2 (T-F1-FE1-01): Clerk v6 (/sign-in, /sign-up), middleware, selector interactivo Buyer/Seller (/settings/mode), ciclo de vida 6 estados y verificación GNAP (/onboarding/wallet) con adaptadores mock. |
+| `1.4.0` | `2026-10-16` | `Implementada (IMPLEMENTED)` | `Cursor` | El BFF de Next reenvía modo, descubrimiento, reto y lectura de wallet a Nest con el JWT de Clerk. La UI abre `interactRedirectUri` y deja de simular el hash. SPEC-03 permanece sin llamadas a `/api/v1`. |
