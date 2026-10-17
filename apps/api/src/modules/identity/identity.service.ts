@@ -12,6 +12,7 @@ export interface PublicUser {
   displayName: string;
   countryCode: string;
   activeMode: ActiveMode;
+  platformRole: 'USER' | 'ADMIN';
 }
 
 @Injectable()
@@ -82,5 +83,6 @@ function publicUser(user: StoredUser): PublicUser {
     displayName: user.displayName,
     countryCode: user.countryCode,
     activeMode: user.activeMode,
+    platformRole: user.platformRole ?? 'USER',
   };
 }
