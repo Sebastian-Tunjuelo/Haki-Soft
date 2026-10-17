@@ -28,6 +28,8 @@ Este archivo contiene el **registro histórico, secuencial e íntegro (sin omisi
 | **Prompt #016** | `2026-10-16` | `Antigravity` | `Gobernanza` | Solicitud de pausa inmediata por el usuario; detención inmediata de tareas sin modificaciones y reporte de estado. | Ninguno (pausa inmediata confirmada) |
 | **Prompt #017** | `2026-10-16` | `Antigravity` | `Frontend`, `Planeación`, `Gobernanza`, `Tests` | Implementación completa de `SPEC-03` desde FE-1 y FE-2: `SmoothScrollProvider` (Lenis + GSAP ticker con `lagSmoothing(0)`), escena `HeroScene` en Three.js/R3F con mutación de refs (zero-setState), `HeroSceneLoader` aislado (`ssr: false`), composición de landing por FE-1, suite Vitest con 8/8 pruebas verdes y actualización de `taskboard.md` y `SPEC-03.md` a `[DONE]` / `TESTED`. | [`apps/web/app/providers/smooth-scroll.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/providers/smooth-scroll.tsx), [`apps/web/app/scenes/`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/scenes), [`apps/web/app/layout.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/layout.tsx), [`apps/web/app/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/page.tsx), [`apps/web/vitest.config.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/vitest.config.ts), [`apps/web/src/tests/spec-03-scroll-canvas.test.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/tests/spec-03-scroll-canvas.test.ts), [`planning/taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Soft/planning/taskboard.md), [`specs/SPEC-03.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/SPEC-03.md), [`specs/README.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/README.md), [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 | **Prompt #020** | `2026-10-16` | `Kiro` | `Gobernanza` | Merge fast-forward de la rama `modelo_datos` hacia `main` sin conflictos. Se integraron 20 archivos del modelo de datos desacoplado (SPEC-04, SPEC-05, schema Prisma v2, migración, domain_checks.sql, shared-schemas, planificación y trazabilidad AI). Registro de trazabilidad actualizado en `AI_USAGE.md`, `promptsAI_USAGE.md` y `prompts/AI_USAGE.md`. | [`AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/prompts/AI_USAGE.md) |
+| **Prompt #021** | `2026-10-16` | `Cursor` | `Backend` | Revisión de `SPEC-04` para implementar el backend del Marketplace. Quedó en pausa: el prompt siguiente pidió alinear primero `SPEC-04` y `SPEC-05` con la sesión local, sin escribir código. | Ninguno |
+| **Prompt #022** | `2026-10-16` | `Cursor` | `Planeación`, `Backend`, `Gobernanza` | `SPEC-04` y `SPEC-05` pasan a v0.3.0 y siguen `Redactada (DRAFTED)`. Se sustituye `ClerkAuthGuard` por `SessionAuthGuard`, la identidad del actor es `req.userId` y la sesión ausente responde `401 UNAUTHENTICATED`. | [`specs/SPEC-04.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-04.md), [`specs/SPEC-05.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-05.md), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 
 ---
 
@@ -970,4 +972,32 @@ Teniendo en cuenta esta auditoria y posibles hallazgos propios que hagas a mejor
 
 ```
 realiza un merge de la rama modelo_datos hacia la rama main y resuleve cualquier conflicto que haya durante este proceso
+```
+
+---
+
+### Prompt #021 — Revisar SPEC-04 e implementar el backend
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`
+* **Resumen de su funcionalidad:** Pedido de revisar `SPEC-04` e implementar el backend del Marketplace (`T-F2-BE2-01`). No se escribió código: el prompt siguiente pidió alinear primero `SPEC-04` y `SPEC-05` con la sesión local y retirar Clerk.
+* **Archivos creados o modificados:** Ninguno.
+* **Texto literal del prompt enviado:**
+
+```
+Bien, revisa ahora el Spec 004 y realiza lo correspondiente al Backend
+```
+
+---
+
+### Prompt #022 — Alinear SPEC-04 y SPEC-05 con la sesión local, sin Clerk
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Planeación`, `Backend`, `Gobernanza`
+* **Resumen de su funcionalidad:** `SPEC-04` y `SPEC-05` pasan a v0.3.0 y siguen en `Redactada (DRAFTED)`. Las rutas autenticadas usan `SessionAuthGuard` de `SPEC-02` (sesión HMAC, cookie httpOnly `taskstream_session`, `req.userId` = `User.id`). Se elimina `ClerkAuthGuard`. La sesión ausente responde `401 UNAUTHENTICATED`.
+* **Archivos creados o modificados:** [`specs/SPEC-04.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-04.md), [`specs/SPEC-05.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/specs/SPEC-05.md), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md)
+* **Texto literal del prompt enviado:**
+
+```
+Antes de realizar algun spec, revisa el spec 004 y 005 y actualiza segun la nueva condicion y que no se usara clerk
 ```
