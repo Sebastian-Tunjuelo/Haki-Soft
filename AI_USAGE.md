@@ -182,6 +182,7 @@ A continuación se listan todos los archivos del repositorio que han sido creado
 | [`apps/web/src/components/escrow-checkout.tsx`](apps/web/src/components/escrow-checkout.tsx) | `Frontend` / `Gobernanza` | **Modificado (`Cursor`)** | Prompt #072: restaura `locked`, `release`/`refund` y panel GNAP buyer (crash en página escrow). |
 | `apps/api/.env`, `.env` (local) | `Backend` / `Herramientas / DX` | **Modificado (`Cursor`)** | Prompt #073: regenera `OPEN_PAYMENTS_ESCROW_ACCESS_TOKEN` (grant outgoing wallet `633c95b8`) y reinicia API. |
 | [`README.md`](README.md) | `Gobernanza` / `Planeación` | **Creado (`Cursor`)** | Prompt #074: README de producto **MERIDIA** (equipo, arquitectura, arranque, OP, docs). |
+| [`promptsAI_USAGE.md`](promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](prompts/AI_USAGE.md) | `Gobernanza` | **Reescrito (`Cursor`)** | Curación: solo prompts de construcción (29 ítems parafraseados); se elimina ruido operativo. |
 
 ---
 
@@ -200,9 +201,9 @@ En cumplimiento de la política de transparencia del proyecto, en los siguientes
 
 ---
 
-## 5. Registro Completo de Prompts Enviados a la IA
+## 5. Registro de Prompts de Construcción
 
-Todos y cada uno de los prompts utilizados para instruir a **`Antigravity`** (incluyendo el texto literal completo del prompt, su resumen funcional, el área donde toma lugar y los archivos modificados) se encuentran registrados sin excepción en:
+La bitácora de prompts se mantiene como **registro curado de construcción** (solo intervenciones relevantes al producto/arquitectura/specs; texto parafraseado; sin ruido operativo). Réplicas sincronizadas:
 
-* �x **Archivo Raíz de Prompts:** [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/promptsAI_USAGE.md)
-* �x� **Carpeta Oficial `/prompts`:** [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Suave/prompts/AI_USAGE.md)
+* **Archivo raíz:** [`promptsAI_USAGE.md`](./promptsAI_USAGE.md)
+* **Carpeta oficial `/prompts`:** [`prompts/AI_USAGE.md`](./prompts/AI_USAGE.md)
