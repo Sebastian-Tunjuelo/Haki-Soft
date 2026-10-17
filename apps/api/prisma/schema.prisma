@@ -236,6 +236,8 @@ model WalletVerificationChallenge {
   id                  String                   @id @default(uuid()) @db.Uuid
   walletId            String                   @map("wallet_id") @db.Uuid
   clientNonce         String                   @unique @map("client_nonce")
+  /// Nonce que devuelve el auth server en `interact.finish`. Hace falta para recomputar el hash GNAP.
+  finishNonce         String                   @map("finish_nonce")
   continueUri         String                   @map("continue_uri")
   continueAccessToken String                   @map("continue_access_token")
   interactRedirectUri String                   @map("interact_redirect_uri")
