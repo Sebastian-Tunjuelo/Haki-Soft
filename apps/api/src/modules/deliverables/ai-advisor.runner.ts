@@ -13,20 +13,6 @@ import {
 import type { StoredDeliverable, StoredOrderForDeliverable } from './deliverables.types';
 import { readObject } from './object-storage';
 
-function defaultCriteria(order: StoredOrderForDeliverable) {
-  if (order.acceptanceCriteria.length > 0) return order.acceptanceCriteria;
-  return [
-    {
-      criterionId: 'scope-default',
-      description:
-        order.scopeDescription.trim().length >= 10
-          ? order.scopeDescription.trim().slice(0, 350)
-          : 'Cumplir el alcance acordado en la orden de trabajo.',
-      isMandatory: true,
-    },
-  ];
-}
-
 function buildDeterministicFake(input: AiAdvisorInputContract): AiAdvisorReport {
   const passed =
     input.deterministicPreCheckResult.extensionAllowed &&
@@ -70,11 +56,22 @@ export function buildAiAdvisorInput(params: {
   const modality = resolveMvpAiAuditableModality(order.expectedMediaType);
   if (!modality) return null;
 
+  // Fail-closed: sin criterios reales no se inventa `scope-default` (no persistible vía FK).
+  if (order.acceptanceCriteria.length === 0) return null;
+
   const original = readObject(deliverable.originalR2Key);
   const extractedText =
     modality === 'TEXT' && original
       ? original.toString('utf8').slice(0, 12_000)
       : undefined;
+
+  // IMAGE: embeber bytes como data URL (no URLs privadas ni firmadas hacia Groq).
+  const imageSignedUrlOrBase64 =
+    modality === 'IMAGE' && original && original.length > 0
+      ? `data:${deliverable.mimeType || 'image/png'};base64,${original.toString('base64')}`
+      : undefined;
+
+  const parsedDims = modality === 'IMAGE' && original ? readRasterDimensions(original) : null;
 
   return {
     taskOrderId: order.taskId,
@@ -85,7 +82,7 @@ export function buildAiAdvisorInput(params: {
     orderContext: {
       title: order.title,
       scopeDescription: order.scopeDescription || order.title,
-      acceptanceCriteria: defaultCriteria(order),
+      acceptanceCriteria: order.acceptanceCriteria,
     },
     deliverableArtifact: {
       fileName: deliverable.fileName,
@@ -95,11 +92,12 @@ export function buildAiAdvisorInput(params: {
       sha256Checksum: deliverable.sha256Checksum.length === 64 ? deliverable.sha256Checksum : 'a'.repeat(64),
       extractedTextContent: extractedText,
       wordCount: extractedText ? extractedText.split(/\s+/).filter(Boolean).length : undefined,
+      imageSignedUrlOrBase64,
       imageDimensions:
         modality === 'IMAGE'
           ? {
-              widthPx: 1200,
-              heightPx: 800,
+              widthPx: parsedDims?.widthPx ?? 1200,
+              heightPx: parsedDims?.heightPx ?? 800,
             }
           : undefined,
     },
@@ -110,6 +108,32 @@ export function buildAiAdvisorInput(params: {
       failureReasons: deliverable.fileSizeBytes > 0 ? [] : ['EMPTY_FILE'],
     },
   };
+}
+
+/** Dimensiones PNG (IHDR) o JPEG (SOF0/2) sin sharp. */
+function readRasterDimensions(bytes: Buffer): { widthPx: number; heightPx: number } | null {
+  if (bytes.length >= 24 && bytes[0] === 0x89 && bytes.toString('ascii', 1, 4) === 'PNG') {
+    return {
+      widthPx: bytes.readUInt32BE(16),
+      heightPx: bytes.readUInt32BE(20),
+    };
+  }
+  if (bytes.length > 4 && bytes[0] === 0xff && bytes[1] === 0xd8) {
+    let offset = 2;
+    while (offset + 9 < bytes.length) {
+      if (bytes[offset] !== 0xff) break;
+      const marker = bytes[offset + 1]!;
+      const size = bytes.readUInt16BE(offset + 2);
+      if (marker === 0xc0 || marker === 0xc2) {
+        return {
+          heightPx: bytes.readUInt16BE(offset + 5),
+          widthPx: bytes.readUInt16BE(offset + 7),
+        };
+      }
+      offset += 2 + size;
+    }
+  }
+  return null;
 }
 
 export async function runAdviseForDeliverable(params: {
