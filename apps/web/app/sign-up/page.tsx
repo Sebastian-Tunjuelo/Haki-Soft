@@ -14,8 +14,8 @@ export default function SignUpPage() {
   return (
     <>
       <AuthShell
-        title="Crear cuenta"
-        lead="Regístrate para publicar encargos o ofrecer servicios con escrow Open Payments."
+        title="Crear cuenta en MERIDIA"
+        lead="Regístrate para publicar actividades como Cliente o prestar servicios como Freelancer con custodia Open Payments."
       >
         <AuthForm
           mode="register"

@@ -1,17 +1,32 @@
 'use client';
 
-import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  DeliverablePreviewViewSchema,
-  OrderWorkspaceViewSchema,
-  SellerActivityItemSchema,
-  type DeliverablePreviewView,
-  type OrderWorkspaceView,
-  type SellerActivityItem,
-} from '@taskstream/shared-schemas';
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  Compass,
+  FolderKanban,
+  MessageSquare,
+  RefreshCw,
+  ShieldCheck,
+  Sparkles,
+  XCircle,
+} from 'lucide-react';
+import { SellerActivityItemSchema, type SellerActivityItem } from '@taskstream/shared-schemas';
 import { api, formatUsd, humanError } from '@/src/lib/api-client';
+import { PageReveal } from '@/src/components/page-reveal';
+import { MeridiaPrismLogo, PrismActionIcon } from '@/src/components/brand/meridia-prism-logo';
+
+const CLIENT_PORTRAITS = [
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&q=80',
+  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=160&q=80',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80',
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=160&q=80',
+] as const;
 
 const ACTIVE = new Set([
   'ESCROW_LOCKED',
@@ -63,7 +78,7 @@ function statusLabel(status: SellerActivityItem['lifecycleStatus']): string {
 }
 
 /**
- * Bandeja unificada: pendientes (seller), en curso (chat/workspace) e historia.
+ * Bandeja de Actividad de MERIDIA: aceptar → dinero a escrow al instante; rechazar → sin pago.
  */
 export function ActivityInbox() {
   const router = useRouter();
@@ -198,62 +213,224 @@ export function ActivityInbox() {
   const history = items.filter((item) => HISTORY.has(item.lifecycleStatus));
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px 48px', display: 'flex', flexDirection: 'column', gap: 22 }}>
-      <Link href="/marketplace" style={{ color: 'var(--brand-blue)', fontSize: 14 }}>
-        ← Marketplace
-      </Link>
+    <PageReveal className="ts-page">
+      {/* Barra superior de navegación */}
+      <div className="ts-reveal" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <Link href="/marketplace" className="btn btn-outline btn-sm">
+            <ArrowLeft size={15} />
+            <span>Marketplace</span>
+          </Link>
+          <Link href="/marketplace/negotiations" className="btn btn-outline btn-sm">
+            <Compass size={15} />
+            <span>Sala de Negociaciones</span>
+          </Link>
+        </div>
+        <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void load()}>
+          <RefreshCw size={14} />
+          <span>Actualizar bandeja</span>
+        </button>
+      </div>
 
-      <header>
-        <h1 style={{ margin: 0, fontSize: '1.65rem' }}>Actividad</h1>
-        <p style={{ margin: '8px 0 0', color: 'var(--text-secondary)' }}>
-          Solicitudes pendientes, encargos en curso (chat y entregas) e historial de lo ya cerrado.
+      {/* Cabecera MERIDIA */}
+      <header className="ts-page__header ts-reveal">
+        <p className="ts-eyebrow">
+          <MeridiaPrismLogo size={20} />
+          <span>MERIDIA · BANDEJA UNIFICADA DE ACTIVIDAD &amp; SOLICITUDES (24H)</span>
+        </p>
+        <h1 className="ts-title kinetic-heading">
+          Actividad y encargos <span className="ts-title__accent">en tiempo real</span>
+        </h1>
+        <p className="ts-lead">
+          Cuando un Cliente solicita tu servicio, dispones de <strong>24 horas</strong> para confirmar. Si aceptas, el{' '}
+          <strong>100% del pago</strong> entra a custodia Open Payments al instante y se habilita el espacio de trabajo
+          con plazo de 7 días. Si rechazas, el dinero nunca se envía.
         </p>
       </header>
 
-      {error ? <p style={bannerError}>{error}</p> : null}
-      {ok ? <p style={bannerOk}>{ok}</p> : null}
+      {/* Resumen de métricas de la bandeja */}
+      <section className="ts-reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14 }}>
+        <article className="meridia-user-stat">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+              Pendientes de Confirmación (24h)
+            </span>
+            <Clock size={16} style={{ color: 'var(--volt)' }} />
+          </div>
+          <strong className="kinetic-heading tabular-num" style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', color: 'var(--volt)' }}>
+            {pending.length} {pending.length === 1 ? 'Solicitud' : 'Solicitudes'}
+          </strong>
+          <span style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>
+            Acepta para activar custodia 100% GNAP
+          </span>
+        </article>
 
-      <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Pendientes de tu respuesta</h2>
+        <article className="meridia-user-stat">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+              Encargos Activos e Historial
+            </span>
+            <FolderKanban size={16} style={{ color: 'var(--tide)' }} />
+          </div>
+          <strong className="kinetic-heading tabular-num" style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', color: 'var(--tide-ink)' }}>
+            {rest.length} {rest.length === 1 ? 'Orden' : 'Órdenes'}
+          </strong>
+          <span style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>
+            Liquidación atómica 96% Freelancer / 4% Meridia
+          </span>
+        </article>
+
+        <article className="meridia-user-stat">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>
+              Protección del Protocolo
+            </span>
+            <ShieldCheck size={16} style={{ color: 'var(--tide)' }} />
+          </div>
+          <strong className="kinetic-heading" style={{ fontFamily: 'var(--font-display)', fontSize: '1.45rem', color: 'var(--text-primary)' }}>
+            Visor + Consejero IA
+          </strong>
+          <span style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>
+            Auditoría consultiva en imagen y texto
+          </span>
+        </article>
+      </section>
+
+      {error ? (
+        <div className="alert alert-error ts-reveal" role="alert">
+          <XCircle size={18} style={{ flexShrink: 0, marginTop: 2 }} />
+          <div>{error}</div>
+        </div>
+      ) : null}
+
+      {ok ? (
+        <div className="alert alert-success ts-reveal" role="status">
+          <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: 2 }} />
+          <div>{ok}</div>
+        </div>
+      ) : null}
+
+      {/* SECCIÓN 1: Solicitudes pendientes de confirmación (24h) */}
+      <section className="ts-reveal" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <h2 className="kinetic-heading" style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.35rem', fontWeight: 700 }}>
+            Pendientes de tu respuesta ({pending.length})
+          </h2>
+          <span className="badge badge-pending">
+            <span className="pulse-dot" /> Ventana determinista de 24 horas
+          </span>
+        </div>
+
         {pending.length === 0 ? (
-          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>No tienes solicitudes esperando.</p>
+          <div
+            className="card"
+            style={{
+              padding: '28px 30px',
+              borderRadius: 24,
+              border: '1px solid var(--border-hi)',
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 16,
+            }}
+          >
+            <div>
+              <strong style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', display: 'block', marginBottom: 4 }}>
+                No tienes solicitudes esperando confirmación en este momento
+              </strong>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14 }}>
+                Explora los encargos abiertos en el Marketplace o publica tu propio servicio para recibir contrataciones
+                directas.
+              </p>
+            </div>
+            <Link href="/marketplace" className="btn btn-amber btn-sm">
+              <PrismActionIcon size={16} />
+              <span>Explorar el Marketplace</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
         ) : (
-          pending.map((item) => (
-            <article key={item.taskId} style={card}>
-              <div>
-                <strong>{item.title}</strong>
-                <p style={{ margin: '4px 0 0', color: 'var(--text-secondary)', fontSize: 14 }}>
-                  {item.buyerDisplayName ? `${item.buyerDisplayName} · ` : ''}
-                  {formatUsd(item.totalAmountUSDInCents)} · responde antes de{' '}
-                  {new Date(item.sellerConfirmationDeadlineAt).toLocaleString('es', {
-                    dateStyle: 'short',
-                    timeStyle: 'short',
-                  })}
-                </p>
+          pending.map((item, idx) => (
+            <article
+              key={item.taskId}
+              className="card"
+              style={{
+                padding: '22px 26px',
+                borderRadius: 24,
+                border: '1px solid rgba(var(--volt-rgb), 0.45)',
+                background: 'linear-gradient(135deg, rgba(var(--volt-rgb), 0.1), transparent), var(--surface)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 18,
+                flexWrap: 'wrap',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start', flex: 1, minWidth: 260 }}>
+                <img
+                  src={CLIENT_PORTRAITS[idx % CLIENT_PORTRAITS.length]}
+                  alt={item.buyerDisplayName ?? 'Cliente'}
+                  className="ld-person-photo"
+                  style={{ width: 48, height: 48, borderRadius: 14 }}
+                />
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                    <span className="badge badge-pending">NUEVA SOLICITUD · 24H</span>
+                    {item.buyerDisplayName ? (
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--text-secondary)' }}>
+                        Cliente: <strong style={{ color: 'var(--text-primary)' }}>{item.buyerDisplayName}</strong>
+                      </span>
+                    ) : null}
+                  </div>
+                  <h3 className="kinetic-heading" style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.18rem', fontWeight: 700 }}>
+                    {item.title}
+                  </h3>
+                  {item.projectBrief ? (
+                    <p style={{ margin: '6px 0 0', fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                      {item.projectBrief}
+                    </p>
+                  ) : null}
+                  <p className="tabular-num" style={{ margin: '8px 0 0', color: 'var(--text-secondary)', fontSize: 13 }}>
+                    Monto en custodia:{' '}
+                    <strong style={{ fontFamily: 'var(--font-mono)', color: 'var(--volt)' }}>
+                      {formatUsd(item.totalAmountUSDInCents)}
+                    </strong>{' '}
+                    · Responde antes de{' '}
+                    {new Date(item.sellerConfirmationDeadlineAt).toLocaleString('es', {
+                      dateStyle: 'short',
+                      timeStyle: 'short',
+                    })}
+                  </p>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-emerald btn-sm"
                   disabled={busy}
                   onClick={() => void accept(item.taskId)}
                 >
-                  Aceptar
+                  <CheckCircle2 size={15} />
+                  <span>Aceptar encargo</span>
                 </button>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-outline btn-sm"
                   disabled={busy}
                   onClick={() => void reject(item.taskId)}
                 >
-                  Rechazar
+                  <XCircle size={15} />
+                  <span>Rechazar</span>
                 </button>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn btn-outline btn-sm"
                   onClick={() => router.push(`/orders/${item.taskId}/escrow`)}
                 >
-                  Ver detalle
+                  <Sparkles size={14} />
+                  <span>Ver detalle</span>
                 </button>
               </div>
             </article>
@@ -261,188 +438,81 @@ export function ActivityInbox() {
         )}
       </section>
 
-      {waitingAsBuyer.length > 0 ? (
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Esperando al emprendedor</h2>
-          {waitingAsBuyer.map((item) => (
-            <article key={item.taskId} style={card}>
-              <div>
-                <strong>{item.title}</strong>
-                <p style={{ margin: '4px 0 0', color: 'var(--text-secondary)', fontSize: 14 }}>
-                  {item.sellerDisplayName ? `${item.sellerDisplayName} · ` : ''}
-                  {formatUsd(item.totalAmountUSDInCents)} · {statusLabel(item.lifecycleStatus)}
-                </p>
+      {/* SECCIÓN 2: Otros encargos en curso o finalizados */}
+      {rest.length > 0 ? (
+        <section className="ts-reveal" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <h2 className="kinetic-heading" style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.35rem', fontWeight: 700 }}>
+            Otros encargos y órdenes ({rest.length})
+          </h2>
+          {rest.map((item, idx) => (
+            <article
+              key={item.taskId}
+              className="card"
+              style={{
+                padding: '20px 24px',
+                borderRadius: 22,
+                border: '1px solid var(--border-hi)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                gap: 16,
+                flexWrap: 'wrap',
+                alignItems: 'center',
+              }}
+            >
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                <img
+                  src={CLIENT_PORTRAITS[(idx + 1) % CLIENT_PORTRAITS.length]}
+                  alt="Participante"
+                  className="ld-person-photo"
+                  style={{ width: 44, height: 44, borderRadius: 12 }}
+                />
+                <div>
+                  <strong style={{ fontFamily: 'var(--font-display)', fontSize: '1.08rem', display: 'block' }}>
+                    {item.title}
+                  </strong>
+                  <p className="tabular-num" style={{ margin: '4px 0 0', color: 'var(--text-secondary)', fontSize: 13.5 }}>
+                    <strong style={{ fontFamily: 'var(--font-mono)', color: 'var(--tide-ink)' }}>
+                      {formatUsd(item.totalAmountUSDInCents)}
+                    </strong>{' '}
+                    ·{' '}
+                    {item.lifecycleStatus === 'PENDING_ESCROW_FUNDING'
+                      ? 'Pendiente de confirmación (24h)'
+                      : item.lifecycleStatus === 'ESCROW_LOCKED'
+                        ? 'Fondos 100% en custodia activa'
+                        : item.lifecycleStatus === 'COMPLETED'
+                          ? 'Completado · 96% liberado'
+                          : item.lifecycleStatus === 'CANCELLED'
+                            ? 'Cancelado · sin movimiento de fondos'
+                            : 'Reembolsado 100% al Cliente'}
+                  </p>
+                </div>
               </div>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => router.push(`/orders/${item.taskId}/escrow`)}
-              >
-                Ver solicitud
-              </button>
+
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                {item.lifecycleStatus === 'ESCROW_LOCKED' ? (
+                  <button
+                    type="button"
+                    className="btn btn-amber btn-sm"
+                    onClick={() => router.push(`/orders/${item.taskId}/workspace`)}
+                  >
+                    <MessageSquare size={14} />
+                    <span>Espacio de trabajo</span>
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => router.push(`/orders/${item.taskId}/escrow`)}
+                >
+                  <span>Abrir custodia</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
             </article>
           ))}
         </section>
       ) : null}
-
-      <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <h2 style={{ margin: 0, fontSize: '1.1rem' }}>En curso</h2>
-        {active.length === 0 ? (
-          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>No tienes encargos abiertos.</p>
-        ) : (
-          active.map((item) => (
-            <article key={item.taskId} style={card}>
-              <div>
-                <strong>{item.title}</strong>
-                <p style={{ margin: '4px 0 0', color: 'var(--text-secondary)', fontSize: 14 }}>
-                  {item.viewerRole === 'buyer'
-                    ? item.sellerDisplayName
-                      ? `Con ${item.sellerDisplayName} · `
-                      : ''
-                    : item.buyerDisplayName
-                      ? `Con ${item.buyerDisplayName} · `
-                      : ''}
-                  {formatUsd(item.totalAmountUSDInCents)} · {statusLabel(item.lifecycleStatus)}
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => router.push(`/orders/${item.taskId}/workspace`)}
-                >
-                  Abrir chat
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => router.push(`/orders/${item.taskId}/deliverables`)}
-                >
-                  Entregables
-                </button>
-              </div>
-            </article>
-          ))
-        )}
-      </section>
-
-      <section style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Historia</h2>
-        {history.length === 0 ? (
-          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Aún no hay encargos finalizados.</p>
-        ) : (
-          history.map((item) => (
-            <article key={item.taskId} style={{ ...card, flexDirection: 'column', alignItems: 'stretch' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-                <div>
-                  <strong>{item.title}</strong>
-                  <p style={{ margin: '4px 0 0', color: 'var(--text-secondary)', fontSize: 14 }}>
-                    {formatUsd(item.totalAmountUSDInCents)} · {statusLabel(item.lifecycleStatus)} ·{' '}
-                    {new Date(item.createdAt).toLocaleDateString('es')}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => void toggleHistory(item.taskId)}
-                >
-                  {expandedId === item.taskId ? 'Ocultar' : 'Ver contenido'}
-                </button>
-              </div>
-              {expandedId === item.taskId ? (
-                <div style={historyDetail}>
-                  {detailLoading ? <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Cargando…</p> : null}
-                  {detail?.note ? <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14 }}>{detail.note}</p> : null}
-                  {detail?.workspace ? (
-                    <>
-                      <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)' }}>
-                        {detail.workspace.buyerDisplayName} ↔ {detail.workspace.sellerDisplayName}
-                      </p>
-                      <h3 style={{ margin: 0, fontSize: '0.95rem' }}>Mensajes</h3>
-                      {detail.workspace.messages.length === 0 ? (
-                        <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>Sin mensajes.</p>
-                      ) : (
-                        detail.workspace.messages.map((m) => (
-                          <div key={m.messageId} style={{ fontSize: 13, lineHeight: 1.45 }}>
-                            <strong>
-                              {m.senderDisplayName} ({m.senderRole})
-                            </strong>
-                            <p style={{ margin: '2px 0 0', whiteSpace: 'pre-wrap' }}>{m.body}</p>
-                          </div>
-                        ))
-                      )}
-                    </>
-                  ) : null}
-                  {detail && !detailLoading ? (
-                    <>
-                      <h3 style={{ margin: 0, fontSize: '0.95rem' }}>Entregables</h3>
-                      {detail.deliverables.length === 0 ? (
-                        <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>Sin entregas.</p>
-                      ) : (
-                        <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
-                          {detail.deliverables.map((d) => (
-                            <li key={d.deliverableId}>
-                              Rev. {d.revisionNumber} · {d.fileName} ({d.previewStatus})
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        <Link href={`/orders/${item.taskId}/deliverables`} className="btn btn-secondary">
-                          Abrir entregables
-                        </Link>
-                        {detail.workspace ? (
-                          <Link href={`/orders/${item.taskId}/workspace`} className="btn btn-secondary">
-                            Abrir workspace
-                          </Link>
-                        ) : null}
-                      </div>
-                    </>
-                  ) : null}
-                </div>
-              ) : null}
-            </article>
-          ))
-        )}
-      </section>
-    </div>
+    </PageReveal>
   );
 }
 
-const card: CSSProperties = {
-  border: '1px solid var(--border)',
-  borderRadius: 14,
-  padding: 16,
-  background: 'var(--surface)',
-  display: 'flex',
-  justifyContent: 'space-between',
-  gap: 12,
-  flexWrap: 'wrap',
-  alignItems: 'center',
-};
-
-const historyDetail: CSSProperties = {
-  borderTop: '1px solid var(--border)',
-  paddingTop: 12,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 10,
-};
-
-const bannerError: CSSProperties = {
-  margin: 0,
-  padding: '12px 14px',
-  borderRadius: 10,
-  background: 'var(--status-failed-bg)',
-  color: 'var(--status-failed)',
-  fontSize: 14,
-};
-
-const bannerOk: CSSProperties = {
-  margin: 0,
-  padding: '12px 14px',
-  borderRadius: 10,
-  background: 'var(--status-verified-bg)',
-  color: 'var(--status-verified)',
-  fontSize: 14,
-};

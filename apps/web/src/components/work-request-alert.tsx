@@ -8,7 +8,8 @@ import {
   type SellerActivityItem,
 } from '@taskstream/shared-schemas';
 import { api } from '@/src/lib/api-client';
-import { formatCountdown } from '@/src/lib/format-countdown';
+import { MeridiaPrismLogo } from '@/src/components/brand/meridia-prism-logo';
+
 
 const DISMISS_KEY = 'ts-work-req-dismissed';
 
@@ -158,25 +159,41 @@ export function WorkRequestAlert() {
 
   return (
     <div role="dialog" aria-modal="true" aria-labelledby="work-req-title" style={overlay}>
-      <div style={modal}>
-        <p style={{ margin: 0, fontSize: 12, color: 'var(--brand-blue)', fontWeight: 600 }}>Nueva solicitud</p>
-        <h2 id="work-req-title" style={{ margin: '8px 0 0', fontSize: '1.25rem', lineHeight: 1.35 }}>
+      <div className="card" style={modal}>
+        <p className="ts-eyebrow" style={{ marginBottom: 10 }}>
+          <MeridiaPrismLogo size={18} />
+          <span>MERIDIA · NUEVA SOLICITUD DE TRABAJO (24H)</span>
+        </p>
+        <h2
+          id="work-req-title"
+          className="kinetic-heading"
+          style={{ margin: '4px 0 0', fontFamily: 'var(--font-display)', fontSize: '1.3rem', lineHeight: 1.35 }}
+        >
           {buyer} está interesado en tu publicación «{current.title}»
         </h2>
         <p style={{ margin: '12px 0 0', color: 'var(--text-secondary)', lineHeight: 1.55, fontSize: 14 }}>
           Y desea realizar: <strong style={{ color: 'var(--text-primary)' }}>{brief}</strong>
         </p>
-        <p style={{ margin: '12px 0 0', fontSize: 13, color: 'var(--status-pending)', lineHeight: 1.45 }}>
-          {expired
-            ? 'La ventana de 24 h venció. Se avisará al contratador de que no estás interesado.'
-            : `Tienes aproximadamente ${remaining} para aceptar el servicio; de lo contrario se le avisará al usuario que no estás interesado.`}
-        </p>
+        <div
+          className="meridia-user-stat"
+          style={{
+            marginTop: 14,
+            border: '1px solid rgba(var(--volt-rgb), 0.4)',
+            background: 'rgba(var(--volt-rgb), 0.1)',
+          }}
+        >
+          <p className="tabular-num" style={{ margin: 0, fontSize: 13, color: 'var(--volt)', fontWeight: 700, lineHeight: 1.45 }}>
+            {expired
+              ? 'La ventana de 24 h venció. Se avisará al contratador de que no estás interesado.'
+              : `Tienes aproximadamente ${remaining} para aceptar el servicio; de lo contrario se le avisará al usuario que no estás interesado.`}
+          </p>
+        </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 22, flexWrap: 'wrap' }}>
-          <button type="button" className="btn btn-primary" onClick={viewRequest}>
-            Ver
+          <button type="button" className="btn btn-amber" onClick={viewRequest}>
+            <span>Ver solicitud y custodia</span>
           </button>
-          <button type="button" className="btn btn-secondary" onClick={dismissLater}>
-            Más tarde
+          <button type="button" className="btn btn-outline" onClick={dismissLater}>
+            <span>Más tarde</span>
           </button>
         </div>
       </div>
@@ -188,7 +205,8 @@ const overlay: CSSProperties = {
   position: 'fixed',
   inset: 0,
   zIndex: 10000,
-  background: 'rgba(2, 6, 23, 0.72)',
+  background: 'rgba(6, 10, 18, 0.76)',
+  backdropFilter: 'blur(10px)',
   display: 'grid',
   placeItems: 'center',
   padding: 20,
@@ -196,10 +214,11 @@ const overlay: CSSProperties = {
 
 const modal: CSSProperties = {
   width: '100%',
-  maxWidth: 460,
-  borderRadius: 16,
-  border: '1px solid var(--border)',
-  background: 'var(--surface-elevated)',
-  padding: 24,
-  boxShadow: '0 24px 60px rgba(0,0,0,0.45)',
+  maxWidth: 480,
+  borderRadius: 24,
+  border: '1px solid var(--border-hi)',
+  background: 'var(--surface-solid)',
+  padding: 26,
+  boxShadow: 'var(--shadow-lg)',
 };
+

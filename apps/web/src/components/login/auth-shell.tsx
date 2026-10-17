@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Component, useEffect, useRef, type ErrorInfo, type ReactNode } from 'react';
 import { ArrowLeft, Percent, Shield, Wallet } from 'lucide-react';
 import { ThemeToggle } from '@/src/components/theme-toggle';
+import { MeridiaPrismLogo } from '@/src/components/brand/meridia-prism-logo';
 
 const WorkflowStage = dynamic(
   () => import('./workflow-stage').then((module) => module.WorkflowStage),
@@ -59,7 +60,7 @@ interface Spark {
   color: string;
 }
 
-const SPARK_COLORS = ['#e8c84a', '#4cd0ba'] as const;
+const SPARK_COLORS = ['#E5A93C', '#10B981'] as const;
 const SPARK_MAX = 8;
 
 /**
@@ -284,19 +285,21 @@ export function AuthShell({ title, lead, children }: AuthShellProps) {
   return (
     <div className="auth-shell" ref={shellRef}>
       <div className="auth-grid">
-        <aside className="auth-pitch" aria-label="Presentación de TaskStream AI">
+        <aside className="auth-pitch" aria-label="Presentación de MERIDIA">
           <Link href="/" className="auth-back">
             <ArrowLeft size={16} aria-hidden="true" />
             Volver al inicio
           </Link>
 
           <div className="auth-pitch__intro">
-            <p className="auth-pitch__brand">TaskStream AI</p>
+            <p className="auth-pitch__brand" style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+              <MeridiaPrismLogo size={34} showWordmark />
+            </p>
             <h1 className="auth-pitch__headline">
               Gestiona encargos y cobros sin fricción
             </h1>
             <p className="auth-pitch__text">
-              Entra al panel para publicar, negociar y liberar pagos con escrow Open
+              Entra al panel para publicar como Cliente, prestar servicios como Freelancer y liberar pagos con custodia Open
               Payments en toda América.
             </p>
           </div>
@@ -322,7 +325,7 @@ export function AuthShell({ title, lead, children }: AuthShellProps) {
                 <div>
                   <p className="auth-metric__label">Liquidación</p>
                   <p className="auth-metric__value">
-                    96% <span>seller</span>
+                    96% <span>Freelancer</span>
                   </p>
                   <p className="auth-metric__hint">Open Payments</p>
                 </div>
@@ -336,7 +339,7 @@ export function AuthShell({ title, lead, children }: AuthShellProps) {
                   <p className="auth-metric__value">
                     4% <span>plana</span>
                   </p>
-                  <p className="auth-metric__hint">Sin extras</p>
+                  <p className="auth-metric__hint">Protocolo Meridia</p>
                 </div>
               </article>
             </div>
@@ -348,7 +351,7 @@ export function AuthShell({ title, lead, children }: AuthShellProps) {
                   <i />
                   <i />
                 </span>
-                <span className="auth-showcase__label">Flujo de custodia</span>
+                <span className="auth-showcase__label">Flujo de custodia MERIDIA</span>
                 <span className="auth-showcase__live">En vivo</span>
               </div>
               <div className="auth-showcase__stage">
@@ -359,16 +362,16 @@ export function AuthShell({ title, lead, children }: AuthShellProps) {
             </div>
 
             <p className="auth-product__caption">
-              Del encargo al pago: bloqueo, entrega, revisión IA y liberación en un solo
+              Del encargo al pago: bloqueo, entrega, revisión IA y liberación 96/4 en un solo
               circuito.
             </p>
           </div>
 
           <p className="auth-pitch__foot">
-            <span className="auth-pitch__mark" aria-hidden="true">
-              TS
+            <span className="auth-pitch__mark" aria-hidden="true" style={{ background: 'transparent' }}>
+              <MeridiaPrismLogo size={24} />
             </span>
-            Interledger · América continental
+            MERIDIA · Interledger · América continental
           </p>
         </aside>
 
@@ -384,8 +387,12 @@ export function AuthShell({ title, lead, children }: AuthShellProps) {
             data-lenis-prevent=""
           >
             <div className="auth-card__glow" aria-hidden="true" />
-            <div className="auth-card__mark" aria-hidden="true">
-              TS
+            <div
+              className="auth-card__mark"
+              aria-hidden="true"
+              style={{ background: 'var(--soft)', border: '1px solid var(--border-hi)' }}
+            >
+              <MeridiaPrismLogo size={40} />
             </div>
             <h2 id="auth-title" className="auth-title">
               {title}

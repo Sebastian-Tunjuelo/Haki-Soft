@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import { AuthForm, type AuthSuccessPayload } from '@/src/components/auth-form';
+import { MeridiaPrismLogo } from '@/src/components/brand/meridia-prism-logo';
 
 export type AuthGateTab = 'login' | 'register' | 'recover';
 
@@ -84,11 +85,14 @@ export function AuthGateModal({
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-          <div>
-            <h2 id={titleId} style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>
-              Accede a TaskStream
-            </h2>
-            <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>{reason}</p>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <MeridiaPrismLogo size={34} />
+            <div>
+              <h2 id={titleId} style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, fontFamily: 'var(--font-display)' }}>
+                Accede a MERIDIA
+              </h2>
+              <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--text-secondary)' }}>{reason}</p>
+            </div>
           </div>
           <button
             type="button"

@@ -2,8 +2,9 @@
 
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import { WalletLinkRequestSchema } from '@taskstream/shared-schemas';
-import { ExternalLink, ShieldAlert, Wallet } from 'lucide-react';
+import { ExternalLink, ShieldAlert } from 'lucide-react';
 import { readApiCode, readWalletChallenge, readWalletDiscovery } from '@/src/lib/identity-contract';
+import { MeridiaPrismLogo } from '@/src/components/brand/meridia-prism-logo';
 
 /** Portal oficial para crear/obtener la wallet address pública (nunca la clave privada). */
 export const INTERLEDGER_TEST_WALLET_URL = 'https://wallet.interledger-test.dev/';
@@ -147,28 +148,15 @@ export function WelcomeWalletModal({ open, displayName, onClose, onDone }: Welco
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 'var(--radius-md)',
-                background: 'rgba(59, 130, 246, 0.15)',
-                color: 'var(--brand-blue)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Wallet size={20} />
-            </div>
+            <MeridiaPrismLogo size={40} />
             <div>
-              <h2 id={titleId} style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>
-                Bienvenido{greeting} a TaskStream AI
+              <h2 id={titleId} style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, fontFamily: 'var(--font-display)' }}>
+                Bienvenido{greeting} a MERIDIA
               </h2>
               <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.55 }}>
-                Nos alegra tenerte aquí. Estás a un paso de publicar Gigs, ofertar y contratar: solo falta vincular
-                tu <strong style={{ color: 'var(--text-primary)' }}>wallet address pública</strong> de Open Payments.
+                Queremos reconocerte con tu billetera de Open Payments: estás a un paso de publicar actividades como
+                Cliente o prestar servicios como Freelancer vinculando tu{' '}
+                <strong style={{ color: 'var(--text-primary)' }}>wallet address pública</strong>.
               </p>
             </div>
           </div>
@@ -225,7 +213,7 @@ export function WelcomeWalletModal({ open, displayName, onClose, onDone }: Welco
             En &quot;Wallet Address list&quot;, copia el valor a la izquierda de Edit (Payment Pointer), p. ej.{' '}
             <code>$ilp.interledger-test.dev/dolarsito</code>. Equivale a{' '}
             <code>https://ilp.interledger-test.dev/dolarsito</code>. No necesitas &quot;Register POS&quot; solo para
-            vincular en TaskStream.
+            vincular en MERIDIA.
           </p>
         </div>
 

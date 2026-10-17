@@ -1,10 +1,24 @@
 'use client';
 
-import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import {
+  ArrowLeft,
+  Briefcase,
+  CheckCircle2,
+  Compass,
+  FolderKanban,
+  RefreshCw,
+  Send,
+  ShieldCheck,
+  Sparkles,
+  XCircle,
+} from 'lucide-react';
 import { HireConfirmModal } from '@/src/components/hire-confirm-modal';
 import { api, formatUsd, humanError } from '@/src/lib/api-client';
+import { PageReveal } from '@/src/components/page-reveal';
+import { MeridiaPrismLogo, PrismActionIcon } from '@/src/components/brand/meridia-prism-logo';
 
 type GigCard = {
   gigId: string;
@@ -31,6 +45,14 @@ type InboxItem = {
   freelancerDisplayName?: string;
 };
 
+const PEOPLE_AVATARS = [
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=80',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&q=80',
+  'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=160&q=80',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&q=80',
+  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=160&q=80',
+] as const;
+
 export function NegotiationsWorkspace() {
   const router = useRouter();
   const [tab, setTab] = useState<'gigs' | 'publications'>('gigs');
@@ -40,10 +62,14 @@ export function NegotiationsWorkspace() {
   const [selectedPub, setSelectedPub] = useState<Publication | null>(null);
   const [inbox, setInbox] = useState<InboxItem[]>([]);
   const [hireConfirmOpen, setHireConfirmOpen] = useState(false);
-  const [brief, setBrief] = useState('Necesito este servicio con el alcance descrito en el Gig y entrega dentro del plazo acordado.');
+  const [brief, setBrief] = useState(
+    'Necesito este servicio con el alcance descrito en el Gig y entrega dentro del plazo acordado.',
+  );
   const [offerUsd, setOfferUsd] = useState('');
   const [offerDays, setOfferDays] = useState('5');
-  const [cover, setCover] = useState('Hola, puedo entregar este trabajo con calidad profesional y dentro del plazo propuesto.');
+  const [cover, setCover] = useState(
+    'Hola, puedo entregar este trabajo con calidad profesional y dentro del plazo propuesto.',
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
@@ -210,7 +236,7 @@ export function NegotiationsWorkspace() {
   }
 
   return (
-    <div style={{ maxWidth: 880, margin: '0 auto', padding: '24px 16px 48px', display: 'flex', flexDirection: 'column', gap: 22 }}>
+    <PageReveal className="ts-page">
       <HireConfirmModal
         open={hireConfirmOpen && Boolean(selectedGig)}
         personName={selectedGig?.seller.displayName ?? 'esta persona'}
@@ -219,105 +245,216 @@ export function NegotiationsWorkspace() {
         onConfirm={() => void hireGig()}
         onCancel={() => setHireConfirmOpen(false)}
       />
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <Link href="/marketplace" style={{ color: 'var(--brand-blue)', fontSize: 14 }}>
-          ← Marketplace
-        </Link>
-        <Link href="/activity" style={{ color: 'var(--brand-blue)', fontSize: 14 }}>
-          Actividad (freelancer)
-        </Link>
+
+      {/* Navegación superior */}
+      <div className="ts-reveal" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <Link href="/marketplace" className="btn btn-outline btn-sm">
+            <ArrowLeft size={15} />
+            <span>Marketplace</span>
+          </Link>
+          <Link href="/activity" className="btn btn-outline btn-sm">
+            <Sparkles size={15} />
+            <span>Bandeja de Actividad</span>
+          </Link>
+        </div>
+        <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void refreshLists()}>
+          <RefreshCw size={14} />
+          <span>Actualizar catálogo</span>
+        </button>
       </div>
 
-      <header>
-        <h1 style={{ margin: 0, fontSize: '1.65rem' }}>Contratar y negociar</h1>
-        <p style={{ margin: '8px 0 0', color: 'var(--text-secondary)' }}>
-          Contrata un Gig a precio fijo o gestiona ofertas sobre una publicación. Al acordar, pasas al depósito en
-          custodia.
+      {/* Cabecera MERIDIA */}
+      <header className="ts-page__header ts-reveal">
+        <p className="ts-eyebrow">
+          <MeridiaPrismLogo size={20} />
+          <span>MERIDIA · SALA DE NEGOCIACIONES Y CONTRATACIÓN DIRECTA</span>
+        </p>
+        <h1 className="ts-title kinetic-heading">
+          Contratar servicios y <span className="ts-title__accent">negociar propuestas</span>
+        </h1>
+        <p className="ts-lead">
+          Contrata un servicio a precio fijo o envía tu propuesta competitiva (<code>≤ presupuesto inicial</code>) sobre
+          cualquier actividad abierta. Al cerrar el acuerdo, el flujo continúa directamente a la bóveda de custodia
+          Open Payments.
         </p>
       </header>
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      {/* Selector de pestaña con botones MERIDIA */}
+      <div className="ts-reveal" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         <button
           type="button"
-          className={tab === 'gigs' ? 'btn btn-primary' : 'btn btn-secondary'}
+          className={tab === 'gigs' ? 'btn btn-amber' : 'btn btn-outline'}
           onClick={() => setTab('gigs')}
         >
-          Contratar Gig
+          <Briefcase size={16} />
+          <span>Contratar Servicio a Precio Fijo ({gigs.length})</span>
         </button>
         <button
           type="button"
-          className={tab === 'publications' ? 'btn btn-primary' : 'btn btn-secondary'}
+          className={tab === 'publications' ? 'btn btn-emerald' : 'btn btn-outline'}
           onClick={() => setTab('publications')}
         >
-          Publicaciones y ofertas
+          <FolderKanban size={16} />
+          <span>Actividades y Propuestas ({publications.length})</span>
         </button>
       </div>
 
-      {error ? <p style={bannerError}>{error}</p> : null}
-      {ok ? <p style={bannerOk}>{ok}</p> : null}
+      {error ? (
+        <div className="alert alert-error ts-reveal" role="alert">
+          <XCircle size={18} style={{ flexShrink: 0, marginTop: 2 }} />
+          <div>{error}</div>
+        </div>
+      ) : null}
+
+      {ok ? (
+        <div className="alert alert-success ts-reveal" role="status">
+          <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: 2 }} />
+          <div>{ok}</div>
+        </div>
+      ) : null}
 
       {tab === 'gigs' ? (
-        <section style={{ display: 'grid', gap: 16 }}>
-          <ul style={list}>
-            {gigs.map((gig) => (
-              <li key={gig.gigId}>
+        <section className="ts-reveal" style={{ display: 'grid', gap: 18 }}>
+          <div style={{ display: 'grid', gap: 12 }}>
+            {gigs.map((gig, idx) => {
+              const isSelected = selectedGig?.gigId === gig.gigId;
+              return (
                 <button
+                  key={gig.gigId}
                   type="button"
                   onClick={() => {
                     setSelectedGig(gig);
                     setError(null);
                     setOk(null);
                   }}
-                  style={listBtn(selectedGig?.gigId === gig.gigId)}
+                  className="card"
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '18px 22px',
+                    borderRadius: 22,
+                    border: isSelected ? '1.5px solid var(--volt)' : '1px solid var(--border-hi)',
+                    background: isSelected
+                      ? 'linear-gradient(135deg, rgba(var(--volt-rgb), 0.14), transparent), var(--surface)'
+                      : 'var(--surface)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 16,
+                    flexWrap: 'wrap',
+                    cursor: 'pointer',
+                  }}
                 >
-                  <strong>{gig.title}</strong>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
-                    {formatUsd(gig.priceUSDInCents)} · {gig.seller.displayName}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <img
+                      src={PEOPLE_AVATARS[idx % PEOPLE_AVATARS.length]}
+                      alt={gig.seller.displayName}
+                      className="ld-person-photo"
+                      style={{ width: 46, height: 46, borderRadius: 14 }}
+                    />
+                    <div>
+                      <strong
+                        className="kinetic-heading"
+                        style={{ fontFamily: 'var(--font-display)', fontSize: '1.08rem', display: 'block', color: 'var(--text-primary)' }}
+                      >
+                        {gig.title}
+                      </strong>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                        Freelancer: <strong style={{ color: 'var(--text-primary)' }}>{gig.seller.displayName}</strong> · Plazo máx. 7 días
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span
+                      className="tabular-num"
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: '1.25rem', fontWeight: 700, color: 'var(--volt)' }}
+                    >
+                      {formatUsd(gig.priceUSDInCents)}
+                    </span>
+                    <span className={isSelected ? 'badge badge-verified' : 'badge badge-buyer'}>
+                      {isSelected ? 'Seleccionado' : 'Elegir'}
+                    </span>
+                  </div>
                 </button>
-              </li>
-            ))}
-            {gigs.length === 0 ? <li style={{ color: 'var(--text-secondary)' }}>No hay Gigs activos.</li> : null}
-          </ul>
+              );
+            })}
+            {gigs.length === 0 ? (
+              <div className="card" style={{ padding: 24, borderRadius: 22, color: 'var(--text-secondary)' }}>
+                No hay Gigs activos registrados en este momento. Explora el{' '}
+                <Link href="/marketplace" style={{ color: 'var(--tide-ink)', fontWeight: 700 }}>
+                  Marketplace
+                </Link>{' '}
+                para publicar un nuevo servicio.
+              </div>
+            ) : null}
+          </div>
 
           {selectedGig ? (
-            <div style={panel}>
-              <h2 style={{ margin: 0, fontSize: '1.1rem' }}>{selectedGig.title}</h2>
-              <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-                Precio fijo {formatUsd(selectedGig.priceUSDInCents)}. El dinero solo entra a escrow si{' '}
-                {selectedGig.seller.displayName} acepta (máx. 24 h).
+            <div
+              className="card"
+              style={{
+                padding: '26px 28px',
+                borderRadius: 26,
+                border: '1px solid var(--border-hi)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <h2 className="kinetic-heading" style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.3rem', fontWeight: 700 }}>
+                  Contratar: {selectedGig.title}
+                </h2>
+                <span className="badge badge-verified tabular-num" style={{ fontFamily: 'var(--font-mono)' }}>
+                  {formatUsd(selectedGig.priceUSDInCents)} · 100% Custodia
+                </span>
+              </div>
+              <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14 }}>
+                Precio fijo <strong style={{ color: 'var(--text-primary)' }}>{formatUsd(selectedGig.priceUSDInCents)}</strong>. El dinero solo entra a
+                escrow si <strong style={{ color: 'var(--text-primary)' }}>{selectedGig.seller.displayName}</strong> acepta dentro de las 24 horas.
               </p>
-              <label style={label}>
-                Brief del proyecto
+              <label style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13.5, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                Brief del proyecto (mín. 15 caracteres)
                 <textarea
                   value={brief}
                   onChange={(e) => setBrief(e.target.value)}
                   rows={4}
-                  style={textarea}
+                  className="input"
                   minLength={15}
                 />
               </label>
-              <label style={checkLabel}>
+              <label style={{ display: 'flex', gap: 10, alignItems: 'center', fontSize: 13, color: 'var(--text-secondary)' }}>
                 <input type="checkbox" defaultChecked disabled />
-                Asumo la doble conversión de divisa (FX) cuando el pago sí se envíe al escrow.
+                <span>
+                  Asumo la doble conversión de divisa (FX) cuando el pago sí se envíe a la bóveda de custodia Open Payments.
+                </span>
               </label>
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={busy || brief.trim().length < 15}
-                onClick={() => setHireConfirmOpen(true)}
-              >
-                Pagar / Contratar
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 12.5, color: 'var(--tide-ink)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <ShieldCheck size={15} /> Liquidación 96% Freelancer / 4% Meridia
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-amber"
+                  disabled={busy || brief.trim().length < 15}
+                  onClick={() => setHireConfirmOpen(true)}
+                >
+                  <PrismActionIcon size={17} />
+                  <span>Pagar / Contratar servicio</span>
+                </button>
+              </div>
             </div>
           ) : null}
         </section>
       ) : (
-        <section style={{ display: 'grid', gap: 16 }}>
-          <ul style={list}>
-            {publications.map((pub) => (
-              <li key={pub.publicationId}>
+        <section className="ts-reveal" style={{ display: 'grid', gap: 18 }}>
+          <div style={{ display: 'grid', gap: 12 }}>
+            {publications.map((pub, idx) => {
+              const isSelected = selectedPub?.publicationId === pub.publicationId;
+              return (
                 <button
+                  key={pub.publicationId}
                   type="button"
                   onClick={() => {
                     setSelectedPub(pub);
@@ -326,166 +463,234 @@ export function NegotiationsWorkspace() {
                     setOk(null);
                     void loadInbox(pub.publicationId);
                   }}
-                  style={listBtn(selectedPub?.publicationId === pub.publicationId)}
+                  className="card"
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '18px 22px',
+                    borderRadius: 22,
+                    border: isSelected ? '1.5px solid var(--tide)' : '1px solid var(--border-hi)',
+                    background: isSelected
+                      ? 'linear-gradient(135deg, rgba(var(--tide-rgb), 0.14), transparent), var(--surface)'
+                      : 'var(--surface)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: 16,
+                    flexWrap: 'wrap',
+                    cursor: 'pointer',
+                  }}
                 >
-                  <strong>{pub.title}</strong>
-                  <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
-                    Tope {formatUsd(pub.initialBudgetUSDInCents)} · {pub.activeProposalCount} ofertas · {pub.status}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <img
+                      src={PEOPLE_AVATARS[(idx + 1) % PEOPLE_AVATARS.length]}
+                      alt={pub.title}
+                      className="ld-person-photo"
+                      style={{ width: 46, height: 46, borderRadius: 14 }}
+                    />
+                    <div>
+                      <strong
+                        className="kinetic-heading"
+                        style={{ fontFamily: 'var(--font-display)', fontSize: '1.08rem', display: 'block', color: 'var(--text-primary)' }}
+                      >
+                        {pub.title}
+                      </strong>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                        {pub.activeProposalCount} ofertas activas · Estado: <strong>{pub.status}</strong>
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span
+                      className="tabular-num"
+                      style={{ fontFamily: 'var(--font-mono)', fontSize: '1.2rem', fontWeight: 700, color: 'var(--tide-ink)' }}
+                    >
+                      Tope {formatUsd(pub.initialBudgetUSDInCents)}
+                    </span>
+                    <span className={isSelected ? 'badge badge-verified' : 'badge badge-buyer'}>
+                      {isSelected ? 'Abierta' : 'Negociar'}
+                    </span>
+                  </div>
                 </button>
-              </li>
-            ))}
+              );
+            })}
             {publications.length === 0 ? (
-              <li style={{ color: 'var(--text-secondary)' }}>No hay publicaciones abiertas.</li>
+              <div className="card" style={{ padding: 24, borderRadius: 22, color: 'var(--text-secondary)' }}>
+                No hay publicaciones abiertas en este momento. Puedes publicar una actividad desde el{' '}
+                <Link href="/marketplace" style={{ color: 'var(--tide-ink)', fontWeight: 700 }}>
+                  Marketplace
+                </Link>
+                .
+              </div>
             ) : null}
-          </ul>
+          </div>
 
           {selectedPub ? (
-            <>
-              <div style={panel}>
-                <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Enviar oferta (Freelancer)</h2>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <label style={label}>
-                    Presupuesto (USD)
+            <div className="inicio-jpg-split" style={{ marginBottom: 0 }}>
+              {/* Columna Izquierda: Enviar Oferta Competitiva */}
+              <div
+                className="card"
+                style={{
+                  padding: '24px 26px',
+                  borderRadius: 24,
+                  border: '1px solid var(--border-hi)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 14,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Compass size={18} style={{ color: 'var(--tide)' }} />
+                  <h2 className="kinetic-heading" style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700 }}>
+                    Enviar propuesta competitiva
+                  </h2>
+                </div>
+                <p style={{ margin: 0, fontSize: 13, color: 'var(--text-secondary)' }}>
+                  El presupuesto propuesto debe ser menor o igual al tope del Cliente (
+                  <strong className="tabular-num" style={{ fontFamily: 'var(--font-mono)', color: 'var(--volt)' }}>
+                    {formatUsd(selectedPub.initialBudgetUSDInCents)}
+                  </strong>
+                  ) y el plazo entre 1 y 7 días.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    Tu Presupuesto (USD)
                     <input
                       type="number"
                       min={1}
                       step={0.01}
                       value={offerUsd}
                       onChange={(e) => setOfferUsd(e.target.value)}
-                      style={input}
+                      className="input"
                     />
                   </label>
-                  <label style={label}>
-                    Días de entrega
+                  <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    Días de entrega (1–7)
                     <input
                       type="number"
                       min={1}
                       max={7}
                       value={offerDays}
                       onChange={(e) => setOfferDays(e.target.value)}
-                      style={input}
+                      className="input"
                     />
                   </label>
                 </div>
-                <label style={label}>
-                  Mensaje de cobertura
-                  <textarea value={cover} onChange={(e) => setCover(e.target.value)} rows={3} style={textarea} />
+
+                <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  Mensaje de propuesta y alcance
+                  <textarea value={cover} onChange={(e) => setCover(e.target.value)} rows={3} className="input" />
                 </label>
-                <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void submitOffer()}>
-                  {busy ? 'Enviando…' : 'Postular'}
+
+                <button type="button" className="btn btn-emerald" disabled={busy} onClick={() => void submitOffer()}>
+                  <Send size={15} />
+                  <span>{busy ? 'Enviando propuesta…' : 'Postular al trabajo'}</span>
                 </button>
               </div>
 
-              <div style={panel}>
-                <h2 style={{ margin: 0, fontSize: '1.1rem' }}>Bandeja del comprador</h2>
+              {/* Columna Derecha: Bandeja de Propuestas Recibidas */}
+              <div
+                className="card"
+                style={{
+                  padding: '24px 26px',
+                  borderRadius: 24,
+                  border: '1px solid var(--border-hi)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 14,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <h2 className="kinetic-heading" style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700 }}>
+                    Propuestas recibidas ({inbox.length})
+                  </h2>
+                  <span className="badge badge-buyer">Evaluación del Cliente</span>
+                </div>
+
                 {inbox.length === 0 ? (
-                  <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Sin ofertas todavía.</p>
+                  <div className="meridia-user-stat">
+                    <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 13.5 }}>
+                      Todavía no hay ofertas registradas para esta publicación.
+                    </p>
+                  </div>
                 ) : (
-                  <ul style={{ ...list, gap: 12 }}>
-                    {inbox.map((item) => (
-                      <li key={item.proposalId} style={{ ...panel, padding: 14 }}>
-                        <strong>{formatUsd(item.proposedBudgetUSDInCents)}</strong>
-                        <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
-                          {item.proposedDeliveryDays} días ·{' '}
-                          {item.status === 'IN_NEGOTIATION'
-                            ? 'En negociación'
-                            : item.status === 'AGREED_PATH_1'
-                              ? 'Acordada'
-                              : item.status === 'DISCREPANCY_CLOSED_PATH_2'
-                                ? 'Cerrada sin acuerdo'
-                                : item.status}
-                          {item.freelancerDisplayName ? ` · ${item.freelancerDisplayName}` : ''}
-                        </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {inbox.map((item, idx) => (
+                      <article key={item.proposalId} className="meridia-user-stat">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <img
+                              src={PEOPLE_AVATARS[idx % PEOPLE_AVATARS.length]}
+                              alt={item.freelancerDisplayName ?? 'Freelancer'}
+                              style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }}
+                            />
+                            <div>
+                              <strong className="tabular-num" style={{ fontFamily: 'var(--font-mono)', fontSize: '1.1rem', color: 'var(--volt)' }}>
+                                {formatUsd(item.proposedBudgetUSDInCents)}
+                              </strong>
+                              <span style={{ display: 'block', fontSize: 12, color: 'var(--text-secondary)' }}>
+                                {item.proposedDeliveryDays} días · {item.freelancerDisplayName ?? 'Talento Verificado'}
+                              </span>
+                            </div>
+                          </div>
+                          <span
+                            className={`badge ${
+                              item.status === 'AGREED_PATH_1'
+                                ? 'badge-verified'
+                                : item.status === 'DISCREPANCY_CLOSED_PATH_2'
+                                  ? 'badge-failed'
+                                  : 'badge-pending'
+                            }`}
+                          >
+                            {item.status === 'IN_NEGOTIATION'
+                              ? 'En negociación'
+                              : item.status === 'AGREED_PATH_1'
+                                ? 'Acordada'
+                                : item.status === 'DISCREPANCY_CLOSED_PATH_2'
+                                  ? 'Cerrada sin acuerdo'
+                                  : item.status}
+                          </span>
+                        </div>
+
                         {item.coverMessage ? (
-                          <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)' }}>{item.coverMessage}</p>
+                          <p style={{ margin: '6px 0 0', fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                            {item.coverMessage}
+                          </p>
                         ) : null}
+
                         {item.status === 'IN_NEGOTIATION' ? (
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 6 }}>
                             <button
                               type="button"
-                              className="btn btn-primary"
+                              className="btn btn-amber btn-sm"
                               disabled={busy}
                               onClick={() => void acceptOffer(item)}
                             >
-                              Aceptar y custodiar
+                              <CheckCircle2 size={14} />
+                              <span>Aceptar y custodiar 100%</span>
                             </button>
                             <button
                               type="button"
-                              className="btn btn-secondary"
+                              className="btn btn-outline btn-sm"
                               disabled={busy}
                               onClick={() => void closeOffer(item)}
                             >
-                              Cerrar sin acuerdo
+                              <XCircle size={14} />
+                              <span>Cerrar sin acuerdo</span>
                             </button>
                           </div>
                         ) : null}
-                      </li>
+                      </article>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </div>
-            </>
+            </div>
           ) : null}
         </section>
       )}
-    </div>
+    </PageReveal>
   );
 }
 
-const list: CSSProperties = { display: 'grid', gap: 8, padding: 0, margin: 0, listStyle: 'none' };
-
-function listBtn(selected: boolean): CSSProperties {
-  return {
-    width: '100%',
-    textAlign: 'left',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 4,
-    padding: '12px 14px',
-    borderRadius: 12,
-    border: `1px solid ${selected ? 'var(--brand-blue)' : 'var(--border)'}`,
-    background: selected ? 'rgba(59,130,246,0.08)' : 'var(--surface)',
-    color: 'inherit',
-    cursor: 'pointer',
-  };
-}
-
-const panel: CSSProperties = {
-  border: '1px solid var(--border)',
-  borderRadius: 14,
-  padding: 18,
-  background: 'var(--surface)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 12,
-};
-
-const label: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, color: 'var(--text-secondary)' };
-const checkLabel: CSSProperties = { display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, color: 'var(--text-secondary)' };
-const input: CSSProperties = {
-  border: '1px solid var(--border)',
-  borderRadius: 8,
-  padding: '8px 10px',
-  background: 'transparent',
-  color: 'var(--text-primary)',
-};
-const textarea: CSSProperties = { ...input, resize: 'vertical', fontFamily: 'inherit' };
-
-const bannerError: CSSProperties = {
-  margin: 0,
-  padding: '12px 14px',
-  borderRadius: 10,
-  background: 'var(--status-failed-bg)',
-  color: 'var(--status-failed)',
-  fontSize: 14,
-};
-
-const bannerOk: CSSProperties = {
-  margin: 0,
-  padding: '12px 14px',
-  borderRadius: 10,
-  background: 'var(--status-verified-bg)',
-  color: 'var(--status-verified)',
-  fontSize: 14,
-};

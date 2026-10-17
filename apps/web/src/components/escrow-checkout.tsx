@@ -1,29 +1,37 @@
 'use client';
 
-import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  RefreshCw,
+  ShieldCheck,
+  Sparkles,
+  XCircle,
+  MessageSquare,
+} from 'lucide-react';
 import { EscrowFundingViewSchema, type EscrowFundingView } from '@taskstream/shared-schemas';
 import { api, formatUsd, humanError } from '@/src/lib/api-client';
+import { PageReveal } from '@/src/components/page-reveal';
+import { MeridiaPrismLogo, PrismActionIcon } from '@/src/components/brand/meridia-prism-logo';
 
-const STATUS_LABEL: Partial<Record<EscrowFundingView['lifecycleStatus'], string>> = {
-  PENDING_ESCROW_FUNDING: 'Esperando respuesta del emprendedor',
-  ESCROW_LOCKED: 'Fondos en custodia',
-  ESCROW_EXTENDED: 'Plazo extendido · fondos en custodia',
-  IN_REVIEW: 'Entrega en revisión (72 h)',
-  REVISION_REQUESTED: 'Corrección solicitada',
-  FINAL_CLAIM_WINDOW_30M: 'Ventana final de reclamación',
-  DISPUTED: 'En disputa administrativa',
-  COMPLETED: 'Completado · 96 % liberado',
-  REFUNDED: 'Reembolsado al comprador',
-  CANCELLED: 'Solicitud cerrada · el dinero no se envió',
+const STATUS_LABEL: Record<EscrowFundingView['lifecycleStatus'], string> = {
+  PENDING_ESCROW_FUNDING: 'Esperando respuesta del Freelancer (24h)',
+  ESCROW_LOCKED: 'Fondos 100% en Custodia Activa',
+  COMPLETED: 'Completado · 96% Liberado al Freelancer',
+  REFUNDED: 'Reembolso 100% al Cliente',
+  CANCELLED: 'Solicitud Cerrada · Sin movimiento de fondos',
 };
 
 /**
- * Flujo acordado:
- * 1) Buyer confirma contratar (modal en storefront)
- * 2) Solicitud pendiente 24h — dinero NO se manda
- * 3) Buyer cancela / Seller rechaza / timeout → sin pago
- * 4) Seller acepta → dinero a escrow al instante + timers (SPEC-09)
+ * Flujo acordado en MERIDIA:
+ * 1) Cliente confirma contratar (modal en storefront/negociaciones)
+ * 2) Solicitud pendiente 24h — dinero NO se manda todavía
+ * 3) Cliente cancela / Freelancer rechaza / timeout → sin pago
+ * 4) Freelancer acepta → dinero a escrow al instante + timers (SPEC-09)
  */
 export function EscrowCheckout({ taskId }: { taskId: string }) {
   const [view, setView] = useState<EscrowFundingView | null>(null);
@@ -143,256 +151,280 @@ export function EscrowCheckout({ taskId }: { taskId: string }) {
   const step = cancelled ? 0 : pending ? 1 : activeCustody ? 2 : terminal ? 3 : 1;
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px 48px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <Link href="/marketplace" style={{ color: 'var(--brand-blue)', fontSize: 14 }}>
-          ← Marketplace
+    <PageReveal className="ts-page">
+      {/* Navegación contextual */}
+      <div className="ts-reveal" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <Link href="/marketplace" className="btn btn-outline btn-sm">
+          <ArrowLeft size={15} />
+          <span>Marketplace</span>
         </Link>
-        <Link href="/activity" style={{ color: 'var(--brand-blue)', fontSize: 14 }}>
-          Actividad
+        <Link href="/activity" className="btn btn-outline btn-sm">
+          <Sparkles size={15} />
+          <span>Bandeja de Actividad</span>
         </Link>
+        {locked ? (
+          <Link href={`/orders/${taskId}/workspace`} className="btn btn-emerald btn-sm">
+            <MessageSquare size={15} />
+            <span>Espacio de Trabajo</span>
+          </Link>
+        ) : null}
       </div>
 
-      <header>
-        <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: 13 }}>Custodia en escrow</p>
-        <h1 style={{ margin: '6px 0 0', fontSize: '1.65rem' }}>{view?.title ?? 'Solicitud de trabajo'}</h1>
-        <p style={{ margin: '8px 0 0', color: 'var(--text-secondary)', fontSize: 15 }}>
-          El pago solo entra a custodia cuando el emprendedor acepta. Si se cancela, se rechaza o pasan 24 h sin
-          respuesta, el dinero no se manda.
+      {/* Cabecera */}
+      <header className="ts-page__header ts-reveal">
+        <p className="ts-eyebrow">
+          <MeridiaPrismLogo size={20} />
+          <span>MERIDIA · CUSTODIA EN ESCROW · OPEN PAYMENTS</span>
+        </p>
+        <h1 className="ts-title kinetic-heading">
+          {view?.title ?? 'Solicitud de trabajo en custodia'}
+        </h1>
+        <p className="ts-lead">
+          El pago solo entra a custodia cuando el Freelancer acepta el encargo. Si se cancela, se rechaza o vencen las{' '}
+          <strong>24 horas</strong> sin respuesta, los fondos no se debitan.
         </p>
       </header>
 
+      {/* Stepper Horizontal 1 — 2 — 3 coherente con Billetera */}
       {!cancelled ? (
-        <ol style={stepper}>
-          {[
-            { n: 1, label: 'Solicitud enviada' },
-            { n: 2, label: 'Aceptación → escrow' },
-            { n: 3, label: 'Cierre' },
-          ].map((item) => (
-            <li key={item.n} style={stepItem(step >= item.n)}>
-              <span style={stepDot(step >= item.n)}>{item.n}</span>
-              {item.label}
-            </li>
-          ))}
-        </ol>
+        <section className="ts-reveal card" style={{ padding: '20px 26px', borderRadius: 22 }}>
+          <div className="wallet-jpg-stepper" style={{ marginTop: 0, paddingTop: 0, borderTop: 'none' }}>
+            {[
+              { n: 1, label: 'Solicitud enviada (24h)' },
+              { n: 2, label: 'Aceptación → Custodia 100%' },
+              { n: 3, label: 'Liquidación 96% / 4%' },
+            ].map((item, idx) => (
+              <div key={item.n} style={{ display: 'contents' }}>
+                <div className={`wallet-jpg-step ${step >= item.n ? 'is-active' : ''}`}>
+                  <span className="wallet-jpg-step__circle">{item.n}</span>
+                  <span className="wallet-jpg-step__text">{item.label}</span>
+                </div>
+                {idx < 2 ? <span className={`wallet-jpg-step__line ${step > item.n ? 'is-active' : ''}`} /> : null}
+              </div>
+            ))}
+          </div>
+        </section>
       ) : null}
 
-      {error ? <p style={bannerError}>{error}</p> : null}
-      {message ? <p style={bannerOk}>{message}</p> : null}
+      {error ? (
+        <div className="alert alert-error ts-reveal" role="alert">
+          <XCircle size={18} style={{ flexShrink: 0, marginTop: 2 }} />
+          <div>{error}</div>
+        </div>
+      ) : null}
 
+      {message ? (
+        <div className="alert alert-success ts-reveal" role="status">
+          <CheckCircle2 size={18} style={{ flexShrink: 0, marginTop: 2 }} />
+          <div>{message}</div>
+        </div>
+      ) : null}
+
+      {/* Resumen Financiero 100% -> 96% / 4% */}
       {view ? (
-        <section style={panel}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-            <h2 style={{ margin: 0, fontSize: '1.15rem' }}>Resumen</h2>
-            <span style={badge(status!)}>{STATUS_LABEL[status!] ?? status}</span>
+        <section className="ts-reveal card" style={{ padding: '26px 28px', borderRadius: 26, border: '1px solid var(--border-hi)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <ShieldCheck size={20} style={{ color: 'var(--tide)' }} />
+              <h2 className="kinetic-heading" style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: 700 }}>
+                Resumen de Bóveda &amp; Reparto Invariante
+              </h2>
+            </div>
+            <span
+              className={`badge ${
+                status === 'ESCROW_LOCKED' || status === 'COMPLETED'
+                  ? 'badge-verified'
+                  : status === 'CANCELLED'
+                    ? 'badge-failed'
+                    : 'badge-pending'
+              }`}
+            >
+              <span className="pulse-dot" />
+              {STATUS_LABEL[status!]}
+            </span>
           </div>
 
-          <dl style={moneyGrid}>
-            <div>
-              <dt style={dt}>Monto del encargo</dt>
-              <dd style={dd}>{formatUsd(view.totalAmountUSDInCents)}</dd>
-            </div>
-            <div>
-              <dt style={dt}>Si se libera: freelancer</dt>
-              <dd style={dd}>{formatUsd(view.freelancerPayoutUSDInCents)}</dd>
-            </div>
-            <div>
-              <dt style={dt}>Si se libera: plataforma</dt>
-              <dd style={dd}>{formatUsd(view.platformFeeUSDInCents)}</dd>
-            </div>
-          </dl>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+            <article className="meridia-user-stat">
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Monto Total del Encargo (100%)
+              </span>
+              <strong className="tabular-num kinetic-heading" style={{ fontFamily: 'var(--font-mono)', fontSize: '1.7rem', color: 'var(--volt)' }}>
+                {formatUsd(view.totalAmountUSDInCents)}
+              </strong>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                Custodia única bloqueada vía GNAP
+              </span>
+            </article>
+
+            <article className="meridia-user-stat">
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Si se libera · Freelancer (96%)
+              </span>
+              <strong className="tabular-num kinetic-heading" style={{ fontFamily: 'var(--font-mono)', fontSize: '1.7rem', color: 'var(--tide-ink)' }}>
+                {formatUsd(view.freelancerPayoutUSDInCents)}
+              </strong>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                Desembolso directo a billetera ILP
+              </span>
+            </article>
+
+            <article className="meridia-user-stat">
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Si se libera · Protocolo MERIDIA (4%)
+              </span>
+              <strong className="tabular-num kinetic-heading" style={{ fontFamily: 'var(--font-mono)', fontSize: '1.7rem', color: 'var(--text-primary)' }}>
+                {formatUsd(view.platformFeeUSDInCents)}
+              </strong>
+              <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                Comisión invariante del protocolo
+              </span>
+            </article>
+          </div>
         </section>
       ) : !error ? (
-        <p style={{ color: 'var(--text-secondary)' }}>Cargando…</p>
+        <div className="card ts-reveal" style={{ padding: 24, borderRadius: 22, color: 'var(--text-secondary)' }}>
+          Sincronizando estado de la custodia Open Payments…
+        </div>
       ) : null}
 
-      <section style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-        {pending && isBuyer && view?.sellerConfirmed && view.interactRedirectUri ? (
-          <div style={{ ...panel, width: '100%', background: 'rgba(34, 197, 94, 0.08)', borderColor: 'rgba(34, 197, 94, 0.35)' }}>
-            <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Autoriza el pago en la Test Wallet</h3>
-            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.5 }}>
-              El emprendedor ya aceptó. Para mover fondos reales (p. ej. EGG) desde tu billetera a custodia, abre Interledger
-              Test Wallet y confirma el grant. Al volver, el saldo de la testnet bajará.
-            </p>
-            <a className="btn btn-primary" href={view.interactRedirectUri}>
-              Abrir autorización Open Payments
-            </a>
-          </div>
-        ) : null}
-        {pending && isBuyer && !view?.sellerConfirmed ? (
-          <div style={{ ...panel, width: '100%', background: 'rgba(245, 158, 11, 0.08)', borderColor: 'rgba(245, 158, 11, 0.35)' }}>
-            <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Tu solicitud fue enviada</h3>
-            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.5 }}>
-              El emprendedor tiene <strong style={{ color: 'var(--status-pending)' }}>24 horas</strong> para aceptar.
-              Hasta entonces el dinero <strong>no se envía</strong> al escrow. Puedes arrepentirte y cancelar.
+      {/* Paneles de Acción según estado y rol */}
+      <section className="ts-reveal" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {pending && isBuyer ? (
+          <div
+            className="card"
+            style={{
+              padding: '24px 28px',
+              borderRadius: 24,
+              border: '1px solid rgba(var(--volt-rgb), 0.45)',
+              background: 'linear-gradient(135deg, rgba(var(--volt-rgb), 0.12), transparent), var(--surface)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Clock size={19} style={{ color: 'var(--volt)' }} />
+              <h3 className="kinetic-heading" style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.18rem', fontWeight: 700 }}>
+                Tu solicitud fue enviada al Freelancer
+              </h3>
+            </div>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.55 }}>
+              El Freelancer tiene <strong style={{ color: 'var(--volt)' }}>24 horas</strong> para aceptar. Hasta
+              entonces el dinero <strong>no se envía</strong> al escrow. Puedes arrepentirte y cancelar sin ningún
+              cargo.
             </p>
             {view?.sellerConfirmationDeadlineAt ? (
-              <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)' }}>
-                Límite:{' '}
+              <p className="tabular-num" style={{ margin: 0, fontSize: 12.5, fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+                Límite de confirmación:{' '}
                 {new Date(view.sellerConfirmationDeadlineAt).toLocaleString('es', {
                   dateStyle: 'medium',
                   timeStyle: 'short',
                 })}
               </p>
             ) : null}
-            <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void cancelAsBuyer()}>
-              {busy ? 'Cancelando…' : 'Arrepentirme · cancelar solicitud'}
-            </button>
-          </div>
-        ) : null}
-
-        {pending && isSeller && view?.sellerConfirmed ? (
-          <div style={{ ...panel, width: '100%' }}>
-            <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Esperando fondeo del contratador</h3>
-            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.5 }}>
-              Ya aceptaste. El contratador debe autorizar el pago en la Test Wallet para que los fondos entren a custodia.
-            </p>
-          </div>
-        ) : null}
-
-        {pending && isSeller && !view?.sellerConfirmed ? (
-          <div style={{ ...panel, width: '100%' }}>
-            <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Nueva solicitud de trabajo</h3>
-            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.5 }}>
-              Si aceptas, el pago del contratador entra a custodia al instante y queda vinculado a este encargo. De lo
-              contrario se realizara la devolución del dinero.
-            </p>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <button type="button" className="btn btn-primary" disabled={busy} onClick={() => void acceptAsSeller()}>
-                {busy ? 'Procesando…' : 'Aceptar y recibir custodia'}
-              </button>
-              <button type="button" className="btn btn-secondary" disabled={busy} onClick={() => void rejectAsSeller()}>
-                Rechazar
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 4 }}>
+              <button type="button" className="btn btn-outline" disabled={busy} onClick={() => void cancelAsBuyer()}>
+                <XCircle size={16} />
+                <span>{busy ? 'Cancelando…' : 'Arrepentirme · cancelar solicitud'}</span>
               </button>
             </div>
           </div>
         ) : null}
 
-        {activeCustody ? (
-          <>
-            <p style={{ margin: 0, width: '100%', color: 'var(--status-verified)', fontSize: 14 }}>
-              Fondos en escrow. Las partes ya están vinculadas. Usa el espacio de trabajo para chat, anexos y el
-              contador de entrega.
+        {pending && isSeller ? (
+          <div
+            className="card"
+            style={{
+              padding: '24px 28px',
+              borderRadius: 24,
+              border: '1px solid var(--border-hi)',
+              background: 'linear-gradient(135deg, rgba(var(--tide-rgb), 0.12), transparent), var(--surface)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 14,
+            }}
+          >
+            <h3 className="kinetic-heading" style={{ margin: 0, fontFamily: 'var(--font-display)', fontSize: '1.2rem', fontWeight: 700 }}>
+              Nueva solicitud de trabajo lista para tu confirmación
+            </h3>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.55 }}>
+              Si aceptas, el pago del Cliente entra al instante al 100% en custodia y se abre el espacio de trabajo con
+              el reloj de 7 días. Si rechazas, el dinero nunca se mueve.
             </p>
-            <Link href={`/orders/${taskId}/workspace`} className="btn btn-primary">
-              Abrir espacio de trabajo
-            </Link>
-          </>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <button type="button" className="btn btn-emerald" disabled={busy} onClick={() => void acceptAsSeller()}>
+                <CheckCircle2 size={17} />
+                <span>{busy ? 'Procesando…' : 'Aceptar y recibir custodia 100%'}</span>
+              </button>
+              <button type="button" className="btn btn-outline" disabled={busy} onClick={() => void rejectAsSeller()}>
+                <XCircle size={16} />
+                <span>Rechazar solicitud</span>
+              </button>
+            </div>
+          </div>
         ) : null}
 
-        {cancelled ? (
-          <p style={{ margin: 0, width: '100%', color: 'var(--text-secondary)', fontSize: 14 }}>
-            Esta solicitud se cerró sin enviar dinero (cancelación, rechazo o vencimiento de las 24 h sin respuesta del
-            emprendedor).
-          </p>
-        ) : null}
-
-        {terminal && !cancelled ? (
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <Link href={`/orders/${taskId}/deliverables`} className="btn btn-secondary">
-              Ver entregables
-            </Link>
-            <Link href="/activity" className="btn btn-primary">
-              Ir a actividad
-            </Link>
+        {locked ? (
+          <div
+            className="card"
+            style={{
+              padding: '24px 28px',
+              borderRadius: 24,
+              border: '1px solid var(--border-hi)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 16,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <CheckCircle2 size={20} style={{ color: 'var(--tide)' }} />
+              <p style={{ margin: 0, color: 'var(--tide-ink)', fontSize: 14.5, fontWeight: 700 }}>
+                Fondos en custodia activa. Las partes están vinculadas: usa el espacio de trabajo para chat en vivo,
+                anexos y el contador de entrega de 7 días.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              <Link href={`/orders/${taskId}/workspace`} className="btn btn-amber">
+                <PrismActionIcon size={17} />
+                <span>Abrir espacio de trabajo</span>
+                <ArrowRight size={15} />
+              </Link>
+              <button type="button" className="btn btn-emerald" disabled={busy} onClick={() => void release()}>
+                <CheckCircle2 size={16} />
+                <span>Liberar 96 % / 4 %</span>
+              </button>
+              <button type="button" className="btn btn-outline" disabled={busy} onClick={() => void refund()}>
+                <span>Reembolsar 100 %</span>
+              </button>
+            </div>
           </div>
         ) : null}
 
         {cancelled ? (
-          <Link href="/marketplace" className="btn btn-primary">
-            Ir al marketplace
-          </Link>
+          <div className="card" style={{ padding: '22px 26px', borderRadius: 22 }}>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: 14.5 }}>
+              Esta solicitud se cerró sin enviar dinero (cancelación del Cliente, rechazo del Freelancer o vencimiento
+              de las 24 h sin respuesta).
+            </p>
+          </div>
         ) : null}
+
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          {terminal ? (
+            <Link href="/marketplace" className="btn btn-amber">
+              <PrismActionIcon size={16} />
+              <span>Ir al Marketplace</span>
+              <ArrowRight size={15} />
+            </Link>
+          ) : null}
+          <button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={() => void load()}>
+            <RefreshCw size={14} />
+            <span>Actualizar estado</span>
+          </button>
+        </div>
       </section>
-    </div>
+    </PageReveal>
   );
 }
 
-const stepper: CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: 12,
-  listStyle: 'none',
-  margin: 0,
-  padding: 0,
-};
-
-function stepItem(active: boolean): CSSProperties {
-  return {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    fontSize: 13,
-    color: active ? 'var(--text-primary)' : 'var(--text-muted)',
-  };
-}
-
-function stepDot(active: boolean): CSSProperties {
-  return {
-    width: 28,
-    height: 28,
-    borderRadius: '50%',
-    display: 'grid',
-    placeItems: 'center',
-    fontSize: 12,
-    fontWeight: 700,
-    background: active ? 'var(--brand-blue)' : 'var(--surface)',
-    border: `1px solid ${active ? 'var(--brand-blue)' : 'var(--border)'}`,
-    color: active ? '#fff' : 'var(--text-muted)',
-  };
-}
-
-const panel: CSSProperties = {
-  border: '1px solid var(--border)',
-  borderRadius: 14,
-  padding: 20,
-  background: 'var(--surface)',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 16,
-};
-
-const moneyGrid: CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-  gap: 16,
-  margin: 0,
-};
-
-const dt: CSSProperties = { margin: 0, fontSize: 12, color: 'var(--text-muted)' };
-const dd: CSSProperties = { margin: '4px 0 0', fontSize: '1.25rem', fontWeight: 700 };
-
-function badge(status: EscrowFundingView['lifecycleStatus']): CSSProperties {
-  const tone =
-    status === 'ESCROW_LOCKED' || status === 'COMPLETED'
-      ? { bg: 'var(--status-verified-bg)', fg: 'var(--status-verified)' }
-      : status === 'CANCELLED'
-        ? { bg: 'var(--status-failed-bg)', fg: 'var(--status-failed)' }
-        : { bg: 'var(--status-pending-bg)', fg: 'var(--status-pending)' };
-  return {
-    fontSize: 12,
-    fontWeight: 600,
-    padding: '4px 10px',
-    borderRadius: 999,
-    background: tone.bg,
-    color: tone.fg,
-  };
-}
-
-const bannerError: CSSProperties = {
-  margin: 0,
-  padding: '12px 14px',
-  borderRadius: 10,
-  background: 'var(--status-failed-bg)',
-  color: 'var(--status-failed)',
-  fontSize: 14,
-};
-
-const bannerOk: CSSProperties = {
-  margin: 0,
-  padding: '12px 14px',
-  borderRadius: 10,
-  background: 'var(--status-verified-bg)',
-  color: 'var(--status-verified)',
-  fontSize: 14,
-};
