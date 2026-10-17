@@ -59,6 +59,7 @@ export function mockFreelancerNegotiationProposal(
     freelancerUserId: SELLER_ID,
     initialBudgetUSDInCents: 10_000,
     proposedBudgetUSDInCents: 8_500,
+    proposedDeliveryDays: 7,
     status: 'IN_NEGOTIATION',
     ...overrides,
   });
@@ -95,6 +96,7 @@ function paymentTerms(totalAmountUSDInCents: number) {
 export function mockTaskOrderCard(overrides: Partial<TaskOrderCard> = {}): TaskOrderCard {
   const base: TaskOrderCard = {
     taskId: TASK_ID,
+    proposalId: PROPOSAL_ID,
     publicationId: PUBLICATION_ID,
     title: 'Edición de fotos de catálogo',
     category: 'GRAPHICS_AND_DESIGN',
@@ -134,6 +136,7 @@ export function mockTaskOrderCard(overrides: Partial<TaskOrderCard> = {}): TaskO
 export function mockGigOrderCard(): TaskOrderCard {
   return mockTaskOrderCard({
     gigId: GIG_ID,
+    proposalId: undefined,
     publicationId: undefined,
     expectedMediaType: 'DOCUMENT_TEXT',
     aiAuditableModality: 'TEXT',

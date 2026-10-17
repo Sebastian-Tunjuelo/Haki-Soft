@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { ESCROW_WALLET_ADDRESS, MANDATORY_AI_DISCLAIMER, splitSingleBlockEscrow } from './money';
+import {
+  ESCROW_WALLET_ADDRESS,
+  MANDATORY_AI_DISCLAIMER,
+  MAX_MARKETPLACE_AMOUNT_USD_IN_CENTS,
+  MIN_MARKETPLACE_AMOUNT_USD_IN_CENTS,
+  splitSingleBlockEscrow,
+} from './money';
 import { resolveMvpAiAuditableModality } from './modality';
 
 export const TaskCategoryEnum = z.enum([
@@ -71,6 +77,12 @@ export const ExtensionRequestStatusEnum = z.enum([
 
 const HOUR_MS = 24 * 60 * 60 * 1000;
 
+const MarketplaceAmountUSDInCents = z
+  .number()
+  .int()
+  .min(MIN_MARKETPLACE_AMOUNT_USD_IN_CENTS)
+  .max(MAX_MARKETPLACE_AMOUNT_USD_IN_CENTS);
+
 export const ClientTaskPublicationSchema = z.object({
   publicationId: z.string().uuid(),
   buyerUserId: z.string().uuid(),
@@ -78,7 +90,7 @@ export const ClientTaskPublicationSchema = z.object({
   description: z.string().min(20).max(3000),
   category: TaskCategoryEnum,
   expectedMediaType: DeliverableMediaTypeEnum,
-  initialBudgetUSDInCents: z.number().int().positive(),
+  initialBudgetUSDInCents: MarketplaceAmountUSDInCents,
   initialDeliveryDays: z.number().int().min(1).max(7).default(7),
   status: PublicationStatusEnum,
 });
@@ -89,14 +101,19 @@ export const FreelancerNegotiationProposalSchema = z
     publicationId: z.string().uuid(),
     buyerUserId: z.string().uuid(),
     freelancerUserId: z.string().uuid(),
-    initialBudgetUSDInCents: z.number().int().positive(),
-    proposedBudgetUSDInCents: z.number().int().positive(),
+    initialBudgetUSDInCents: MarketplaceAmountUSDInCents,
+    proposedBudgetUSDInCents: MarketplaceAmountUSDInCents,
+    proposedDeliveryDays: z.number().int().min(1).max(7),
     status: NegotiationProposalStatusEnum,
   })
   .refine((data) => data.proposedBudgetUSDInCents <= data.initialBudgetUSDInCents, {
     message:
       'El valor negociado siempre debe ser menor o igual al presupuesto planteado inicialmente por el cliente.',
     path: ['proposedBudgetUSDInCents'],
+  })
+  .refine((data) => data.freelancerUserId !== data.buyerUserId, {
+    message: 'El Freelancer no puede negociar sobre su propia publicación.',
+    path: ['freelancerUserId'],
   });
 
 export const AcceptanceCriterionSchema = z.object({
@@ -133,7 +150,8 @@ export const TaskOrderCardSchema = z
   .object({
     taskId: z.string().uuid(),
     gigId: z.string().uuid().optional(),
-    publicationId: z.string().uuid().optional(),
+    proposalId: z.string().uuid().optional(),
+    publicationId: z.string().uuid().optional().describe('Solo informativo; se deriva de proposalId'),
     title: z.string().min(10).max(120),
     category: TaskCategoryEnum,
     expectedMediaType: DeliverableMediaTypeEnum,
@@ -158,7 +176,7 @@ export const TaskOrderCardSchema = z
         .string()
         .url()
         .describe('Wallet distinta del escrow que recibe el 4% de comisión del dueño/plataforma'),
-      totalAmountUSDInCents: z.number().int().positive(),
+      totalAmountUSDInCents: MarketplaceAmountUSDInCents,
       freelancerPayoutUSDInCents: z.number().int().positive().describe('96% para el Freelancer'),
       platformFeeUSDInCents: z.number().int().nonnegative().describe('4% transferido a platformOwnerWalletAddress'),
       buyerAssumesDoubleFxConversion: z.literal(true),
@@ -194,7 +212,12 @@ export const TaskOrderCardSchema = z
   })
   .refine(
     (data) => {
-      const split = splitSingleBlockEscrow(data.paymentTerms.totalAmountUSDInCents);
+      let split: ReturnType<typeof splitSingleBlockEscrow>;
+      try {
+        split = splitSingleBlockEscrow(data.paymentTerms.totalAmountUSDInCents);
+      } catch {
+        return false;
+      }
       return (
         data.paymentTerms.platformFeeUSDInCents === split.platformFeeUSDInCents &&
         data.paymentTerms.freelancerPayoutUSDInCents === split.freelancerPayoutUSDInCents &&
@@ -204,13 +227,21 @@ export const TaskOrderCardSchema = z
     },
     {
       message:
-        'El reparto debe ser floor(total * 0.04) para la wallet del dueño y el resto para el Freelancer, en wallets distintas del escrow.',
+        'El reparto debe ser floor(total * 4 / 100) para la wallet del dueño y el resto para el Freelancer, en wallets distintas del escrow.',
       path: ['paymentTerms'],
     },
   )
-  .refine((data) => Boolean(data.gigId) !== Boolean(data.publicationId), {
-    message: 'La orden nace de un Gig fijo o de una publicación aceptada, nunca de ambos ni de ninguno.',
+  .refine((data) => Boolean(data.gigId) !== Boolean(data.proposalId), {
+    message: 'La orden nace de un Gig fijo o de una propuesta acordada, nunca de ambos ni de ninguno.',
     path: ['gigId'],
+  })
+  .refine((data) => !data.publicationId || Boolean(data.proposalId), {
+    message: 'publicationId solo acompaña a una orden nacida de una propuesta acordada.',
+    path: ['publicationId'],
+  })
+  .refine((data) => data.buyer.userId !== data.seller.userId, {
+    message: 'Buyer y Freelancer de una orden deben ser usuarios distintos.',
+    path: ['seller'],
   })
   .refine(
     (data) => data.aiAuditableModality === (resolveMvpAiAuditableModality(data.expectedMediaType) ?? undefined),
@@ -299,6 +330,22 @@ export const WalletLinkRequestSchema = z.object({
 
 export const ActiveModeSwitchSchema = z.object({
   activeMode: UserActiveModeEnum,
+});
+
+export const LocalRegisterSchema = z.object({
+  email: z.string().trim().email().max(200),
+  password: z.string().min(8).max(200),
+  displayName: z.string().trim().min(1).max(100),
+  countryCode: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z]{2}$/)
+    .optional(),
+});
+
+export const LocalLoginSchema = z.object({
+  email: z.string().trim().email().max(200),
+  password: z.string().min(1).max(200),
 });
 
 export type TaskCategory = z.infer<typeof TaskCategoryEnum>;

@@ -26,6 +26,17 @@ const pino = require("pino");
 const pretty = require("pino-pretty");
 const { parseWalletAddress } = require("./src/utils");
 
+function readPrivateKey(value) {
+  const trimmed = String(value ?? "").trim();
+  if (trimmed.includes("BEGIN PRIVATE KEY")) {
+    return trimmed.includes("\\n") ? trimmed.replace(/\\n/g, "\n") : trimmed;
+  }
+  if (trimmed && fs.existsSync(trimmed)) {
+    return fs.readFileSync(trimmed, "utf8");
+  }
+  return trimmed;
+}
+
 if (!fs.existsSync("./logs")) {
   fs.mkdirSync("./logs");
 }
@@ -158,7 +169,7 @@ async function promptToConfigureClient(session) {
   return createAuthenticatedClient({
     logger,
     keyId,
-    privateKey,
+    privateKey: readPrivateKey(privateKey),
     walletAddressUrl: clientWalletAddressUrl,
   });
 }
@@ -189,7 +200,7 @@ async function initializeFromConfig(session) {
   const client = await createAuthenticatedClient({
     logger,
     keyId: config["KEY_ID"],
-    privateKey: config["PRIVATE_KEY"],
+    privateKey: readPrivateKey(config["PRIVATE_KEY"]),
     walletAddressUrl: parseWalletAddress(config["CLIENT_WALLET_ADDRESS"]),
   });
 

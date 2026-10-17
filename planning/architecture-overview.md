@@ -1,6 +1,6 @@
 # Arquitectura General del Sistema, Flujo de Pagos y Modelo de Datos — TaskStream AI (`architecture-overview.md`)
 
-> **Documento Oficial de Arquitectura (`architecture-overview.md`):** Define la arquitectura técnica integral de **TaskStream AI**, la estructura del proyecto, el **flujo completo de contratación, escrow, entregas, revisiones, extensiones, reclamaciones y pagos**, el contrato exacto del servicio de IA (**acotado en el MVP exclusivamente a tareas de imagen y texto**) y el **Modelo de Datos Relacional en PostgreSQL + Prisma 6** diseñado en Tercera Forma Normal (3NF), libre de *God-Entities* e incongruencias.
+> **Documento Oficial de Arquitectura (`architecture-overview.md`):** Define la arquitectura técnica integral de **TaskStream AI**, la estructura del proyecto, el **flujo completo de contratación, escrow, entregas, revisiones, extensiones, reclamaciones y pagos**, el contrato exacto del servicio de IA (**acotado en el MVP exclusivamente a tareas de imagen y texto**) y el **Modelo de Datos Relacional v2 en PostgreSQL + Prisma 6**, documentado en sus tres pasos (conceptual, lógico y físico), normalizado hasta FNBC con desnormalizaciones justificadas y con `TaskOrder` desacoplada en contextos delimitados.
 >
 > 🔗 **Alineado con:** `CONTEXT.md`, `AGENTS.md`, `AI_USAGE.md`, `taskboard.md`, `pbp-development.md` y `sdd-process.md`.
 
@@ -221,745 +221,428 @@ Haki-Suave/ (TaskStream AI)
 
 ---
 
-## 5. Modelado de la Base de Datos (PostgreSQL + Prisma 6) — Libre de *God-Entities*
+## 5. Modelado de la Base de Datos (PostgreSQL + Prisma 6) — Modelo v2 Desacoplado
 
-### 5.1. Verificación de Limpieza del Modelo Relacional (3NF)
+El modelo se documenta en los tres pasos clásicos, cada uno con su propio nivel de abstracción: **conceptual** (qué existe en el negocio), **lógico** (relaciones, claves, dependencias y normalización) y **físico** (cómo se materializa en PostgreSQL). La versión v2 resuelve la auditoría del modelo v1, en la que `TaskOrder` concentraba 31 atributos, 14 FK y cuatro dominios.
 
-El modelo de datos ha sido diseñado verificando la ausencia total de *God-Entities*, redundancias o estados contradictorios:
+**Fuentes canónicas.** Este documento explica el modelo pero no copia el esquema completo, para no crear una segunda fuente de verdad:
 
-1. **Separación de Responsabilidades (Sin *God-Entity* en `TaskOrder` ni en `User`):**
-   * `User` contiene la identidad base; `SellerProfile` (1:1 opcional); **una sola wallet activa** en `UserWallet` (cardinalidad de negocio 1 activa por usuario; historial de wallets reemplazadas puede conservarse inactivas).
-   * Publicaciones, ofertas (`NegotiationProposal` como bandeja), órdenes, escrow, transacciones OP, extensión única, entregas, IA, disputas y timers viven en tablas separadas.
-2. **Cumplimiento Exacto de las Reglas de Plazos y Pagos en el Esquema:**
-   * **Extensión única solo al vencer:** `DeadlineExtensionRequest` `UNIQUE(taskOrderId)`; `requestedExtraDays` ∈ `[1,7]`; respuesta Buyer **24h**. Sin extensión al vencer 7d → `AUTO_REFUNDED_INITIAL_EXPIRED`.
-   * **Revisión 32h / máx. 2 correcciones:** `revisionsUsed` `0..2` global; tras 2ª re-entrega el Buyer acepta o abre `DisputeCase` por mediación.
-   * **Ventana 30m:** sin petición de disputa → payout **96% + 4% a `platformOwnerWalletAddress`**; con petición → `DISPUTED`.
-   * **Reembolso termina la actividad:** no existe estado `REFUNDED_AND_REOPENED`; el Freelancer queda desligado.
+| Artefacto | Contenido |
+| :--- | :--- |
+| [`apps/api/prisma/schema.prisma`](../apps/api/prisma/schema.prisma) | Tablas, columnas, FK, índices simples y compuestos. |
+| [`apps/api/prisma/sql/domain_checks.sql`](../apps/api/prisma/sql/domain_checks.sql) | Lo que Prisma 6 no modela: `CHECK`, índices parciales, triggers, vistas y datos de referencia. |
+| [`apps/api/prisma/migrations/20261017000000_decouple_task_order/`](../apps/api/prisma/migrations/20261017000000_decouple_task_order/migration.sql) | Migración v1 → v2: DDL generado por Prisma más la capa física canónica. |
 
 ---
 
-### 5.2. Diagrama Entidad-Relación (`erDiagram`)
+### 5.1. Paso 1 — Modelo Conceptual
+
+#### 5.1.1. Contextos Delimitados (*Bounded Contexts*)
+
+Cada contexto es dueño de sus datos. Las dependencias van en un solo sentido: **Identidad ← Marketplace ← Contratación ← Finanzas / Ejecución**. Ningún contexto aguas arriba conoce a uno aguas abajo (una publicación no sabe qué orden nació de ella; la orden sí sabe su origen).
+
+| Contexto | Entidades | Responsabilidad | Responsable |
+| :--- | :--- | :--- | :--- |
+| **Identidad** | `User`, `SellerProfile`, `UserWallet`, `WalletVerificationChallenge`, `PlatformWallet` | Quién es cada actor y a qué wallets se le puede pagar. | BE-1 |
+| **Marketplace** | `TaskCategoryMediaType`, `Gig`, `ClientTaskPublication`, `NegotiationProposal`, `NegotiationMessage` | Oferta y demanda antes del contrato; negociación siempre a la baja. | FE-1 / BE-1 |
+| **Contratación** | `TaskOrder`, `TaskAcceptanceCriterion`, `TaskTechnicalConstraint`, `DeadlineExtensionRequest` | El contrato: partes, términos congelados y la extensión única. | BE-1 |
+| **Finanzas** | `EscrowLedger`, `OpenPaymentsTransaction`, `RafikiWebhookEvent` | Custodia del 100 %, reparto 96/4 y reembolso 100 %. | BE-2 |
+| **Ejecución** | `TaskDeliverable`, `AiAdvisorReport`, `AiCriterionEvaluation`, `DisputeCase`, `ScheduledTimerJob` | Entregas, revisión, IA consultiva, mediación y relojes. | BE-2 / AI-1 |
+
+#### 5.1.2. Diagrama Conceptual (entidades de negocio, sin atributos)
 
 ```mermaid
 erDiagram
-    User ||--o| SellerProfile : "1:1 optional"
-    User ||--o{ UserWallet : "historial; 1 activa"
-    UserWallet ||--o{ WalletVerificationChallenge : "1:N"
-
-    User ||--o{ Gig : "1:N"
-    User ||--o{ ClientTaskPublication : "1:N"
-    ClientTaskPublication ||--o{ NegotiationProposal : "1:N"
-    NegotiationProposal ||--o{ NegotiationMessage : "1:N"
-
-    ClientTaskPublication ||--o{ TaskOrder : "1:N"
-    NegotiationProposal ||--o| TaskOrder : "1:1"
-    Gig ||--o{ TaskOrder : "1:N"
-
-    TaskOrder ||--|{ TaskAcceptanceCriterion : "1:N"
-    TaskOrder ||--|| TaskTechnicalConstraint : "1:1"
-    TaskOrder ||--o| DeadlineExtensionRequest : "1:1 unique (Max 1 extension up to +7d)"
-    TaskOrder ||--|| EscrowLedger : "1:1"
-    TaskOrder ||--o{ TaskDeliverable : "1:N (Initial + Max 2 global corrections)"
-    TaskOrder ||--o| DisputeCase : "1:1 (Admin justified binary resolution)"
-    TaskOrder ||--o{ ScheduledTimerJob : "1:N (7d, 24h, +7d, 32h, 30m)"
-
-    EscrowLedger ||--|{ OpenPaymentsTransaction : "1:N"
-    TaskDeliverable ||--o| AiAdvisorReport : "1:1 (Only IMAGE and TEXT in MVP)"
-    AiAdvisorReport ||--|{ AiCriterionEvaluation : "1:N"
-    TaskAcceptanceCriterion ||--o{ AiCriterionEvaluation : "1:N"
+    USER ||--o| SELLER_PROFILE : "puede tener"
+    USER ||--o{ USER_WALLET : "registra (1 activa)"
+    USER ||--o{ GIG : "ofrece"
+    USER ||--o{ PUBLICATION : "publica"
+    PUBLICATION ||--o{ PROPOSAL : "recibe"
+    USER ||--o{ PROPOSAL : "negocia como freelancer"
+    PROPOSAL ||--o{ MESSAGE : "contiene"
+    GIG ||--o{ ORDER : "origina"
+    PROPOSAL ||--o| ORDER : "origina (si se acuerda)"
+    ORDER ||--|{ CRITERION : "fija"
+    ORDER ||--|| TECH_CONSTRAINT : "fija"
+    ORDER ||--o| EXTENSION : "admite una"
+    ORDER ||--|| ESCROW : "se financia con"
+    ESCROW ||--o{ OP_TRANSACTION : "mueve dinero con"
+    PLATFORM_WALLET ||--o{ ESCROW : "custodia / cobra 4 %"
+    ORDER ||--o{ DELIVERABLE : "recibe (máx. 3)"
+    DELIVERABLE ||--o| AI_REPORT : "auditada por (imagen/texto)"
+    AI_REPORT ||--|{ AI_EVALUATION : "evalúa"
+    CRITERION ||--o{ AI_EVALUATION : "es evaluado en"
+    ORDER ||--o| DISPUTE : "puede escalar a"
+    ORDER ||--o{ TIMER : "corre plazos"
 ```
+
+#### 5.1.3. Reglas de Negocio que el Modelo Debe Garantizar
+
+| ID | Regla | Dónde se garantiza |
+| :--- | :--- | :--- |
+| R-01 | Un usuario tiene como máximo una wallet activa, y solo si está verificada. | Índice parcial + `CHECK` |
+| R-02 | La negociación es siempre a la baja y nadie negocia consigo mismo. | `CHECK` |
+| R-03 | Una publicación termina en un único acuerdo. | Índice parcial (SEC-GAP-01) |
+| R-04 | Una orden nace de exactamente un origen: Gig o propuesta acordada. | `CHECK` + trigger |
+| R-05 | Los términos acordados no cambian después del contrato. | Columnas snapshot + trigger |
+| R-06 | Montos en centavos USD entre 100 y 50.000.000; reparto `floor(total*4/100)` / resto. | `CHECK` + `money.ts` |
+| R-07 | El 96 % va a la wallet del Freelancer vigente al contratar; el 4 % a la wallet del dueño, distinta del escrow. | FK a filas inmutables + trigger |
+| R-08 | Plazos: 1–7 días iniciales, 24 h de respuesta, +1–7 días, 32 h de revisión, 30 min de ventana final. | `CHECK` por tipo de reloj + trigger |
+| R-09 | Máximo 2 correcciones globales; la revisión *n* exige que la *n-1* haya sido devuelta. | `CHECK` + trigger |
+| R-10 | La IA solo audita entregas de imagen o texto, y nunca decide pagos. | Trigger + contrato Zod |
+| R-11 | Una disputa resuelta exige administrador y justificación de al menos 20 caracteres. | `CHECK` |
+| R-12 | No se borran contratos ni dinero: el historial financiero es inmutable. | `ON DELETE RESTRICT` |
 
 ---
 
-### 5.3. Esquema Completo en Prisma 6 (`schema.prisma`)
+### 5.2. Paso 2 — Modelo Lógico
+
+#### 5.2.1. Esquema Relacional
+
+Notación: **PK** clave primaria, **FK** clave foránea, **AK** clave candidata alterna (`UNIQUE`), *AK parcial* = única solo bajo una condición.
+
+| Relación | PK | FK | AK |
+| :--- | :--- | :--- | :--- |
+| `users` | `id` | — | `clerk_id`; `email` |
+| `seller_profiles` | `id` | `user_id → users` | `user_id` |
+| `user_wallets` | `id` | `user_id → users` | `wallet_address_url`; *parcial* `user_id WHERE is_active` |
+| `wallet_verification_challenges` | `id` | `wallet_id → user_wallets` | `client_nonce` |
+| `platform_wallets` | `id` | — | `wallet_address_url`; *parcial* `role WHERE is_active` |
+| `task_category_media_types` | `(category, media_type)` | — | — |
+| `gigs` | `id` | `seller_id → users`; `(category, expected_media_type) → task_category_media_types` | — |
+| `client_task_publications` | `id` | `buyer_id → users`; `(category, expected_media_type) → task_category_media_types` | `(id, buyer_id, initial_budget_usd_in_cents)` (destino de FK compuesta) |
+| `negotiation_proposals` | `id` | `(publication_id, buyer_id, initial_budget_usd_in_cents) → client_task_publications`; `buyer_id → users`; `freelancer_id → users` | *parcial* `publication_id WHERE AGREED_PATH_1`; *parcial* `(publication_id, freelancer_id) WHERE IN_NEGOTIATION` |
+| `negotiation_messages` | `id` | `proposal_id → negotiation_proposals`; `sender_id → users` | — |
+| `task_orders` | `id` | `buyer_id`, `seller_id → users`; `gig_id → gigs`; `proposal_id → negotiation_proposals`; `(category, expected_media_type) → task_category_media_types` | `proposal_id` |
+| `task_acceptance_criteria` | `id` | `task_order_id → task_orders` | `(task_order_id, criterion_code)` |
+| `task_technical_constraints` | `task_order_id` | `task_order_id → task_orders` | — |
+| `deadline_extension_requests` | `id` | `task_order_id → task_orders` | `task_order_id` |
+| `escrow_ledgers` | `id` | `task_order_id → task_orders`; `buyer_wallet_id`, `seller_wallet_id → user_wallets`; `custody_wallet_id`, `owner_fee_wallet_id → platform_wallets` | `task_order_id` |
+| `open_payments_transactions` | `id` | `escrow_ledger_id → escrow_ledgers` | `idempotency_key`; `(escrow_ledger_id, operation_type, attempt_number)`; *parciales* por pierna |
+| `rafiki_webhook_events` | `id` | — | `event_id` |
+| `task_deliverables` | `id` | `task_order_id → task_orders` | `(task_order_id, revision_number)`; `original_r2_key`; `preview_r2_key`; *parcial* `task_order_id WHERE PENDING_REVIEW` |
+| `ai_advisor_reports` | `id` | `deliverable_id → task_deliverables` | `deliverable_id` |
+| `ai_criterion_evaluations` | `id` | `ai_report_id → ai_advisor_reports`; `criterion_id → task_acceptance_criteria` | `(ai_report_id, criterion_id)` |
+| `dispute_cases` | `id` | `task_order_id → task_orders`; `admin_reviewer_id → users` | `task_order_id` |
+| `scheduled_timer_jobs` | `id` | `task_order_id → task_orders`; `deliverable_id → task_deliverables` | `bullmq_job_id`; *parcial* `task_order_id WHERE SCHEDULED` |
+
+`id` es un UUID subrogado en todas las entidades. Cuando existe una clave natural estable se declara como AK (`clerk_id`, `wallet_address_url`, `idempotency_key`, `(task_order_id, revision_number)`).
+
+#### 5.2.2. Diagrama Lógico (claves y atributos determinantes)
+
+```mermaid
+erDiagram
+    users ||--o{ user_wallets : ""
+    users ||--o{ negotiation_proposals : "buyer / freelancer"
+    client_task_publications ||--o{ negotiation_proposals : "FK compuesta"
+    task_category_media_types ||--o{ gigs : ""
+    task_category_media_types ||--o{ client_task_publications : ""
+    task_category_media_types ||--o{ task_orders : ""
+    gigs ||--o{ task_orders : "origen A"
+    negotiation_proposals ||--o| task_orders : "origen B"
+    task_orders ||--|| escrow_ledgers : ""
+    user_wallets ||--o{ escrow_ledgers : "buyer / seller"
+    platform_wallets ||--o{ escrow_ledgers : "custodia / fee"
+    escrow_ledgers ||--o{ open_payments_transactions : ""
+    task_orders ||--o{ task_deliverables : ""
+    task_deliverables ||--o| ai_advisor_reports : ""
+    task_deliverables ||--o{ scheduled_timer_jobs : "32h / 30m"
+    task_orders ||--o{ scheduled_timer_jobs : ""
+
+    task_orders {
+        uuid id PK
+        uuid buyer_id FK
+        uuid seller_id FK
+        uuid gig_id FK "XOR proposal_id"
+        uuid proposal_id FK,UK
+        varchar title "snapshot"
+        enum category FK "snapshot"
+        enum expected_media_type FK "snapshot"
+        int initial_delivery_days "snapshot 1..7"
+        enum lifecycle_status
+        timestamp closed_at "solo en estado terminal"
+    }
+    escrow_ledgers {
+        uuid id PK
+        uuid task_order_id FK,UK
+        uuid buyer_wallet_id FK
+        uuid seller_wallet_id FK
+        uuid custody_wallet_id FK
+        uuid owner_fee_wallet_id FK
+        int total_amount_usd_in_cents "100..50M"
+        int platform_fee_usd_in_cents "floor(total*4/100)"
+        int freelancer_payout_usd_in_cents "total - fee"
+        enum status
+    }
+    open_payments_transactions {
+        uuid id PK
+        uuid escrow_ledger_id FK
+        enum operation_type
+        int attempt_number
+        varchar idempotency_key UK
+        enum status
+    }
+    task_deliverables {
+        uuid id PK
+        uuid task_order_id FK
+        int revision_number "0..2"
+        enum review_decision
+        timestamp review_decided_at
+        timestamp original_unlocked_at
+    }
+    scheduled_timer_jobs {
+        uuid id PK
+        uuid task_order_id FK
+        uuid deliverable_id FK "solo 32h y 30m"
+        enum timer_type
+        timestamp started_at
+        timestamp expires_at "inmutable"
+        enum status
+    }
+    negotiation_proposals {
+        uuid id PK
+        uuid publication_id FK
+        uuid buyer_id FK
+        int initial_budget_usd_in_cents FK
+        uuid freelancer_id FK
+        int proposed_budget_usd_in_cents
+        int proposed_delivery_days
+        enum status
+    }
+```
+
+#### 5.2.3. Normalización
+
+**1FN.** Todos los atributos son atómicos respecto a cómo se consultan. Hay dos excepciones deliberadas:
+
+* `allowed_extensions`, `skills`, `languages` y `suggestions_for_freelancer` son `text[]`. Se leen y escriben siempre como un todo, nunca se buscan elemento a elemento ni se referencian desde otra tabla. Son valores compuestos del dominio, no grupos repetidos.
+* `default_criteria_json` y `preliminary_criteria_json` (JSONB, validados por Zod) son **plantillas** editables del Gig o de la publicación. Al nacer la orden se copian fila a fila a `task_acceptance_criteria`, que sí está normalizada y es la que referencian las evaluaciones de IA.
+
+**2FN.** Todas las tablas con PK simple cumplen trivialmente. En las de PK compuesta (`task_category_media_types`) no hay atributos no clave. Las AK compuestas (`(task_order_id, revision_number)`, `(ai_report_id, criterion_id)`) no tienen atributos que dependan solo de una parte.
+
+**3FN / FNBC.** Dependencias funcionales principales después del desacople:
+
+| Relación | Dependencias funcionales | Resultado |
+| :--- | :--- | :--- |
+| `task_orders` | `id → buyer_id, seller_id, gig_id, proposal_id, términos, lifecycle_status, closed_at`; `proposal_id → id` | FNBC: todo determinante es clave candidata. |
+| `escrow_ledgers` | `id → todo`; `task_order_id → id`; `total → platform_fee, freelancer_payout` | `total → fee` es una dependencia transitiva **aceptada y controlada** (ver abajo). |
+| `negotiation_proposals` | `id → todo`; `publication_id → buyer_id, initial_budget` | Redundancia **controlada**: la FK compuesta impide divergencia. |
+| `task_deliverables` | `id → todo`; `(task_order_id, revision_number) → id` | FNBC. |
+| `ai_advisor_reports` | `id → todo`; `deliverable_id → id` | FNBC (en v1, `task_order_id` y `revision_evaluated` eran transitivos vía `deliverable_id`; eliminados). |
+| `scheduled_timer_jobs` | `id → todo` | FNBC. La duración es función del tipo y se impone por `CHECK`, sin columna redundante. |
+
+**Desnormalizaciones conservadas y por qué no rompen la integridad:**
+
+| Dato | Por qué se conserva | Cómo se evita la divergencia |
+| :--- | :--- | :--- |
+| `escrow_ledgers.platform_fee` y `freelancer_payout` | Son las cifras exactas instruidas a Open Payments y auditadas por la conciliación. | `chk_escrow_exact_96_4_split` las recalcula en cada escritura. |
+| `negotiation_proposals.buyer_id` e `initial_budget` | El `CHECK` de oferta a la baja y el anti *self-dealing* son por fila. | FK compuesta a `(id, buyer_id, initial_budget)` de la publicación con `ON UPDATE CASCADE`. |
+| `task_orders.title`, `scope_description`, `category`, `expected_media_type`, `initial_delivery_days` | Son la **foto del contrato**: el Gig puede editarse después sin alterar órdenes vivas. No es redundancia, es otro hecho (lo acordado en una fecha). | Trigger `fn_task_order_origin_guard` valida contra el origen al insertar y prohíbe cambiarlos después. |
+| `task_orders.buyer_id` y `seller_id` | Son las partes del contrato y se consultan en cada listado. Derivarlos del origen costaría dos rutas de join distintas (Gig o propuesta). | El mismo trigger exige que coincidan con el origen. |
+
+**Valores derivados que ya no se almacenan** (se leen de vistas):
+
+| Antes (v1) | Ahora (v2) |
+| :--- | :--- |
+| `task_orders.revisions_used` | `v_task_order_revision_usage` = `count(review_decision = 'REVISION_REQUESTED')` |
+| Plazos copiados en `task_orders` y `task_deliverables` | `v_task_order_active_deadline` (el reloj `SCHEDULED`) |
+| `escrow_ledgers.released_to_seller…`, `refunded_to_buyer…`, `platform_fee_paid_out…` | `v_escrow_ledger_settlement` (pierna completada según las transacciones) |
+| `seller_profiles.completed_orders_count`, `ai_advisory_score_avg`, `rating_avg` | `v_seller_profile_stats` (`rating_avg` se eliminó: no existe flujo de calificación en el MVP) |
+| `task_orders.ai_auditable_modality`, `ai_advisor_reports.auditable_modality` | `resolveMvpAiAuditableModality(expected_media_type)` |
+| `ai_advisor_reports.mandatory_disclaimer` | Constante `MANDATORY_AI_DISCLAIMER` del contrato Zod |
+
+#### 5.2.4. Resolución de la Auditoría
+
+| # | Hallazgo de la auditoría | Modelo v1 | Modelo v2 |
+| :-- | :--- | :--- | :--- |
+| A-1 | Los tres pasos de modelado estaban mezclados. | Una sola sección con lista de verificación, diagrama y schema. | §5.1 conceptual, §5.2 lógico, §5.3 físico. |
+| A-2 | `TaskOrder` era una *God Entity* latente (31 atributos, 14 FK, 4 dominios). | Dinero, wallets, contadores, relojes y modalidad IA en la orden. | 14 columnas: partes, origen, términos congelados y estado. Dinero y wallets en `EscrowLedger`, plazos en `ScheduledTimerJob`, correcciones en `TaskDeliverable`. |
+| A-3 | Origen redundante `publicationId + proposalId + gigId`. | Tres FK y un `CHECK` de dos ramas. | `gig_id` XOR `proposal_id` (`num_nonnulls = 1`); la publicación se alcanza por la propuesta. |
+| A-4 | `AiAdvisorReport.taskOrderId` duplicaba el camino vía la entrega. | FK directa a la orden más `revision_evaluated`. | La IA cuelga solo de la entrega; orden y revisión se derivan. |
+| A-5 | `OpenPaymentsTransaction` tenía `taskOrderId` y `escrowLedgerId`. | Dos caminos que podían divergir. | Solo `escrow_ledger_id`. |
+| A-6 | Wallets en `TaskOrder`. | `buyer_wallet_id`, `seller_wallet_id` en la orden y direcciones de plataforma como texto en el ledger. | Las cuatro wallets son FK de `EscrowLedger`; las de plataforma están normalizadas en `platform_wallets`. |
+| A-7 | El plazo de 32 h vivía en tres lugares (*split-brain*). | `task_orders.current_review_*`, `task_deliverables.review_*` y el timer. | Solo `scheduled_timer_jobs.expires_at`, inmutable y con duración fijada por `CHECK`. |
+| A-8 | El redondeo 96/4 no tenía fórmula canónica. | El `CHECK` aceptaba cualquier reparto que sumara el total. | `fee = floor(total*4/100)` idéntico en SQL (`::bigint`) y en `money.ts`. |
+| A-9 | Faltaba el índice parcial de wallet activa única. | Solo un índice compuesto no único. | `user_wallets_one_active_per_user` + `chk_wallet_active_requires_verified`. |
+| A-10 | Múltiples rutas de borrado en cascada. | `TaskOrder` y sus hijos en `Cascade`, alcanzables por varios caminos. | Contratos, dinero, entregas y relojes en `Restrict`. `Cascade` solo para datos que pertenecen a su padre (perfil, desafíos de wallet, mensajes, evaluaciones IA). |
+
+#### 5.2.5. Hallazgos Propios Adicionales
+
+| # | Hallazgo | Corrección v2 |
+| :-- | :--- | :--- |
+| P-1 | Dos propuestas podían quedar `AGREED_PATH_1` sobre la misma publicación (SEC-GAP-01). | Índice parcial `negotiation_proposals_one_agreement_per_publication`. |
+| P-2 | `category` y `expected_media_type` podían contradecirse (p. ej. diseño con audio). | Tabla de referencia `task_category_media_types` con FK compuesta en Gig, publicación y orden. |
+| P-3 | Self-dealing: un usuario podía ser buyer y seller de su propia orden o negociación. | `chk_task_order_no_self_dealing`, `chk_proposal_no_self_dealing`, `chk_escrow_distinct_party_wallets`. |
+| P-4 | La propuesta no guardaba el plazo negociado, así que la orden no tenía de dónde copiarlo. | `proposed_delivery_days` en la propuesta y `offered_delivery_days` en los mensajes. |
+| P-5 | La propuesta replicaba `buyer_id` e `initial_budget` sin garantía de coincidir con la publicación. | FK compuesta hacia la publicación. |
+| P-6 | La wallet del Freelancer se leía de su perfil al pagar; si la cambiaba, el 96 % iba a otra dirección (SEC-GAP-04). | El ledger referencia filas de wallet inmutables, validadas por trigger al crearse. |
+| P-7 | Un reintento de liquidación podía duplicar la pierna del 96 % o la del 4 % (SEC-GAP-06). | `(ledger, operación, intento)` único; como máximo un intento `COMPLETED` y uno en curso por pierna. |
+| P-8 | `is_original_unlocked` y `unlocked_at` podían contradecirse; el original podía desbloquearse sin aceptación. | Solo `original_unlocked_at`, permitido únicamente tras aceptación o mediación. |
+| P-9 | Se podía entregar la revisión 2 sin que la 1 hubiera sido devuelta, o tener dos entregas en revisión. | Trigger de secuencia + índice parcial de una revisión pendiente por orden. |
+| P-10 | `closed_at`, `completed_at`, `refunded_at` en la orden podían contradecir el estado. | Un único `closed_at` presente si y solo si el estado es terminal. |
+| P-11 | Montos sin tope: un `int4` de centavos podía desbordar al multiplicar por 4. | Rango `[100, 50.000.000]` y cálculo en `bigint`. |
+| P-12 | `max_revisions_allowed`, `review_window_hours` y `final_claim_window_minutes` eran columnas que el `CHECK` obligaba a ser constantes. | Eliminadas: son reglas del dominio en el código y en el `CHECK` de cada reloj. |
+| P-13 | `requested_by_id` y `opened_by_id` repetían a una de las partes de la orden. | Eliminados: la extensión la pide siempre el seller y la disputa la abre siempre el buyer. |
+| P-14 | Un reporte IA podía evaluar criterios de otra orden, o existir para una orden de video. | Triggers `fn_ai_criterion_same_order` y `fn_ai_report_mvp_modality`. |
+
+---
+
+### 5.3. Paso 3 — Modelo Físico
+
+#### 5.3.1. Convenciones
+
+| Aspecto | Decisión |
+| :--- | :--- |
+| Motor | PostgreSQL ≥ 14 (Supabase), Prisma 6.19 con `prisma-client-js`, `url` (pooler) y `directUrl` (migraciones). |
+| Nombres | Modelos en PascalCase y campos en camelCase en Prisma; tablas y columnas en `snake_case` vía `@@map` / `@map`. |
+| Identificadores | `uuid` generado por Prisma (`@default(uuid())`), tipo `@db.Uuid`. |
+| Dinero | `integer` en centavos USD. Nunca `float` ni `decimal`. Multiplicaciones en `bigint`. |
+| Tiempo | `timestamp(3)` en UTC. Todo plazo es `started_at` + `expires_at` en su reloj. |
+| Estados | Enums de PostgreSQL espejo de los enums Zod de `@taskstream/shared-schemas`. |
+| Errores de dominio | Los triggers lanzan `check_violation` con un código legible (`TASK_ORDER_ORIGIN_MISMATCH`, `ESCROW_TOTAL_MISMATCH`, …). |
+
+#### 5.3.2. Extractos Clave de `schema.prisma`
 
 ```prisma
-// schema.prisma
-generator client {
-  provider = "prisma-client-js"
-}
-
-datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-}
-
-// ============================================================================
-// 1. ENUMS DEL DOMINIO
-// ============================================================================
-
-enum UserActiveMode {
-  BUYER
-  SELLER
-}
-
-enum PlatformRole {
-  USER
-  ADMIN
-}
-
-enum WalletVerificationStatus {
-  PENDING_REDIRECT
-  VERIFIED
-  FAILED
-  EXPIRED
-}
-
-enum TaskCategory {
-  DIGITAL_MARKETING
-  GRAPHICS_AND_DESIGN
-  PROGRAMMING_AND_TECH
-  TECHNICAL_WRITING_TRANS
-  VIDEO_AND_ANIMATION
-  MUSIC_AND_AUDIO
-}
-
-enum DeliverableMediaType {
-  IMAGE_RASTER_VECTOR // Auditable por IA en el MVP (Imagen)
-  DOCUMENT_TEXT       // Auditable por IA en el MVP (Texto)
-  CODE_ARCHIVE        // Planteado para IA Post-MVP
-  DATA_CAMPAIGN       // Planteado para IA Post-MVP
-  VIDEO_STREAM        // Planteado para IA Post-MVP
-  AUDIO_TRACK         // Planteado para IA Post-MVP
-}
-
-enum MvpAiAuditableModality {
-  IMAGE
-  TEXT
-}
-
-enum PublicationStatus {
-  OPEN_FOR_PROPOSALS
-  AGREED_AND_LOCKED
-  CANCELLED
-}
-
-enum NegotiationProposalStatus {
-  IN_NEGOTIATION
-  AGREED_PATH_1
-  DISCREPANCY_CLOSED_PATH_2
-}
-
-enum TaskLifecycleStatus {
-  PENDING_ESCROW_FUNDING         // Aceptación mutua; esperando fondeo
-  ESCROW_LOCKED                  // Plazo inicial 7 días
-  EXTENSION_REQUESTED            // Extensión pedida SOLO al vencer 7d; Buyer 24h
-  ESCROW_EXTENDED                // Extensión aprobada (máx. 14 días totales)
-  IN_REVIEW                      // Revisión 32h
-  REVISION_REQUESTED             // Corrección (máx. 2 globales)
-  FINAL_CLAIM_WINDOW_30M         // 30 min para pedir disputa
-  DISPUTED                       // Mediación (tras 2ª corrección o en 30m)
-  COMPLETED                      // 96% Freelancer + 4% wallet dueño
-  REFUNDED                       // 100% Buyer; actividad muere
-  AUTO_REFUNDED_INITIAL_EXPIRED  // 7d sin pedir extensión
-  AUTO_REFUNDED_BY_TIMEOUT       // Buyer no responde 24h a extensión
-  AUTO_REFUNDED_EXTENDED_EXPIRED // Sin entrega en extensión
-}
-
-enum ExtensionRequestStatus {
-  PENDING_BUYER_DECISION
-  APPROVED_EXTRA_DAYS
-  REJECTED_REFUND_REQUESTED
-  REJECTED_BY_TIMEOUT_AUTO_REFUNDED
-}
-
-enum EscrowLedgerStatus {
-  AWAITING_FUNDS
-  FUNDS_LOCKED
-  RELEASED_96_4
-  REFUNDED_100
-}
-
-enum OpenPaymentsOperationType {
-  ESCROW_LOCK
-  FREELANCER_PAYOUT_96      // OutgoingPayment 96% → wallet Freelancer
-  PLATFORM_FEE_PAYOUT_4     // OutgoingPayment 4% → wallet del dueño (distinta del escrow)
-  BUYER_REFUND_100
-}
-
-enum OpenPaymentsTxStatus {
-  PENDING_INTERACTION
-  PROCESSING
-  COMPLETED
-  FAILED
-  CANCELLED
-}
-
-enum PreviewProcessingStatus {
-  PENDING_PROCESSING
-  READY
-  FAILED
-}
-
-enum AiAdvisoryLabel {
-  HIGH_COMPLIANCE
-  PARTIAL_COMPLIANCE
-  LOW_COMPLIANCE
-}
-
-enum CriterionEvalStatus {
-  MET
-  PARTIALLY_MET
-  NOT_MET
-  REQUIRES_HUMAN_VERIFICATION
-}
-
-enum DisputeOriginType {
-  BUYER_MEDIATION_AFTER_2ND_REVISION // Buyer pide mediación/reembolso tras 2ª corrección
-  FINAL_30M_CLAIM_WINDOW             // Petición de disputa en ventana de 30 min
-}
-
-enum AdminBinaryResolution {
-  PENDING
-  BUYER_FULL_REFUND_100
-  SELLER_RELEASE_96_4
-}
-
-enum TimerJobType {
-  INITIAL_DELIVERY_7D        // 7 días iniciales de entrega
-  EXTENSION_RESPONSE_24H     // 24 horas para que el Buyer responda a la extensión
-  EXTENDED_DELIVERY_UP_TO_7D // Hasta 7 días adicionales aprobados (máx. 14 días totales)
-  DELIVERY_REVIEW_32H        // 32 horas para que el Buyer revise una entrega
-  FINAL_CLAIM_WINDOW_30M     // 30 minutos de ventana final antes de liberar 96% / 4%
-}
-
-enum TimerJobStatus {
-  SCHEDULED
-  EXECUTED
-  CANCELLED_BY_ACTION
-  SUSPENDED_BY_DISPUTE
-  FAILED
-}
-
-// ============================================================================
-// 2. IDENTIDAD, PERFILES Y BILLETERAS MULTIMONEDA
-// ============================================================================
-
-model User {
-  id           String         @id @default(uuid()) @db.Uuid
-  clerkId      String         @unique @map("clerk_id")
-  email        String         @unique
-  displayName  String         @map("display_name") @db.VarChar(100)
-  avatarUrl    String?        @map("avatar_url")
-  countryCode  String         @map("country_code") @db.Char(2)
-  activeMode   UserActiveMode @default(BUYER) @map("active_mode")
-  platformRole PlatformRole   @default(USER) @map("platform_role")
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
-
-  sellerProfile           SellerProfile?
-  wallets                 UserWallet[]
-  gigs                    Gig[]                      @relation("SellerGigs")
-  publications            ClientTaskPublication[]    @relation("BuyerPublications")
-  buyerNegotiations       NegotiationProposal[]      @relation("BuyerNegotiations")
-  freelancerNegotiations  NegotiationProposal[]      @relation("FreelancerNegotiations")
-  sentNegotiationMessages NegotiationMessage[]       @relation("MessageSender")
-  buyerTaskOrders         TaskOrder[]                @relation("BuyerOrders")
-  sellerTaskOrders        TaskOrder[]                @relation("SellerOrders")
-  requestedExtensions     DeadlineExtensionRequest[] @relation("ExtensionRequester")
-  openedDisputes          DisputeCase[]              @relation("DisputeOpener")
-  resolvedDisputes        DisputeCase[]              @relation("DisputeAdminReviewer")
-
-  @@index([countryCode])
-  @@map("users")
-}
-
-model SellerProfile {
-  id                     String   @id @default(uuid()) @db.Uuid
-  userId                 String   @unique @map("user_id") @db.Uuid
-  headline               String   @db.VarChar(140)
-  bio                    String   @db.Text
-  skills                 String[]
-  languages              String[]
-  webMonetizationEnabled Boolean  @default(true) @map("web_monetization_enabled")
-  ratingAvg              Decimal  @default(0.00) @map("rating_avg") @db.Decimal(3, 2)
-  completedOrdersCount   Int      @default(0) @map("completed_orders_count")
-  aiAdvisoryScoreAvg     Decimal  @default(0.00) @map("ai_advisory_score_avg") @db.Decimal(5, 2)
-  createdAt              DateTime @default(now()) @map("created_at")
-  updatedAt              DateTime @updatedAt @map("updated_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("seller_profiles")
-}
-
-model UserWallet {
-  id                String    @id @default(uuid()) @db.Uuid
-  userId            String    @map("user_id") @db.Uuid
-  walletAddressUrl  String    @unique @map("wallet_address_url")
-  assetCode         String    @map("asset_code") @db.VarChar(6)
-  assetScale        Int       @map("asset_scale")
-  authServerUrl     String    @map("auth_server_url")
-  resourceServerUrl String    @map("resource_server_url")
-  isVerified        Boolean   @default(false) @map("is_verified")
-  verifiedAt        DateTime? @map("verified_at")
-  /// Regla de negocio: como máximo UNA wallet con isActive=true por userId (enforce en servicio + índice parcial SQL).
-  /// Al verificar una nueva, la anterior pasa a isActive=false (reemplazo).
-  isActive          Boolean   @default(true) @map("is_active")
-  createdAt         DateTime  @default(now()) @map("created_at")
-  updatedAt         DateTime  @updatedAt @map("updated_at")
-
-  user                   User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  verificationChallenges WalletVerificationChallenge[]
-  buyerOrders            TaskOrder[]                   @relation("BuyerOrderWallet")
-  sellerOrders           TaskOrder[]                   @relation("SellerOrderWallet")
-
-  @@index([userId, isActive])
-  @@map("user_wallets")
-}
-
-model WalletVerificationChallenge {
-  id                  String                   @id @default(uuid()) @db.Uuid
-  walletId            String                   @map("wallet_id") @db.Uuid
-  clientNonce         String                   @unique @map("client_nonce")
-  continueUri         String                   @map("continue_uri")
-  continueAccessToken String                   @map("continue_access_token")
-  interactRedirectUri String                   @map("interact_redirect_uri")
-  interactRef         String?                  @map("interact_ref")
-  receivedHash        String?                  @map("received_hash")
-  status              WalletVerificationStatus @default(PENDING_REDIRECT)
-  expiresAt           DateTime                 @map("expires_at")
-  createdAt           DateTime                 @default(now()) @map("created_at")
-  completedAt         DateTime?                @map("completed_at")
-
-  wallet UserWallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
-
-  @@index([walletId, status])
-  @@map("wallet_verification_challenges")
-}
-
-// ============================================================================
-// 3. MARKETPLACE, PUBLICACIONES Y NEGOCIACIÓN
-// ============================================================================
-
-model Gig {
+/// Contrato entre Buyer y Freelancer. No guarda dinero, wallets, contadores ni relojes.
+model TaskOrder {
   id                  String               @id @default(uuid()) @db.Uuid
+  buyerId             String               @map("buyer_id") @db.Uuid
   sellerId            String               @map("seller_id") @db.Uuid
+  gigId               String?              @map("gig_id") @db.Uuid
+  proposalId          String?              @unique @map("proposal_id") @db.Uuid
+  title               String               @db.VarChar(120)
+  scopeDescription    String               @map("scope_description") @db.Text
   category            TaskCategory
   expectedMediaType   DeliverableMediaType @map("expected_media_type")
-  title               String               @db.VarChar(120)
-  description         String               @db.Text
-  priceUSDInCents     Int                  @map("price_usd_in_cents")
-  initialDeliveryDays Int                  @default(7) @map("initial_delivery_days") // Máx. 7 días iniciales
-  defaultCriteriaJson Json                 @map("default_criteria_json")
-  allowedExtensions   String[]             @map("allowed_extensions")
-  isActive            Boolean              @default(true) @map("is_active")
+  initialDeliveryDays Int                  @map("initial_delivery_days")
+  lifecycleStatus     TaskLifecycleStatus  @default(PENDING_ESCROW_FUNDING) @map("lifecycle_status")
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
-
-  seller     User        @relation("SellerGigs", fields: [sellerId], references: [id], onDelete: Restrict)
-  taskOrders TaskOrder[]
-
-  @@index([category, isActive])
-  @@index([sellerId])
-  @@map("gigs")
+  closedAt            DateTime?            @map("closed_at")
+  // relaciones: buyer, seller, gig?, proposal?, categoryMedia, criterios,
+  // restricción técnica, extensión?, escrowLedger?, entregas, disputa?, relojes
 }
-
-model ClientTaskPublication {
-  id                      String               @id @default(uuid()) @db.Uuid
-  buyerId                 String               @map("buyer_id") @db.Uuid
-  category                TaskCategory
-  expectedMediaType       DeliverableMediaType @map("expected_media_type")
-  title                   String               @db.VarChar(120)
-  description             String               @db.Text
-  initialBudgetUSDInCents Int                  @map("initial_budget_usd_in_cents")
-  initialDeliveryDays     Int                  @default(7) @map("initial_delivery_days") // Máx. 7 días iniciales
-  preliminaryCriteriaJson Json                 @map("preliminary_criteria_json")
-  allowedExtensions       String[]             @map("allowed_extensions")
-  status                  PublicationStatus    @default(OPEN_FOR_PROPOSALS)
-  republishCount          Int                  @default(0) @map("republish_count")
-  createdAt               DateTime             @default(now()) @map("created_at")
-  updatedAt               DateTime             @updatedAt @map("updated_at")
-
-  buyer      User                  @relation("BuyerPublications", fields: [buyerId], references: [id], onDelete: Restrict)
-  proposals  NegotiationProposal[]
-  taskOrders TaskOrder[]
-
-  @@index([status, category])
-  @@index([buyerId])
-  @@map("client_task_publications")
-}
-
-model NegotiationProposal {
-  id                       String                    @id @default(uuid()) @db.Uuid
-  publicationId            String                    @map("publication_id") @db.Uuid
-  buyerId                  String                    @map("buyer_id") @db.Uuid
-  freelancerId             String                    @map("freelancer_id") @db.Uuid
-  initialBudgetUSDInCents  Int                       @map("initial_budget_usd_in_cents")
-  proposedBudgetUSDInCents Int                       @map("proposed_budget_usd_in_cents") // <= initialBudgetUSDInCents
-  status                   NegotiationProposalStatus @default(IN_NEGOTIATION)
-  closedReason             String?                   @map("closed_reason") @db.VarChar(250)
-  createdAt                DateTime                  @default(now()) @map("created_at")
-  updatedAt                DateTime                  @updatedAt @map("updated_at")
-  closedAt                 DateTime?                 @map("closed_at")
-
-  publication ClientTaskPublication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
-  buyer       User                  @relation("BuyerNegotiations", fields: [buyerId], references: [id], onDelete: Restrict)
-  freelancer  User                  @relation("FreelancerNegotiations", fields: [freelancerId], references: [id], onDelete: Restrict)
-  messages    NegotiationMessage[]
-  taskOrder   TaskOrder?
-
-  @@index([publicationId, status])
-  @@index([freelancerId, status])
-  @@map("negotiation_proposals")
-}
-
-model NegotiationMessage {
-  id                      String   @id @default(uuid()) @db.Uuid
-  proposalId              String   @map("proposal_id") @db.Uuid
-  senderId                String   @map("sender_id") @db.Uuid
-  messageText             String   @map("message_text") @db.Text
-  offeredAmountUSDInCents Int?     @map("offered_amount_usd_in_cents")
-  createdAt               DateTime @default(now()) @map("created_at")
-
-  proposal NegotiationProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
-  sender   User                @relation("MessageSender", fields: [senderId], references: [id], onDelete: Restrict)
-
-  @@index([proposalId, createdAt])
-  @@map("negotiation_messages")
-}
-
-// ============================================================================
-// 4. ORDEN DE TAREA, PLAZOS (7d, 24h, +7d, 32h, 30m) Y CORRECCIONES (MÁX. 2)
-// ============================================================================
-
-model TaskOrder {
-  id                          String                  @id @default(uuid()) @db.Uuid
-  buyerId                     String                  @map("buyer_id") @db.Uuid
-  sellerId                    String                  @map("seller_id") @db.Uuid
-  buyerWalletId               String                  @map("buyer_wallet_id") @db.Uuid
-  sellerWalletId              String                  @map("seller_wallet_id") @db.Uuid
-  publicationId               String?                 @map("publication_id") @db.Uuid
-  proposalId                  String?                 @unique @map("proposal_id") @db.Uuid
-  gigId                       String?                 @map("gig_id") @db.Uuid
-  title                       String                  @db.VarChar(120)
-  scopeDescription            String                  @map("scope_description") @db.Text
-  category                    TaskCategory
-  expectedMediaType           DeliverableMediaType    @map("expected_media_type")
-  aiAuditableModality         MvpAiAuditableModality? @map("ai_auditable_modality") // Presente solo si es IMAGE o TEXT en el MVP
-  lifecycleStatus             TaskLifecycleStatus     @default(PENDING_ESCROW_FUNDING) @map("lifecycle_status")
-
-  // Distribución: 96% Freelancer / 4% wallet del dueño (billetera distinta del escrow)
-  totalAmountUSDInCents       Int                     @map("total_amount_usd_in_cents")       // 100%
-  freelancerPayoutUSDInCents  Int                     @map("freelancer_payout_usd_in_cents")  // 96%
-  platformFeeUSDInCents       Int                     @map("platform_fee_usd_in_cents")       // 4% → platformOwnerWallet
-  buyerOriginCurrency         String                  @map("buyer_origin_currency") @db.VarChar(6)
-  sellerTargetCurrency        String                  @map("seller_target_currency") @db.VarChar(6)
-
-  // Reglas Globales de Plazos y Correcciones
-  initialDeliveryDays         Int                     @default(7) @map("initial_delivery_days")     // 7 días iniciales
-  reviewWindowHours           Int                     @default(32) @map("review_window_hours")      // 32 horas por cada entrega
-  finalClaimWindowMinutes     Int                     @default(30) @map("final_claim_window_minutes") // 30 minutos ventana final
-  maxRevisionsAllowed         Int                     @default(2) @map("max_revisions_allowed")     // Máximo 2 por orden
-  revisionsUsed               Int                     @default(0) @map("revisions_used")            // Global (0..2), no se reinicia con extensión
-  extensionGrantedDays        Int                     @default(0) @map("extension_granted_days")    // 0 o 1..7 días adicionales (máx. 14d totales)
-
-  // Marcas de Tiempo de los Relojes Independientes
-  escrowLockedAt              DateTime?               @map("escrow_locked_at")
-  initialDeliveryDeadlineAt   DateTime?               @map("initial_delivery_deadline_at")  // +7 días desde inicio
-  extendedDeliveryDeadlineAt  DateTime?               @map("extended_delivery_deadline_at") // Hasta +7 días adicionales (máx. 14d desde inicio)
-  currentReviewStartedAt      DateTime?               @map("current_review_started_at")
-  currentReviewExpiresAt      DateTime?               @map("current_review_expires_at")     // +32 horas desde la entrega vigente
-  finalClaimWindowStartedAt   DateTime?               @map("final_claim_window_started_at")
-  finalClaimWindowExpiresAt   DateTime?               @map("final_claim_window_expires_at") // +30 minutos tras aceptación expresa o automática
-  completedAt                 DateTime?               @map("completed_at")
-  refundedAt                  DateTime?               @map("refunded_at")
-  createdAt                   DateTime                @default(now()) @map("created_at")
-  updatedAt                   DateTime                @updatedAt @map("updated_at")
-
-  buyer                User                      @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Restrict)
-  seller               User                      @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: Restrict)
-  buyerWallet          UserWallet                @relation("BuyerOrderWallet", fields: [buyerWalletId], references: [id], onDelete: Restrict)
-  sellerWallet         UserWallet                @relation("SellerOrderWallet", fields: [sellerWalletId], references: [id], onDelete: Restrict)
-  publication          ClientTaskPublication?    @relation(fields: [publicationId], references: [id], onDelete: SetNull)
-  proposal             NegotiationProposal?      @relation(fields: [proposalId], references: [id], onDelete: SetNull)
-  gig                  Gig?                      @relation(fields: [gigId], references: [id], onDelete: SetNull)
-  acceptanceCriteria   TaskAcceptanceCriterion[]
-  technicalConstraint  TaskTechnicalConstraint?
-  extensionRequest     DeadlineExtensionRequest?
-  escrowLedger         EscrowLedger?
-  openPaymentsTxs      OpenPaymentsTransaction[]
-  deliverables         TaskDeliverable[]
-  aiAdvisorReports     AiAdvisorReport[]
-  disputeCase          DisputeCase?
-  scheduledTimerJobs   ScheduledTimerJob[]
-
-  @@index([buyerId, lifecycleStatus])
-  @@index([sellerId, lifecycleStatus])
-  @@index([lifecycleStatus])
-  @@map("task_orders")
-}
-
-model TaskAcceptanceCriterion {
-  id            String  @id @default(uuid()) @db.Uuid
-  taskOrderId   String  @map("task_order_id") @db.Uuid
-  criterionCode String  @map("criterion_code") @db.VarChar(32)
-  description   String  @db.VarChar(350)
-  isMandatory   Boolean @default(true) @map("is_mandatory")
-  sortOrder     Int     @default(0) @map("sort_order")
-
-  taskOrder     TaskOrder               @relation(fields: [taskOrderId], references: [id], onDelete: Cascade)
-  aiEvaluations AiCriterionEvaluation[]
-
-  @@unique([taskOrderId, criterionCode])
-  @@map("task_acceptance_criteria")
-}
-
-model TaskTechnicalConstraint {
-  taskOrderId        String   @id @map("task_order_id") @db.Uuid
-  allowedExtensions  String[] @map("allowed_extensions")
-  maxFileSizeBytes   BigInt?  @map("max_file_size_bytes") // NULL en MVP
-  minWordCount       Int?     @map("min_word_count")
-  minWidthPx         Int?     @map("min_width_px")
-  minHeightPx        Int?     @map("min_height_px")
-  minDurationSeconds Int?     @map("min_duration_seconds")
-  maxDurationSeconds Int?     @map("max_duration_seconds")
-
-  taskOrder TaskOrder @relation(fields: [taskOrderId], references: [id], onDelete: Cascade)
-
-  @@map("task_technical_constraints")
-}
-
-model DeadlineExtensionRequest {
-  id                      String                 @id @default(uuid()) @db.Uuid
-  taskOrderId             String                 @unique @map("task_order_id") @db.Uuid // Garantiza 1 única extensión por orden
-  requestedById           String                 @map("requested_by_id") @db.Uuid
-  requestedExtraDays      Int                    @map("requested_extra_days")          // Hasta 7 días adicionales (1..7)
-  reason                  String                 @db.VarChar(500)
-  requestedAt             DateTime               @default(now()) @map("requested_at")
-  buyerDecisionDeadlineAt DateTime               @map("buyer_decision_deadline_at")    // +24 horas para aprobar o rechazar
-  respondedAt             DateTime?              @map("responded_at")
-  status                  ExtensionRequestStatus @default(PENDING_BUYER_DECISION)
-
-  taskOrder   TaskOrder @relation(fields: [taskOrderId], references: [id], onDelete: Cascade)
-  requestedBy User      @relation("ExtensionRequester", fields: [requestedById], references: [id], onDelete: Restrict)
-
-  @@index([status, buyerDecisionDeadlineAt])
-  @@map("deadline_extension_requests")
-}
-
-// ============================================================================
-// 5. LIBRO MAYOR EN ESCROW Y TRANSACCIONES OPEN PAYMENTS
-// ============================================================================
 
 model EscrowLedger {
   id                         String             @id @default(uuid()) @db.Uuid
   taskOrderId                String             @unique @map("task_order_id") @db.Uuid
-  escrowWalletAddress        String             @default("https://ilp.interledger-test.dev/taskstream-escrow") @map("escrow_wallet_address")
-  platformOwnerWalletAddress String             @map("platform_owner_wallet_address") // Wallet del dueño que recibe el 4%
-  lockedAmountUSDInCents     Int                @default(0) @map("locked_amount_usd_in_cents")
-  releasedToSellerUSDInCents Int                @default(0) @map("released_to_seller_usd_in_cents")
-  platformFeePaidOutInCents  Int                @default(0) @map("platform_fee_paid_out_in_cents") // 4% transferido (no “retenido” informal)
-  refundedToBuyerUSDInCents  Int                @default(0) @map("refunded_to_buyer_usd_in_cents")
+  buyerWalletId              String             @map("buyer_wallet_id") @db.Uuid
+  sellerWalletId             String             @map("seller_wallet_id") @db.Uuid
+  custodyWalletId            String             @map("custody_wallet_id") @db.Uuid
+  ownerFeeWalletId           String             @map("owner_fee_wallet_id") @db.Uuid
+  totalAmountUSDInCents      Int                @map("total_amount_usd_in_cents")
+  platformFeeUSDInCents      Int                @map("platform_fee_usd_in_cents")
+  freelancerPayoutUSDInCents Int                @map("freelancer_payout_usd_in_cents")
   status                     EscrowLedgerStatus @default(AWAITING_FUNDS)
-  createdAt                  DateTime           @default(now()) @map("created_at")
-  updatedAt                  DateTime           @updatedAt @map("updated_at")
-
-  taskOrder    TaskOrder                 @relation(fields: [taskOrderId], references: [id], onDelete: Restrict)
-  transactions OpenPaymentsTransaction[]
-
-  @@map("escrow_ledgers")
+  fundsLockedAt              DateTime?          @map("funds_locked_at")
+  settledAt                  DateTime?          @map("settled_at")
+  // ...
 }
 
-model OpenPaymentsTransaction {
-  id                  String                    @id @default(uuid()) @db.Uuid
-  escrowLedgerId      String                    @map("escrow_ledger_id") @db.Uuid
-  taskOrderId         String                    @map("task_order_id") @db.Uuid
-  operationType       OpenPaymentsOperationType @map("operation_type")
-  attemptNumber       Int                       @default(1) @map("attempt_number")
-  idempotencyKey      String                    @unique @map("idempotency_key")
-  incomingPaymentUrl  String?                   @map("incoming_payment_url")
-  quoteUrl            String?                   @map("quote_url")
-  outgoingPaymentUrl  String?                   @map("outgoing_payment_url")
-  grantContinueUri    String?                   @map("grant_continue_uri")
-  grantContinueToken  String?                   @map("grant_continue_token")
-  interactRedirectUri String?                   @map("interact_redirect_uri")
-  clientNonce         String?                   @map("client_nonce")
-  debitAmountValue    String?                   @map("debit_amount_value")
-  debitAssetCode      String?                   @map("debit_asset_code") @db.VarChar(6)
-  debitAssetScale     Int?                      @map("debit_asset_scale")
-  receiveAmountValue  String?                   @map("receive_amount_value")
-  receiveAssetCode    String?                   @map("receive_asset_code") @db.VarChar(6)
-  receiveAssetScale   Int?                      @map("receive_asset_scale")
-  status              OpenPaymentsTxStatus      @default(PENDING_INTERACTION)
-  failureReason       String?                   @map("failure_reason")
-  metadataJson        Json?                     @map("metadata_json")
-  createdAt           DateTime                  @default(now()) @map("created_at")
-  completedAt         DateTime?                 @map("completed_at")
-
-  escrowLedger EscrowLedger @relation(fields: [escrowLedgerId], references: [id], onDelete: Restrict)
-  taskOrder    TaskOrder    @relation(fields: [taskOrderId], references: [id], onDelete: Restrict)
-
-  @@index([taskOrderId, operationType])
-  @@index([status])
-  @@map("open_payments_transactions")
-}
-
-model RafikiWebhookEvent {
-  id          String    @id @default(uuid()) @db.Uuid
-  eventId     String    @unique @map("event_id")
-  eventType   String    @map("event_type") @db.VarChar(80)
-  resourceUrl String    @map("resource_url")
-  payloadJson Json      @map("payload_json")
-  processedAt DateTime? @map("processed_at")
-  createdAt   DateTime  @default(now()) @map("created_at")
-
-  @@index([eventType, processedAt])
-  @@map("rafiki_webhook_events")
-}
-
-// ============================================================================
-// 6. ENTREGABLES, CONSEJERO DE IA (IMAGEN Y TEXTO EN MVP) Y DISPUTAS
-// ============================================================================
-
-model TaskDeliverable {
-  id                 String                  @id @default(uuid()) @db.Uuid
-  taskOrderId        String                  @map("task_order_id") @db.Uuid
-  revisionNumber     Int                     @map("revision_number") // 0 = Inicial, 1 = Corrección 1, 2 = Corrección 2
-  originalR2Key      String                  @map("original_r2_key")
-  previewR2Key       String?                 @map("preview_r2_key")
-  fileName           String                  @map("file_name") @db.VarChar(255)
-  mimeType           String                  @map("mime_type") @db.VarChar(120)
-  fileExtension      String                  @map("file_extension") @db.VarChar(20)
-  fileSizeBytes      BigInt                  @map("file_size_bytes")
-  sha256Checksum     String                  @map("sha256_checksum") @db.Char(64)
-  previewStatus      PreviewProcessingStatus @default(PENDING_PROCESSING) @map("preview_status")
-  isOriginalUnlocked Boolean                 @default(false) @map("is_original_unlocked")
-  buyerRevisionNotes String?                 @map("buyer_revision_notes") @db.Text
-  reviewStartedAt    DateTime                @default(now()) @map("review_started_at")
-  reviewExpiresAt    DateTime                @map("review_expires_at") // +32 horas para esta entrega
-  submittedAt        DateTime                @default(now()) @map("submitted_at")
-  unlockedAt         DateTime?               @map("unlocked_at")
-
-  taskOrder       TaskOrder        @relation(fields: [taskOrderId], references: [id], onDelete: Cascade)
-  aiAdvisorReport AiAdvisorReport?
-
-  @@unique([taskOrderId, revisionNumber])
-  @@index([taskOrderId, previewStatus])
-  @@map("task_deliverables")
-}
-
-model AiAdvisorReport {
-  id                           String                 @id @default(uuid()) @db.Uuid
-  deliverableId                String                 @unique @map("deliverable_id") @db.Uuid
-  taskOrderId                  String                 @map("task_order_id") @db.Uuid
-  revisionEvaluated            Int                    @map("revision_evaluated")
-  auditableModality            MvpAiAuditableModality @map("auditable_modality") // IMAGE | TEXT en MVP
-  advisoryScore                Int                    @map("advisory_score")     // 0..100
-  advisoryLabel                AiAdvisoryLabel        @map("advisory_label")
-  executiveSummaryForBuyer     String                 @map("executive_summary_for_buyer") @db.VarChar(500)
-  suggestionsForFreelancer     String[]               @map("suggestions_for_freelancer")
-  promptInjectionDetected      Boolean                @default(false) @map("prompt_injection_detected")
-  emptyOrCorruptedFileDetected Boolean                @default(false) @map("empty_or_corrupted_file_detected")
-  deterministicCheckPassed     Boolean                @default(true) @map("deterministic_check_passed")
-  mandatoryDisclaimer          String                 @default("Este informe es estrictamente consultivo para tareas de imagen y texto. El Consejero de IA nunca aprueba ni ejecuta pagos.") @map("mandatory_disclaimer")
-  createdAt                    DateTime               @default(now()) @map("created_at")
-
-  deliverable         TaskDeliverable         @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
-  taskOrder           TaskOrder               @relation(fields: [taskOrderId], references: [id], onDelete: Cascade)
-  criteriaEvaluations AiCriterionEvaluation[]
-
-  @@index([taskOrderId, revisionEvaluated])
-  @@map("ai_advisor_reports")
-}
-
-model AiCriterionEvaluation {
-  id          String              @id @default(uuid()) @db.Uuid
-  aiReportId  String              @map("ai_report_id") @db.Uuid
-  criterionId String              @map("criterion_id") @db.Uuid
-  status      CriterionEvalStatus
-  evidence    String              @map("evidence") @db.VarChar(300)
-
-  aiReport  AiAdvisorReport         @relation(fields: [aiReportId], references: [id], onDelete: Cascade)
-  criterion TaskAcceptanceCriterion @relation(fields: [criterionId], references: [id], onDelete: Cascade)
-
-  @@unique([aiReportId, criterionId])
-  @@map("ai_criterion_evaluations")
-}
-
-model DisputeCase {
-  id                      String                @id @default(uuid()) @db.Uuid
-  taskOrderId             String                @unique @map("task_order_id") @db.Uuid
-  openedById              String                @map("opened_by_id") @db.Uuid
-  originType              DisputeOriginType     @map("origin_type")
-  claimReason             String                @map("claim_reason") @db.Text
-  freelancerDefense       String?               @map("freelancer_defense") @db.Text
-  adminReviewerId         String?               @map("admin_reviewer_id") @db.Uuid
-  binaryResolution        AdminBinaryResolution @default(PENDING) @map("binary_resolution") // 100% Buyer o 96%/4% Freelancer
-  resolutionJustification String?               @map("resolution_justification") @db.Text   // Justificación obligatoria basada en evidencias
-  openedAt                DateTime              @default(now()) @map("opened_at")
-  resolvedAt              DateTime?             @map("resolved_at")
-
-  taskOrder     TaskOrder @relation(fields: [taskOrderId], references: [id], onDelete: Restrict)
-  openedBy      User      @relation("DisputeOpener", fields: [openedById], references: [id], onDelete: Restrict)
-  adminReviewer User?     @relation("DisputeAdminReviewer", fields: [adminReviewerId], references: [id], onDelete: Restrict)
-
-  @@index([binaryResolution])
-  @@map("dispute_cases")
-}
-
+/// Única fuente de verdad de todos los plazos. `expiresAt` es inmutable.
 model ScheduledTimerJob {
-  id           String         @id @default(uuid()) @db.Uuid
-  taskOrderId  String         @map("task_order_id") @db.Uuid
-  timerType    TimerJobType   @map("timer_type")
-  bullmqJobId  String         @unique @map("bullmq_job_id")
-  scheduledFor DateTime       @map("scheduled_for")
-  status       TimerJobStatus @default(SCHEDULED)
-  executedAt   DateTime?      @map("executed_at")
-  cancelledAt  DateTime?      @map("cancelled_at")
-  createdAt    DateTime       @default(now()) @map("created_at")
-
-  taskOrder TaskOrder @relation(fields: [taskOrderId], references: [id], onDelete: Cascade)
-
-  @@index([taskOrderId, timerType, status])
-  @@map("scheduled_timer_jobs")
+  id            String         @id @default(uuid()) @db.Uuid
+  taskOrderId   String         @map("task_order_id") @db.Uuid
+  deliverableId String?        @map("deliverable_id") @db.Uuid
+  timerType     TimerJobType   @map("timer_type")
+  bullmqJobId   String         @unique @map("bullmq_job_id")
+  startedAt     DateTime       @map("started_at")
+  expiresAt     DateTime       @map("expires_at")
+  status        TimerJobStatus @default(SCHEDULED)
+  // ...
 }
 ```
 
-### 5.4. Restricciones `CHECK` a Nivel de Motor PostgreSQL
+#### 5.3.3. Fórmula Canónica del Reparto 96/4
 
-```sql
--- 1. Regla de Negociación a la Baja
-ALTER TABLE "negotiation_proposals"
-  ADD CONSTRAINT "chk_negotiation_proposed_le_initial"
-  CHECK ("proposed_budget_usd_in_cents" > 0 AND "proposed_budget_usd_in_cents" <= "initial_budget_usd_in_cents");
+En centavos enteros, idéntica en TypeScript (`splitSingleBlockEscrow` en `packages/shared-schemas/src/money.ts`) y en SQL (`chk_escrow_exact_96_4_split`):
 
--- 2. Distribución Exacta 96% Freelancer / 4% TaskStream
-ALTER TABLE "task_orders"
-  ADD CONSTRAINT "chk_task_order_exact_96_4_split"
-  CHECK (
-    "total_amount_usd_in_cents" > 0
-    AND "freelancer_payout_usd_in_cents" + "platform_fee_usd_in_cents" = "total_amount_usd_in_cents"
-  );
-
--- 3. Reglas Globales de Plazos (7d inicial, 32h revisión, 30m ventana final, máx. 2 correcciones y hasta +7d extensión)
-ALTER TABLE "task_orders"
-  ADD CONSTRAINT "chk_task_order_global_rules"
-  CHECK (
-    "initial_delivery_days" >= 1 AND "initial_delivery_days" <= 7
-    AND "review_window_hours" = 32
-    AND "final_claim_window_minutes" = 30
-    AND "max_revisions_allowed" = 2
-    AND "revisions_used" >= 0 AND "revisions_used" <= 2
-    AND "extension_granted_days" >= 0 AND "extension_granted_days" <= 7
-  );
-
--- 4. Extensión Única de Hasta 7 Días Adicionales
-ALTER TABLE "deadline_extension_requests"
-  ADD CONSTRAINT "chk_extension_days_1_to_7"
-  CHECK ("requested_extra_days" >= 1 AND "requested_extra_days" <= 7);
-
--- 5. Entregas (0 = Inicial, 1 = Corrección 1, 2 = Corrección 2)
-ALTER TABLE "task_deliverables"
-  ADD CONSTRAINT "chk_deliverable_revision_0_to_2"
-  CHECK ("revision_number" >= 0 AND "revision_number" <= 2);
-
--- 6. Justificación Obligatoria cuando el Administrador Resuelve una Disputa
-ALTER TABLE "dispute_cases"
-  ADD CONSTRAINT "chk_dispute_justification_when_resolved"
-  CHECK (
-    "binary_resolution" = 'PENDING'
-    OR ("resolution_justification" IS NOT NULL AND length(trim("resolution_justification")) >= 20)
-  );
+```text
+platform_fee      = floor(total * 4 / 100)     -- SQL: total::bigint * 4 / 100
+freelancer_payout = total - platform_fee
+total ∈ [100, 50_000_000]
 ```
+
+| Total (centavos) | Fee 4 % | Payout 96 % | Nota |
+| --: | --: | --: | :--- |
+| 100 | 4 | 96 | Mínimo permitido. |
+| 10.000 | 400 | 9.600 | Exacto. |
+| 10.001 | 400 | 9.601 | El centavo residual va al Freelancer. |
+| 12.345 | 493 | 11.852 | `floor(493,8)`; no se redondea hacia arriba. |
+| 50.000.000 | 2.000.000 | 48.000.000 | Máximo permitido. |
+
+#### 5.3.4. Catálogo de Restricciones `CHECK`
+
+| Tabla | Restricción | Regla |
+| :--- | :--- | :--- |
+| `user_wallets` | `chk_wallet_active_requires_verified`, `chk_wallet_verified_at_coherent`, `chk_wallet_asset_scale` | Activa ⇒ verificada; `verified_at` coherente; escala 0–18. |
+| `platform_wallets` | `chk_platform_wallet_asset_scale` | Escala 0–18. |
+| `gigs` | `chk_gig_price_and_days` | Precio en rango, días 1–7, al menos una extensión. |
+| `client_task_publications` | `chk_publication_budget_and_days` | Presupuesto en rango, días 1–7, `republish_count ≥ 0`. |
+| `negotiation_proposals` | `chk_proposal_downward_only`, `chk_proposal_no_self_dealing`, `chk_proposal_closed_at_coherent` | 100 ≤ propuesto ≤ inicial, días 1–7; freelancer ≠ buyer; `closed_at` si y solo si cerrada. |
+| `negotiation_messages` | `chk_message_offer_range` | Contraofertas en rango. |
+| `task_orders` | `chk_task_order_single_origin`, `chk_task_order_no_self_dealing`, `chk_task_order_initial_days`, `chk_task_order_closed_at_coherent` | Un solo origen; buyer ≠ seller; días 1–7; `closed_at` si y solo si estado terminal. |
+| `task_technical_constraints` | `chk_technical_constraint_ranges` | Extensiones ≥ 1, carga sin límite en MVP, mínimos positivos, duración mín ≤ máx. |
+| `deadline_extension_requests` | `chk_extension_days_1_to_7`, `chk_extension_responded_at_coherent` | +1–7 días; respuesta del Buyer dentro de 24 h. |
+| `escrow_ledgers` | `chk_escrow_amount_range`, `chk_escrow_exact_96_4_split`, `chk_escrow_distinct_party_wallets`, `chk_escrow_distinct_platform_wallets`, `chk_escrow_timestamps_coherent` | Rango, fórmula, wallets distintas, `funds_locked_at` / `settled_at` según estado. |
+| `open_payments_transactions` | `chk_op_tx_attempt_number`, `chk_op_tx_completed_at_coherent` | Intento ≥ 1; `completed_at` si y solo si `COMPLETED`. |
+| `task_deliverables` | `chk_deliverable_revision_0_to_2`, `chk_deliverable_file_integrity`, `chk_deliverable_review_coherent`, `chk_deliverable_unlock_after_decision` | Revisión 0–2; tamaño > 0 y SHA-256 hex; decisión coherente (corrección con notas y solo en rev < 2, mediación solo en rev 2); desbloqueo solo tras aceptación o mediación. |
+| `ai_advisor_reports` | `chk_ai_advisory_score_0_100`, `chk_ai_suggestions_max_6` | Puntaje 0–100; máximo 6 sugerencias. |
+| `dispute_cases` | `chk_dispute_resolution_coherent` | Resuelta ⇒ admin, fecha y justificación ≥ 20 caracteres. |
+| `scheduled_timer_jobs` | `chk_timer_subject_matches_type`, `chk_timer_duration_by_type`, `chk_timer_status_timestamps` | 32 h y 30 min apuntan a una entrega, el resto no; 24 h, 32 h y 30 min exactos, entrega 1–7 días; timestamps según estado. |
+
+#### 5.3.5. Índices Únicos Parciales
+
+| Índice | Garantiza |
+| :--- | :--- |
+| `user_wallets_one_active_per_user` | Una wallet activa por usuario (R-01). |
+| `platform_wallets_one_active_per_role` | Una wallet de custodia y una de fee activas. |
+| `negotiation_proposals_one_agreement_per_publication` | Un único acuerdo por publicación (SEC-GAP-01). |
+| `negotiation_proposals_one_active_per_freelancer` | Una negociación abierta por freelancer y publicación. |
+| `open_payments_transactions_one_completed_per_leg` | Cada pierna (lock, 96 %, 4 %, reembolso) se completa una sola vez (SEC-GAP-06). |
+| `open_payments_transactions_one_in_flight_per_leg` | No hay dos intentos simultáneos de la misma pierna. |
+| `task_deliverables_one_pending_review_per_order` | Una sola entrega en revisión por orden. |
+| `scheduled_timer_jobs_one_scheduled_per_order` | Un único reloj activo por orden: no hay plazos en conflicto. |
+
+#### 5.3.6. Triggers (invariantes entre tablas)
+
+| Trigger | Tabla | Regla |
+| :--- | :--- | :--- |
+| `trg_task_order_origin_guard` | `task_orders` | Al insertar: con propuesta, debe estar `AGREED_PATH_1` y coincidir buyer, freelancer, días, categoría y medio; con Gig, debe estar activo y coincidir seller, días, categoría y medio. Al actualizar: partes, origen y términos son inmutables. |
+| `trg_escrow_ledger_wallets_match` | `escrow_ledgers` | Wallets de las partes correctas y verificadas (activas al crear); roles de plataforma correctos; con propuesta, total = presupuesto acordado. |
+| `trg_timer_job_guard` | `scheduled_timer_jobs` | La entrega pertenece a la orden; el reloj inicial dura los días de la orden y el extendido los días aprobados; sujeto y vencimiento inmutables. |
+| `trg_deliverable_revision_sequence` | `task_deliverables` | La revisión *n* exige la *n-1* con `REVISION_REQUESTED`. |
+| `trg_ai_report_mvp_modality` | `ai_advisor_reports` | Solo órdenes `IMAGE_RASTER_VECTOR` o `DOCUMENT_TEXT`. |
+| `trg_ai_criterion_same_order` | `ai_criterion_evaluations` | El criterio pertenece a la orden de la entrega auditada. |
+
+Se usan triggers y no FK compuestas cuando la relación es condicional (p. ej. el origen es Gig *o* propuesta) o cuando Prisma no puede modelar una FK compuesta opcional con un campo obligatorio.
+
+#### 5.3.7. Vistas de Valores Derivados
+
+| Vista | Columnas |
+| :--- | :--- |
+| `v_task_order_revision_usage` | `task_order_id`, `revisions_used`, `max_revisions_allowed` (2), `revisions_remaining` |
+| `v_task_order_active_deadline` | `task_order_id`, `timer_job_id`, `timer_type`, `deliverable_id`, `started_at`, `expires_at` |
+| `v_escrow_ledger_settlement` | `escrow_ledger_id`, `task_order_id`, `status`, `lock_completed`, `payout_96_completed`, `fee_4_completed`, `refund_100_completed` |
+| `v_seller_profile_stats` | `seller_id`, `completed_orders_count`, `ai_advisory_score_avg` |
+
+#### 5.3.8. Política de Borrado
+
+| Política | Relaciones | Motivo |
+| :--- | :--- | :--- |
+| `RESTRICT` | Todas las que tocan contratos, dinero, entregas, IA, disputas y relojes; usuarios referenciados por cualquiera de ellas. | El historial financiero y contractual es inmutable; una baja de usuario es lógica, no física. |
+| `CASCADE` | `seller_profiles`, `user_wallets` y `wallet_verification_challenges` respecto a su usuario o wallet; `negotiation_messages` respecto a su propuesta; `ai_criterion_evaluations` respecto a su reporte. | Son datos que pertenecen a su padre y no tienen sentido sin él. Una wallet ya referenciada por un ledger queda protegida por el `RESTRICT` del ledger. |
+
+Con este esquema no hay dos caminos de cascada que lleguen a la misma fila.
+
+#### 5.3.9. Índices de Consulta
+
+Además de las PK, AK y parciales, `schema.prisma` declara índices para los accesos calientes: órdenes por `(buyer_id, lifecycle_status)`, `(seller_id, lifecycle_status)` y `lifecycle_status`; entregas por `(task_order_id, review_decision)` y `preview_status`; relojes por `(task_order_id, status)` y `(status, expires_at)` para el *sweeper* de BullMQ; ledgers por `status` y por wallet; propuestas por `(publication_id, status)` y `(freelancer_id, status)`.
+
+#### 5.3.10. Operación de Migraciones
+
+1. Prisma no conoce los `CHECK`, índices parciales, triggers ni vistas, y no los reporta como *drift*. Toda migración generada con `prisma migrate dev` debe revisarse para que no los elimine.
+2. Si una migración recrea una tabla, se reaplica el bloque correspondiente de `domain_checks.sql`.
+3. La migración `20261017000000_decouple_task_order` asume tablas vacías: las migraciones anteriores nunca se aplicaron a una base viva (SPEC-01 §10).
+4. Verificación local sin servidor: las tres migraciones se aplicaron en orden sobre PostgreSQL embebido (PGlite), con 45 escenarios positivos y negativos (fórmula 96/4, origen, wallets, relojes, secuencia de revisiones, piernas de liquidación, `RESTRICT`).

@@ -1,0 +1,3 @@
+export const IDENTITY_REPOSITORY = Symbol('IDENTITY_REPOSITORY');
+export const WALLET_OWNERSHIP_GATEWAY = Symbol('WALLET_OWNERSHIP_GATEWAY');
+export const CLOCK = Symbol('CLOCK');

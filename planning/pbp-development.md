@@ -56,7 +56,7 @@ flowchart LR
 
 #### A. Especificaciones de la Fase
 * **`SPEC-00.md`:** Creación de la carpeta `specs` y su `README.md` con el índice maestro de especificaciones desde `SPEC-00` hasta `SPEC-12` (`Deploy`).
-* **`SPEC-01.md`:** Definición de los contratos compartidos en `shared-schemas` y del modelo relacional de base de datos en 3NF (`schema.prisma`) libre de *God-Entities*.
+* **`SPEC-01.md`:** Definición de los contratos compartidos en `shared-schemas` y del modelo relacional de base de datos v2 (`schema.prisma` + `domain_checks.sql`), documentado en sus tres pasos en `architecture-overview.md` §5, con `TaskOrder` desacoplada.
 
 #### B. Trabajo Paralelo por Rol
 * **`AI-1`:** Crea la carpeta `specs` y su `README.md` (`SPEC-00.md`), e inicializa `shared-schemas` (`SPEC-01.md`) exportando los esquemas de órdenes, plazos, contrato de entrada/salida de IA y generadores de *mocks*.
@@ -71,14 +71,14 @@ flowchart LR
 ### Fase 1: Identidad Multimoneda en América (`SPEC-02`) y Motor 3D Scroll-Driven (`SPEC-03`)
 
 #### A. Especificaciones de la Fase
-* **`SPEC-02.md`:** Autenticación con Clerk y verificación criptográfica de posesión de billetera multimoneda en América mediante Open Payments (`Subject Grant` + verificación de hash).
+* **`SPEC-02.md`:** Registro propio e inicio de sesión, y verificación criptográfica de posesión de billetera multimoneda en América mediante Open Payments (`Subject Grant` + verificación de hash).
 * **`SPEC-03.md`:** Configuración de `Lenis` + `GSAP ScrollTrigger` + `@react-three/fiber v9` + `@react-three/drei v10` aislados en cliente a 60–120 FPS sin re-renders de React.
 
 #### B. Trabajo Paralelo por Rol
 * **`FE-1`:** Construye el inicio de sesión, el selector `Buyer Mode / Seller Mode` y la pantalla de vinculación de `walletAddress` americana sobre mocks de `SPEC-02.md`.
 * **`FE-2`:** Construye el proveedor de Smooth Scroll y la escena 3D principal controlada por `ScrollTrigger` (`SPEC-03.md`).
 * **`BE-1` (`🛡️ Autoría Manual`):** Configura las claves `Ed25519` e implementa en `open-payments.service.ts` el descubrimiento con `UnauthenticatedClient` y la verificación `Subject Grant`.
-* **`BE-2`:** Ejecuta la migración del modelo 3NF en PostgreSQL con las restricciones `CHECK` SQL y el webhook de usuarios de Clerk.
+* **`BE-2`:** Ejecuta la migración del modelo 3NF en PostgreSQL con las restricciones `CHECK` SQL y el registro local de usuarios.
 * **`AI-1`:** Implementa las pruebas automatizadas de validación sobre los esquemas de `SPEC-01.md` y `SPEC-02.md`.
 
 #### C. Criterio de Aprobación de Fase
@@ -111,7 +111,7 @@ flowchart LR
 
 #### B. Trabajo Paralelo por Rol
 * **`BE-1` (`🛡️ Autoría Manual — Uso de IA Mínimo/Nulo`):** `escrow-payment.service.ts` con fondeo (`receiveAmount`), payout dual 96/4 a wallets distintas, reembolsos 100 %, grants y rotación de tokens.
-* **`BE-2`:** Idempotencia `SHA-256`, `EscrowLedger` con `platformOwnerWalletAddress`, webhooks Rafiki.
+* **`BE-2`:** Idempotencia `SHA-256`, `EscrowLedger` con FK a las wallets de las partes y a `PlatformWallet` (custodia y fee del dueño), una fila de `OpenPaymentsTransaction` por intento de cada pierna, webhooks Rafiki.
 * **`FE-1`:** Checkout mostrando 96 % / 4 % (wallet dueño) e inicio de **7 días** tras fondeo.
 * **`FE-2`:** Escena 3D de bóveda escrow.
 * **`AI-1`:** Invariantes `100 % = 96 % + 4 %` e idempotencia.

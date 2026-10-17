@@ -91,7 +91,7 @@ Al ejecutar el **Modo 1 — Arranque (`SPEC-00`)**, `specs/_template.md` debe cr
 
 ## 7. Seguridad, Idempotencia Financiera y Defensa Anti-Prompt Injection
 
-- **Autenticación y Autorización:** <Validación Clerk v6, `UserWallet.isVerified === true`, `PlatformRole.ADMIN` o bloqueo de `/originals` durante las 32h de `IN_REVIEW`.>
+- **Autenticación y Autorización:** <Validación de la sesión local, `UserWallet.isVerified === true`, `PlatformRole.ADMIN` o bloqueo de `/originals` durante las 32h de `IN_REVIEW`.>
 - **Idempotencia e Integridad Criptográfica:** <Claves `SHA-256` en `OpenPaymentsTransaction`, verificación de hash GNAP o encapsulamiento `<untrusted_deliverable_artifact>` y pre-check determinista.>
 
 ---

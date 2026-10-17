@@ -105,7 +105,7 @@ A partir del requisito de actualizar **Next.js a una versión entre la 15 y la 1
 * **Uso de Wallet Addresses Multimoneda en Toda América (Open Payments v7.4.0):** Cada contratista y freelancer del continente americano se identifica mediante su **Wallet Address** con formato URL HTTPS estándar (ej. `https://ilp.interledger-test.dev/usuario-latam`), operando de forma nativa con la moneda configurada en su proveedor de billetera (`USD`, `CAD`, `MXN`, `COP`, `BRL`, `ARS`, `CLP`, `PEN`, `UYU`, `CRC`, `DOP`, `GTQ`, `EUR`, etc.).
 * **Cardinalidad de Wallet (Regla Inmutable):** Un usuario tiene **exactamente una** wallet activa verificada. Al registrar una nueva wallet verificada, la anterior queda **reemplazada** (deja de ser la activa). Sin wallet verificada activa no puede publicar, ofertar, contratar ni cobrar.
 * **Protocolo de Verificación Criptográfica de Posesión (`Subject Grant` — Guía Oficial Open Payments):**
-  1. **Autenticación Social (Clerk):** El usuario inicia sesión con Google o GitHub mediante Clerk (`clerkUserId`). La misma cuenta unificada permite alternar **Buyer Mode / Seller Mode**.
+  1. **Registro local:** El usuario crea su cuenta con correo y contraseña. La misma cuenta unificada permite alternar **Buyer Mode / Seller Mode**.
   2. **Descubrimiento de Metadatos (`walletAddress.get`):** Al registrar su `walletAddress`, el backend en NestJS consulta `GET {walletAddress}` mediante `unauthenticatedClient.walletAddress.get({ url })` para descubrir el `authServer`, el `resourceServer`, el `assetCode` (moneda local del usuario) y el `assetScale`.
   3. **Desafío GNAP Interact con `subject.sub_ids`:** El backend solicita al `authServer` una concesión interactiva sin movimiento de fondos (`client.grant.request`) enviando `subject: { sub_ids: [{ format: 'uri', id: userWalletAddress }] }` y un `interact` con `start: ['redirect']` y `finish: { method: 'redirect', uri: callbackUrl, nonce: clientNonce }`.
   4. **Confirmación de Titularidad y Verificación de Hash:** El usuario aprueba el consentimiento en el IdP de su proveedor de billetera (Interledger Test Wallet / Rafiki). Al volver al callback de NestJS (`/api/v1/auth/wallet/callback?interact_ref=...&hash=...`), el backend verifica criptográficamente el hash (`SHA-256(clientNonce + "\n" + finishNonce + "\n" + interact_ref + "\n" + authServerUrl)`), ejecuta `client.grant.continue` para confirmar la respuesta `subject` y marca la billetera como `isVerified: true` en PostgreSQL (reemplazando cualquier wallet activa previa). Ninguna billetera con `isVerified: false` puede publicar tareas, ofertar, recibir desembolsos ni contratar encargos.
@@ -283,9 +283,9 @@ En el MVP de **TaskStream AI**, el servicio de Inteligencia Artificial (`AiAdvis
 
 ### 8.1. Perfiles de Contratista (Buyer) y Freelancer (Seller) en Toda América
 
-Se utiliza una **Cuenta Unificada en Clerk** con cambio de modo en tiempo real (`Buyer Mode` / `Seller Mode`). El mismo usuario **puede ofrecer y contratar** trabajos (roles en órdenes distintas).
+Se utiliza una **cuenta unificada de registro propio** con cambio de modo en tiempo real (`Buyer Mode` / `Seller Mode`). El mismo usuario **puede ofrecer y contratar** trabajos (roles en órdenes distintas).
 
-* **Atributos Compartidos:** `userId` (UUID), `clerkId`, `displayName`, `avatarUrl`, `countryCode`, y **una sola** `walletAddress` activa verificada (GNAP Subject Grant) con su `walletAssetCode` / `walletAssetScale`. Cambiar wallet = reemplazar la activa.
+* **Atributos Compartidos:** `userId` (UUID), `email`, `displayName`, `avatarUrl`, `countryCode`, y **una sola** `walletAddress` activa verificada (GNAP Subject Grant) con su `walletAssetCode` / `walletAssetScale`. Cambiar wallet = reemplazar la activa. La contraseña se guarda solo como hash.
 * **Perfil Freelancer (`Seller`):**
   * Bio, habilidades, idiomas, Web Monetization opcional y catálogo por categoría.
   * **Gigs a precio fijo (no negociable)** y **ofertas `<=` tope** sobre publicaciones de Buyers.
@@ -350,6 +350,9 @@ export const TaskLifecycleStatusEnum = z.enum([
   'AUTO_REFUNDED_EXTENDED_EXPIRED', // No entregó dentro de la extensión aprobada → reembolso 100%
 ]);
 
+/** Centavos USD enteros en [100, 50_000_000]; mismo rango que los CHECK de la base de datos. */
+const MarketplaceAmountUSDInCents = z.number().int().min(100).max(50_000_000);
+
 /**
  * 0. PUBLICACIÓN DE TAREA DEL SOLICITANTE Y NEGOCIACIÓN DE PRESUPUESTO
  */
@@ -360,7 +363,7 @@ export const ClientTaskPublicationSchema = z.object({
   description: z.string().min(20).max(3000),
   category: TaskCategoryEnum,
   expectedMediaType: DeliverableMediaTypeEnum,
-  initialBudgetUSDInCents: z.number().int().positive(),
+  initialBudgetUSDInCents: MarketplaceAmountUSDInCents, // entero en [100, 50_000_000]
   initialDeliveryDays: z.number().int().min(1).max(7).default(7),
   status: z.enum(['OPEN_FOR_PROPOSALS', 'AGREED_AND_LOCKED', 'CANCELLED']),
 });
@@ -369,9 +372,10 @@ export const FreelancerNegotiationProposalSchema = z.object({
   proposalId: z.string().uuid(),
   publicationId: z.string().uuid(),
   buyerUserId: z.string().uuid(),
-  freelancerUserId: z.string().uuid(),
-  initialBudgetUSDInCents: z.number().int().positive(),
-  proposedBudgetUSDInCents: z.number().int().positive(),
+  freelancerUserId: z.string().uuid(), // distinto de buyerUserId
+  initialBudgetUSDInCents: MarketplaceAmountUSDInCents,
+  proposedBudgetUSDInCents: MarketplaceAmountUSDInCents,
+  proposedDeliveryDays: z.number().int().min(1).max(7), // se congela en la orden al acordar
   status: z.enum([
     'IN_NEGOTIATION',
     'AGREED_PATH_1',
@@ -408,9 +412,12 @@ export const DeadlineExtensionRequestSchema = z.object({
   ]),
 });
 
+// Origen: exactamente uno de gigId o proposalId (espejo de chk_task_order_single_origin).
+// publicationId es informativo y solo acompaña a proposalId. buyer.userId ≠ seller.userId.
 export const TaskOrderCardSchema = z.object({
   taskId: z.string().uuid(),
   gigId: z.string().uuid().optional(),
+  proposalId: z.string().uuid().optional(),
   publicationId: z.string().uuid().optional(),
   title: z.string().min(10).max(120),
   category: TaskCategoryEnum,
@@ -433,9 +440,9 @@ export const TaskOrderCardSchema = z.object({
     escrowWalletAddress: z.string().url().default('https://ilp.interledger-test.dev/taskstream-escrow'),
     platformOwnerWalletAddress: z.string().url()
       .describe('Wallet distinta del escrow que recibe el 4% de comisión del dueño/plataforma'),
-    totalAmountUSDInCents: z.number().int().positive(),
-    freelancerPayoutUSDInCents: z.number().int().positive().describe('96% para el Freelancer'),
-    platformFeeUSDInCents: z.number().int().nonnegative().describe('4% transferido a platformOwnerWalletAddress'),
+    totalAmountUSDInCents: MarketplaceAmountUSDInCents,
+    freelancerPayoutUSDInCents: z.number().int().positive().describe('96%: total - platformFee'),
+    platformFeeUSDInCents: z.number().int().nonnegative().describe('4%: floor(total * 4 / 100) → platformOwnerWalletAddress'),
     buyerAssumesDoubleFxConversion: z.literal(true),
     deliveryReviewHours: z.literal(32),
     finalClaimWindowMinutes: z.literal(30),
@@ -454,7 +461,7 @@ export const TaskOrderCardSchema = z.object({
   }),
   revisionTerms: z.object({
     maxRevisionsAllowed: z.literal(2).describe('Máximo 2 correcciones globales por orden; no se reinicia con extensión'),
-    revisionsUsed: z.number().int().min(0).max(2).default(0),
+    revisionsUsed: z.number().int().min(0).max(2).default(0), // se lee de v_task_order_revision_usage
     arbitrationAuthorityOnDispute: z.literal('PLATFORM_ADMIN'),
     adminDecisionModality: z.literal('STRICT_BINARY_JUSTIFIED'),
   }),
@@ -600,7 +607,7 @@ El proyecto se ejecuta desde `SPEC-00.md` (creación de la carpeta `specs` y su 
 | Fase | Especificaciones | Entregables Frontend (`FE-1`, `FE-2`) | Entregables Backend (`BE-1`, `BE-2`) | Entregables IA (`AI-1`) |
 | :---- | :---- | :---- | :---- | :---- |
 | **Fase 0** | `SPEC-00`, `SPEC-01` | Inicialización de `apps/web` y cliente de mocks. | Inicialización de `apps/api` y modelo 3NF Prisma. | Creación de carpeta `specs` + `README.md` y contratos en `shared-schemas`. |
-| **Fase 1** | `SPEC-02`, `SPEC-03` | Login Clerk, vinculación de billetera americana y motor 3D `ScrollTrigger` + `Lenis`. | Descubrimiento y verificación GNAP `Subject Grant` en `open-payments.service.ts` (Manual `BE-1`). | Estructura base de validación y pruebas de contrato. |
+| **Fase 1** | `SPEC-02`, `SPEC-03` | Registro e inicio de sesión propios, vinculación de billetera americana y motor 3D `ScrollTrigger` + `Lenis`. | Descubrimiento y verificación GNAP `Subject Grant` en `open-payments.service.ts` (Manual `BE-1`). | Estructura base de validación y pruebas de contrato. |
 | **Fase 2** | `SPEC-04`, `SPEC-05` | Catálogo de 6 categorías, tablón de clientes y sala de negociación (Caminos 1 y 2). | Módulos de Marketplace y Negociación (`<= presupuesto inicial`). | Validación de criterios de aceptación de la orden. |
 | **Fase 3** | `SPEC-06` | Checkout de custodia única y escena 3D de bóveda en escrow. | `escrow-payment.service.ts` (Manual `BE-1`): fondeo 100%, desembolso 96%/4%, reembolso 100% e idempotencia. | Pruebas de invariantes financieras 96%/4% y 100%. |
 | **Fase 4** | `SPEC-07`, `SPEC-08` | Visores de *Protected Preview* y panel del informe de IA para tareas de imagen y texto. | Subida a R2 sin límite y workers `sharp`/`ffmpeg` para marcas de agua. | Contrato exacto `AiAdvisorInputContractSchema` + `AiAdvisorReportSchema` y `AiAdvisorService` exclusivo para **imagen y texto**. |
@@ -623,7 +630,7 @@ El proyecto se ejecuta desde `SPEC-00.md` (creación de la carpeta `specs` y su 
 | **Colas, Workers y Timers** | BullMQ (`@nestjs/bullmq` + `bullmq`) + Redis | `5.25.x` | Procesamiento asíncrono de marcas de agua y **relojes independientes**: entrega inicial (`7d`), respuesta a extensión (`24h`), extensión única (`hasta +7d`), revisión por entrega (`32h`) y ventana final (`30m`). |
 | **Procesadores Multimedia** | `sharp` + `fluent-ffmpeg` (`ffmpeg-static`) | `0.33.5` / `2.1.3` | `sharp` para marcas de agua en imágenes y `ffmpeg` para recortes/marcas de agua en video (360p) y audio (64kbps). |
 | **Base de Datos y ORM** | PostgreSQL (Neon Serverless) + Prisma | `5.22.0` / `6.x` | Transacciones ACID y bloqueo de registros para llaves de idempotencia de pagos (96/4 y reembolsos). |
-| **Autenticación Híbrida** | Clerk (`@clerk/nextjs` v6) + Open Payments Grant | Clerk `v6` (Next 15/16) + OP `7.4.0` | `@clerk/nextjs v6` ofrece soporte nativo para las APIs asíncronas de Next.js 15/16 + verificación criptográfica GNAP (`Subject Grant` + Hash Verification). |
+| **Autenticación** | Registro propio + Open Payments Grant | Sesión local firmada + OP `7.4.0` | Correo y contraseña emitidos por la plataforma. La posesión de la billetera sigue siendo GNAP (`Subject Grant` + verificación de hash). |
 | **Pagos Interledger** | `@interledger/open-payments` | `7.4.0` | SDK oficial para llamadas GNAP, `IncomingPayment`, `Quote`, `OutgoingPayment`, `token.rotate` y consulta de límites en Rafiki/Test Wallet. |
 | **Almacenamiento (Storage)** | Cloudflare R2 (`@aws-sdk/client-s3` + `s3-request-presigner`) | `3.700.0` | Subida directa con Presigned URLs (sin límite de tamaño en el MVP) para originales y previsualizaciones. |
 | **Notificaciones Email** | Resend (`resend`) | `4.0.1` | Alertas transaccionales de solicitud de extensión (`24h`), aceptación automática (`32h`), ventana de reclamaciones (`30m`), disputas y resultados. |

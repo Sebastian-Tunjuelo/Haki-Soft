@@ -5,8 +5,8 @@
 | **ID de Especificación** | `SPEC-03` |
 | **Archivo** | `specs/SPEC-03.md` |
 | **Fase de Desarrollo** | `Fase 1 — Identidad multimoneda en América y motor 3D` |
-| **Estado del Ciclo SDD** | `Redactada (DRAFTED)` |
-| **Roles Responsables** | `FE-2` |
+| **Estado del Ciclo SDD** | `Testeada (TESTED)` |
+| **Roles Responsables** | `FE-1`, `FE-2` |
 | **Tareas Asociadas (`taskboard.md`)** | `T-F1-FE2-01`, `T-F1-FE2-02` |
 | **Intervención Manual / IA Mínima-Nula** | `No aplica` |
 | **Dependencias SDD** | `SPEC-01` |
@@ -230,3 +230,5 @@ Decisiones operativas:
 | Versión | Fecha | Estado | Autor / Herramienta | Resumen de Cambios |
 | :--- | :--- | :--- | :--- | :--- |
 | `1.0.0` | `2026-10-16` | `Redactada (DRAFTED)` | `Cursor` + `FE-2` | Contrato del proveedor Lenis, del canvas aislado y de la hero sin re-renders. Sin implementación. |
+| `1.1.0` | `2026-10-16` | `Testeada (TESTED)` | `Antigravity` + `FE-1` / `FE-2` | Implementación completa del motor 3D y scroll: proveedor global `SmoothScrollProvider` (Lenis + GSAP ScrollTrigger ticker con lagSmoothing 0), componente de escena `HeroScene` en Three.js / R3F / Drei con mutación directa de `useRef` (zero-setState), `HeroSceneLoader` con dynamic ssr:false y placeholder de 480px, maquetación de landing enriquecida por FE-1 (timeline de estados y split 96/4), y suite de pruebas unitarias/integración con Vitest (8/8 pruebas verdes). |
+| `1.1.1` | `2026-10-16` | `Testeada (TESTED)` | `Cursor` | Verificación de integración: la hero, el loader y el proveedor de scroll no llaman a `/api/v1`. El progreso sigue siendo el scroll del documento. |

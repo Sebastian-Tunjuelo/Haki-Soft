@@ -2,6 +2,8 @@ export {
   buyerExtensionDecisionDeadline,
   ESCROW_WALLET_ADDRESS,
   MANDATORY_AI_DISCLAIMER,
+  MAX_MARKETPLACE_AMOUNT_USD_IN_CENTS,
+  MIN_MARKETPLACE_AMOUNT_USD_IN_CENTS,
   splitSingleBlockEscrow,
 } from './money';
 export {
@@ -25,6 +27,8 @@ export {
 export {
   AcceptanceCriterionSchema,
   ActiveModeSwitchSchema,
+  LocalLoginSchema,
+  LocalRegisterSchema,
   AiAdvisorInputContractSchema,
   AiAdvisorReportSchema,
   ClientTaskPublicationSchema,

@@ -22,7 +22,18 @@ import {
 } from './index';
 
 describe('RF-03 reparto 96/4', () => {
-  it('aplica floor(total * 0.04) y conserva la suma exacta', () => {
+  it('acota el monto al rango [100, 50_000_000] centavos', () => {
+    expect(splitSingleBlockEscrow(100)).toEqual({ platformFeeUSDInCents: 4, freelancerPayoutUSDInCents: 96 });
+    expect(splitSingleBlockEscrow(50_000_000).platformFeeUSDInCents).toBe(2_000_000);
+    expect(() => splitSingleBlockEscrow(99)).toThrow('INVALID_TOTAL_AMOUNT');
+    expect(() => splitSingleBlockEscrow(50_000_001)).toThrow('INVALID_TOTAL_AMOUNT');
+    const card = mockTaskOrderCard();
+    expect(
+      TaskOrderCardSchema.safeParse({ ...card, paymentTerms: { ...card.paymentTerms, totalAmountUSDInCents: 99 } }).success,
+    ).toBe(false);
+  });
+
+  it('aplica floor(total * 4 / 100) y conserva la suma exacta', () => {
     const split = splitSingleBlockEscrow(10_000);
     expect(split.platformFeeUSDInCents).toBe(400);
     expect(split.freelancerPayoutUSDInCents).toBe(9_600);
@@ -51,6 +62,13 @@ describe('RF-04 oferta menor o igual al tope', () => {
       proposedBudgetUSDInCents: 10_001,
     });
     expect(over.success).toBe(false);
+  });
+
+  it('rechaza que el Buyer negocie sobre su propia publicación', () => {
+    const proposal = mockFreelancerNegotiationProposal();
+    expect(
+      FreelancerNegotiationProposalSchema.safeParse({ ...proposal, freelancerUserId: proposal.buyerUserId }).success,
+    ).toBe(false);
   });
 });
 
@@ -96,9 +114,21 @@ describe('RF-01 y RF-02 contratos y mocks', () => {
     expect(report.mandatoryDisclaimer).toContain('nunca aprueba ni ejecuta pagos');
   });
 
-  it('rechaza una orden con gig y publicación a la vez', () => {
+  it('rechaza una orden con gig y propuesta a la vez', () => {
     const card = mockTaskOrderCard();
+    expect(card.proposalId).toBeDefined();
     expect(TaskOrderCardSchema.safeParse({ ...card, gigId: '66666666-6666-4666-8666-666666666666' }).success).toBe(false);
+  });
+
+  it('rechaza publicationId sin proposalId y buyer igual a seller', () => {
+    const gig = mockGigOrderCard();
+    expect(gig.proposalId).toBeUndefined();
+    expect(
+      TaskOrderCardSchema.safeParse({ ...gig, publicationId: '33333333-3333-4333-8333-333333333333' }).success,
+    ).toBe(false);
+    expect(
+      TaskOrderCardSchema.safeParse({ ...gig, seller: { ...gig.seller, userId: gig.buyer.userId } }).success,
+    ).toBe(false);
   });
 });
 

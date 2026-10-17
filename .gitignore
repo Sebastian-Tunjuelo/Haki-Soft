@@ -6,3 +6,7 @@ dist
 .env.local
 *.tsbuildinfo
 coverage
+*.key
+*.pem
+secrets/
+.data/
