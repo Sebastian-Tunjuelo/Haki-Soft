@@ -339,6 +339,8 @@ export class PrismaNegotiationsRepository implements NegotiationsRepository {
         expectedMediaType: input.expectedMediaType,
         initialDeliveryDays: input.initialDeliveryDays,
         lifecycleStatus: 'PENDING_ESCROW_FUNDING',
+        // Camino 1 (oferta): el Freelancer ya aceptó al postular. Gig fijo: espera confirmación.
+        sellerConfirmedAt: input.proposalId ? new Date() : null,
       },
     });
 

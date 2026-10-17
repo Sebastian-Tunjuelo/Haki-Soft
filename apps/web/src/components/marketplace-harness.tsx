@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthGateModal } from '@/src/components/auth-gate-modal';
 import { WelcomeWalletModal } from '@/src/components/welcome-wallet-modal';
@@ -113,13 +113,16 @@ export function MarketplaceHarness() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [gigs, setGigs] = useState<GigCard[]>([]);
   const [publications, setPublications] = useState<Publication[]>([]);
-  const [log, setLog] = useState<string>('Listo para probar SPEC-04.');
+  const [notice, setNotice] = useState<string | null>(null);
+  const [noticeError, setNoticeError] = useState<string | null>(null);
   const [selectedGig, setSelectedGig] = useState<GigCard | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
   const [authReason, setAuthReason] = useState('Necesitas una sesión activa para continuar.');
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
   const [welcomeWalletOpen, setWelcomeWalletOpen] = useState(false);
   const [welcomeName, setWelcomeName] = useState<string | null>(null);
+  const [mutating, setMutating] = useState(false);
+  const mutatingRef = useRef(false);
 
   const refresh = useCallback(async () => {
     const [cats, gigList, pubList] = await Promise.all([
@@ -144,80 +147,112 @@ export function MarketplaceHarness() {
     setAuthReason(reason);
     setPendingAction(action);
     setAuthOpen(true);
-    setLog(`Sesión requerida → se abre el acceso sobre el marketplace (sin cambiar de página).`);
+    setNotice('Inicia sesión para continuar. El acceso se abre sobre esta misma página.');
+    setNoticeError(null);
     return true;
   }
 
-  function openWalletGate(reasonLog: string) {
-    setLog(reasonLog);
+  function openWalletGate(_reasonLog: string) {
+    setNotice('Vincula y verifica tu billetera Interledger para publicar.');
+    setNoticeError(null);
     setWelcomeWalletOpen(true);
   }
 
+  async function withSingleFlight(action: () => Promise<void>): Promise<void> {
+    if (mutatingRef.current) return;
+    mutatingRef.current = true;
+    setMutating(true);
+    try {
+      await action();
+    } finally {
+      mutatingRef.current = false;
+      setMutating(false);
+    }
+  }
+
   async function createGig(fromResume = false) {
-    const result = await api('/api/v1/marketplace/gigs', {
-      method: 'POST',
-      headers: { 'Idempotency-Key': newIdempotencyKey() },
-      body: JSON.stringify(GIG_BODY),
+    await withSingleFlight(async () => {
+      const result = await api('/api/v1/marketplace/gigs', {
+        method: 'POST',
+        headers: { 'Idempotency-Key': newIdempotencyKey() },
+        body: JSON.stringify(GIG_BODY),
+      });
+      if (isUnauthenticated(result.status, result.body)) {
+        requireAuth('Inicia sesión o crea una cuenta para publicar un Gig.', 'create-gig');
+        return;
+      }
+      if (isWalletNotVerified(result.status, result.body)) {
+        setPendingAction('create-gig');
+        openWalletGate('Falta wallet verificada → se abre el paso de vinculación.');
+        return;
+      }
+      if (fromResume) setPendingAction(null);
+      if (result.status === 201 && result.body && typeof result.body === 'object' && 'gigId' in result.body) {
+        setNotice('Gig creado. Abriendo tu vitrina…');
+        setNoticeError(null);
+        router.push(`/marketplace/gigs/${(result.body as GigCard).gigId}`);
+        return;
+      }
+      setNoticeError('No se pudo crear el Gig. Revisa sesión y wallet.');
+      setNotice(null);
+      await refresh();
     });
-    if (isUnauthenticated(result.status, result.body)) {
-      requireAuth('Inicia sesión o crea una cuenta para publicar un Gig.', 'create-gig');
-      return;
-    }
-    if (isWalletNotVerified(result.status, result.body)) {
-      setPendingAction('create-gig');
-      openWalletGate('Falta wallet verificada → se abre el paso de vinculación.');
-      return;
-    }
-    setLog(`POST gigs → ${result.status} ${JSON.stringify(result.body)}`);
-    if (fromResume) setPendingAction(null);
-    if (result.status === 201 && result.body && typeof result.body === 'object' && 'gigId' in result.body) {
-      router.push(`/marketplace/gigs/${(result.body as GigCard).gigId}`);
-      return;
-    }
-    await refresh();
   }
 
   async function createPublication(fromResume = false) {
-    const result = await api('/api/v1/marketplace/publications', {
-      method: 'POST',
-      headers: { 'Idempotency-Key': newIdempotencyKey() },
-      body: JSON.stringify(PUBLICATION_BODY),
+    await withSingleFlight(async () => {
+      const result = await api('/api/v1/marketplace/publications', {
+        method: 'POST',
+        headers: { 'Idempotency-Key': newIdempotencyKey() },
+        body: JSON.stringify(PUBLICATION_BODY),
+      });
+      if (isUnauthenticated(result.status, result.body)) {
+        requireAuth('Inicia sesión o crea una cuenta para publicar una tarea.', 'create-publication');
+        return;
+      }
+      if (isWalletNotVerified(result.status, result.body)) {
+        setPendingAction('create-publication');
+        openWalletGate('Falta wallet verificada → se abre el paso de vinculación.');
+        return;
+      }
+      if (fromResume) setPendingAction(null);
+      if (
+        result.status === 201 &&
+        result.body &&
+        typeof result.body === 'object' &&
+        'publicationId' in result.body
+      ) {
+        setNotice('Publicación creada. Abriendo tu vitrina…');
+        setNoticeError(null);
+        router.push(`/marketplace/publications/${(result.body as Publication).publicationId}`);
+        return;
+      }
+      setNoticeError('No se pudo crear la publicación. Revisa sesión y wallet.');
+      setNotice(null);
+      await refresh();
     });
-    if (isUnauthenticated(result.status, result.body)) {
-      requireAuth('Inicia sesión o crea una cuenta para publicar una tarea.', 'create-publication');
-      return;
-    }
-    if (isWalletNotVerified(result.status, result.body)) {
-      setPendingAction('create-publication');
-      openWalletGate('Falta wallet verificada → se abre el paso de vinculación.');
-      return;
-    }
-    setLog(`POST publications → ${result.status} ${JSON.stringify(result.body)}`);
-    if (fromResume) setPendingAction(null);
-    if (
-      result.status === 201 &&
-      result.body &&
-      typeof result.body === 'object' &&
-      'publicationId' in result.body
-    ) {
-      router.push(`/marketplace/publications/${(result.body as Publication).publicationId}`);
-      return;
-    }
-    await refresh();
   }
 
   async function cancelPublication(publicationId: string, fromResume = false) {
-    const result = await api(`/api/v1/marketplace/publications/${publicationId}/cancel`, {
-      method: 'POST',
-      body: JSON.stringify({ cancelReason: 'Prueba de cancelación SPEC-04' }),
+    await withSingleFlight(async () => {
+      const result = await api(`/api/v1/marketplace/publications/${publicationId}/cancel`, {
+        method: 'POST',
+        body: JSON.stringify({ cancelReason: 'Prueba de cancelación SPEC-04' }),
+      });
+      if (isUnauthenticated(result.status, result.body)) {
+        requireAuth('Inicia sesión para cancelar tu publicación.', { type: 'cancel', publicationId });
+        return;
+      }
+      if (result.status >= 200 && result.status < 300) {
+        setNotice('Publicación cancelada.');
+        setNoticeError(null);
+      } else {
+        setNoticeError('No se pudo cancelar la publicación.');
+        setNotice(null);
+      }
+      if (fromResume) setPendingAction(null);
+      await refresh();
     });
-    if (isUnauthenticated(result.status, result.body)) {
-      requireAuth('Inicia sesión para cancelar tu publicación.', { type: 'cancel', publicationId });
-      return;
-    }
-    setLog(`POST cancel → ${result.status} ${JSON.stringify(result.body)}`);
-    if (fromResume) setPendingAction(null);
-    await refresh();
   }
 
   async function openGig(gigId: string) {
@@ -250,55 +285,88 @@ export function MarketplaceHarness() {
     if (result.mode === 'register') {
       setWelcomeName(result.displayName ?? null);
       setWelcomeWalletOpen(true);
-      setLog('Cuenta creada → bienvenida y vínculo de wallet.');
+      setNotice('Cuenta creada. Vincula tu billetera para publicar.');
+      setNoticeError(null);
       return;
     }
-    setLog('Sesión iniciada. Reintentando la acción pendiente…');
+    setNotice('Sesión iniciada. Continuamos con tu acción…');
+    setNoticeError(null);
     await resumePendingAction();
   }
 
   async function handleWalletStepDone() {
     setWelcomeWalletOpen(false);
-    setLog('Paso de wallet cerrado. Si ya verificaste, puedes reintentar la acción.');
+    setNotice('Si ya verificaste la billetera, reintentamos tu publicación.');
+    setNoticeError(null);
     await resumePendingAction();
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28, maxWidth: 960 }}>
       <header>
-        <p style={{ color: 'var(--brand-blue)', fontSize: 13, margin: '0 0 8px' }}>SPEC-04 · Harness mínimo de prueba</p>
-        <h1 style={{ margin: 0, fontSize: '1.75rem' }}>Marketplace (backend)</h1>
+        <h1 style={{ margin: 0, fontSize: '1.75rem' }}>Marketplace</h1>
         <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>
-          UI mínima para validar categorías, Gigs a precio fijo, publicaciones con tope y Web Monetization.
-          Sin sesión, las mutaciones abren un panel de acceso sobre esta misma vista.
+          Explora categorías, Gigs a precio fijo y publicaciones con presupuesto tope. Sin sesión, las acciones
+          protegidas abren el acceso en esta misma vista.
         </p>
       </header>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-        <button type="button" className="btn btn-primary" onClick={() => void createGig()}>
-          Crear Gig (Seller)
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={mutating}
+          onClick={() => void createGig()}
+        >
+          {mutating ? 'Creando…' : 'Crear Gig'}
         </button>
-        <button type="button" className="btn btn-secondary" onClick={() => void createPublication()}>
-          Crear publicación (Buyer)
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={mutating}
+          onClick={() => void createPublication()}
+        >
+          {mutating ? 'Creando…' : 'Crear publicación'}
         </button>
-        <button type="button" className="btn btn-secondary" onClick={() => void refresh()}>
-          Refrescar
+        <a href="/marketplace/negotiations" className="btn btn-secondary">
+          Contratar / negociar
+        </a>
+        <a href="/activity" className="btn btn-secondary">
+          Actividad
+        </a>
+        <button type="button" className="btn btn-secondary" disabled={mutating} onClick={() => void refresh()}>
+          Actualizar
         </button>
       </div>
 
-      <pre
-        style={{
-          margin: 0,
-          padding: 14,
-          background: 'rgba(15,23,42,0.7)',
-          border: '1px solid var(--border)',
-          borderRadius: 8,
-          whiteSpace: 'pre-wrap',
-          fontSize: 13,
-        }}
-      >
-        {log}
-      </pre>
+      {noticeError ? (
+        <p
+          style={{
+            margin: 0,
+            padding: '12px 14px',
+            borderRadius: 10,
+            background: 'var(--status-failed-bg)',
+            color: 'var(--status-failed)',
+            fontSize: 14,
+          }}
+        >
+          {noticeError}
+        </p>
+      ) : null}
+      {notice ? (
+        <p
+          style={{
+            margin: 0,
+            padding: '12px 14px',
+            borderRadius: 10,
+            background: 'var(--status-verified-bg)',
+            color: 'var(--status-verified)',
+            fontSize: 14,
+          }}
+        >
+          {notice}
+        </p>
+      ) : null}
 
       <section>
         <h2 style={{ fontSize: '1.1rem' }}>6 categorías</h2>

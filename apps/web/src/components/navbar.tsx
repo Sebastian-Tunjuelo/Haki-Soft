@@ -103,6 +103,14 @@ export function Navbar() {
               <ShieldCheck size={15} />
               <span>Marketplace</span>
             </Link>
+            {sessionEmail ? (
+              <Link
+                href="/activity"
+                className={`nav-link ${pathname?.startsWith('/activity') ? 'active' : ''}`}
+              >
+                Actividad
+              </Link>
+            ) : null}
             <Link
               href="/onboarding/wallet"
               className={`nav-link ${pathname === '/onboarding/wallet' ? 'active' : ''}`}

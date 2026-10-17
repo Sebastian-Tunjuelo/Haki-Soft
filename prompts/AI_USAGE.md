@@ -1346,5 +1346,107 @@ Podrias forzar la creacion de un usuario con la billetera: $ilp.interledger-test
 La cual es de la test net, no mia pero si de mi compañero para probar dicho flujo
 ```
 
+### Prompt #038 — SPEC-06 Escrow (backend + harness)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Tests`, `Gobernanza`, `IA`
+* **Resumen de su funcionalidad:** Implementación SPEC-06 solo backend (BE-2): fondeo simulado 100 %, webhook Rafiki idempotente → `ESCROW_LOCKED`, simulate release 96/4 y refund 100 %. Sin reescribir `open-payments.service.ts` / `escrow-payment.service.ts`. Harness mínimo en `/orders/escrow` + BFF. Contratos `EscrowFundingViewSchema`. Tests HTTP en verde.
+* **Archivos creados o modificados:** `packages/shared-schemas/src/escrow.ts`, `apps/api/src/modules/escrow/*`, `apps/web/src/components/escrow-harness.tsx`, `apps/web/app/orders/escrow/page.tsx`, BFF `api/v1/orders` y `webhooks/rafiki`, `specs/SPEC-06.md`, `planning/taskboard.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+Iniciemos ahora con el Spec 06, con la misma estructura de los anteriores:
+
+-Inicia el spec pero solo uno a la vez, solo realiza las tareas de Backed y si para realizar pruebas es necesario un front minimo realizalo, para poder probar que cada spec cumpla con lo planeado, ademas indicame el flujo implementado de ser el caso para realizar dicho flujo y validar que funcione.
+```
+
+### Prompt #039 — UI MVP sin JSON/POST en fronts de specs
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Sustituye harnesses con volcado JSON por UI de producto: checkout escrow (`/orders/[taskId]/escrow`), workspace contratar/negociar, CTA Contratar en storefront Gig, avisos humanos en marketplace. Sin mostrar estructura POST ni claves técnicas.
+* **Archivos creados o modificados:** `escrow-checkout.tsx`, `negotiations-workspace.tsx`, `api-client.ts`, `storefront-page.tsx`, `marketplace-harness.tsx`, páginas orders/negotiations; eliminados `escrow-harness.tsx` y `negotiations-harness.tsx`; `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md`
+* **Texto literal del prompt enviado:**
+
+```
+referente al front de este spec hazlo para poder vailidar el flujo y que no sea validaciones ni prubas por post, La idea es que tanto este como los anteriores ninguna dato dentro del front se vea en estructura pos, ya que queda mal para el MVP
+```
+
+### Prompt #040 — Anti doble-clic, reseñas y confirmación mutua
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Bloqueo single-flight en Crear Gig/publicación; elimina texto de reseñas; añade `sellerConfirmedAt`, bandeja `/activity` para que el freelancer confirme, y checkout que solo permite depositar tras esa confirmación (timers SPEC-09 aún no encolados).
+* **Archivos creados o modificados:** `marketplace-harness.tsx`, `reviews-section.tsx`, migración `seller_confirmed_at`, módulo escrow (confirm/activity), `activity-inbox.tsx`, `escrow-checkout.tsx`, contratos `EscrowFundingView`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+Correcciones: 
+
+-Referente crear Gig: Este tarda un poco en tardar, pero el problema no reside en esto, reside en que si yo presiono en ese tiempo de carga el boton 100 veces, se crean 100 ofertas. Deberia solo permitir una peticion a la vez.
+
+-El siguiente mensaje sobra:
+"Solo puedes dejar una reseña si ya hubo un servicio acordado con esta persona (entrega o reembolso)."
+
+-Referente al flujo de Checkout de pago:
+Le doy a "1. depositar en custodia" que prosigue? por que por ejemplo por la parte del trabajador no hay nada, como una zona de nofiticaciones donde el confirme el trabajo y tras las 2 confirmaciones este se almacene en el Scrow y comiencen los timers.
+```
+
+### Prompt #041 — Popup solicitud trabajo + 24h contratador
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Tras contratar Gig, el Buyer ve “solicitud enviada · 24h”; el Freelancer recibe popup forzado (Ver / Más tarde) al cargar o en vivo vía SSE (+ poll). Hub de notificaciones al crear la orden.
+* **Archivos creados o modificados:** `work-request-alert.tsx`, layout, navbar, escrow checkout, `seller-notification.hub.ts`, SSE stream API/BFF, shared-schemas deadline 24h, negotiations notify, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+Un ejemplo de flujo para el emprendedor, Si algun contratador genera la solicitud, digammos que su flujo llega hasta ahi y le indica, Tu solicitud fue enviada tienes 24h para que acepten tu solicitud, En la interfaz del emprendedor deberiamos forzar una ventana emergente tipo notificacion en plan "Tienes una solicitud nueva de trabajo, Preiciona el boton de ver para saber mas" y su respectivo boton, de hecho al meomento que le contratador genera la petcion el servidor manda insta, por si el emprendedor esta en la plataforma de una se entere, y si esta fuera de ella cuando acceda a la plataforma nada mas cargar le salga, Asi aseguramos que los emprendedores no pierdan sus ofertas y puedan reacionar a tiempo.
+```
+
+### Prompt #042 — Flujo contratar: escrow solo al aceptar
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Modal “¿Seguro contratar a X?”; tras confirmar la solicitud queda pendiente sin mover dinero. Cancel buyer / reject seller / 24h → sin envío. Aceptación seller → lock escrow simulado + vínculo de partes. UX checkout/actividad alineada.
+* **Archivos creados o modificados:** `hire-confirm-modal.tsx`, `escrow-checkout.tsx`, `activity-inbox.tsx`, `work-request-alert.tsx`, storefront hire, `negotiations-workspace.tsx`, escrow cancel/reject/confirm→lock BE, schemas `CANCELLED`, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+Referente al flujo lo considero asi mejor:
+
+Contratador: selecciona emprendedor, le da a pagar, sale pop de "Estas seguro que quieires contrarta a X persona para tu solicitud" el puede confirmar o denegar. Si confirma el envio del dinero al Scrow se congela hasta uno de estos 4 sucesos:
+
+1. el se arrepiente y el dinero nunca se envia.
+2. el tiempo de las 24h pasa y el emprendedor nunca responde, el dinero nunca se manda.
+3. el emprendedor rechaza, el dinero nunca se manda.
+4. el emprendedor acepta y al instante dicho dinero por parte del contratador es enviado al scrow y se genera la logica de times, y se establece entre quienes esta vinculado dicho dinero.
+```
+
+### Prompt #043 — Popup amigable, 24h real, workspace chat
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Frontend`, `Gobernanza`
+* **Resumen de su funcionalidad:** Popup con buyer + gig + brief; contador 24h en vivo; job auto-cancel; fix reject (migración CANCELLED); workspace post-aceptar con chat, anexos, plazo 7d y contexto.
+* **Archivos creados o modificados:** `work-request-alert.tsx`, `order-workspace.tsx`, workspace page, escrow timeout job, OrderWorkspaceService, chat migration, activity/schemas/CONTEXT, AI_USAGE/prompts
+* **Texto literal del prompt enviado:**
+
+```
+Correciones:
+
+Referente al emergente del emprendedor:
+
+El siguiente texto: "Prueba4 para la vuelta ya tu sabe · $10.00. Si aceptas, el pago entra a escrow al instante. Si rechazas, el dinero nunca se manda. Presiona Ver para decidir." Este mensajo no va, La idea es algo mas amigable tipo: "El usuario X(El que solocita el trabajo) esta interesado en tu publicacion de X(Nombre del gig), Y desea realizar X(Esta es la descripcion que se añade antes de que el contratador acepte el pago)".
+
+referente a la logica de las 24, Esta planteado a añadirse? si es es el caso esperamos, Si no esta planteado añadelo directamente, y en la parte de : "Quedan aprox. 24 h para responder (ventana de 24 h)." cambialo por "Tienes aproximadamente (Un contador real de las 24h) para aceptar el servicio, de lo contrario se le avisara al usuario que no estas interesado."
+
+Por ejemplo probe el boton de rechazar: "Algo salió mal. Inténtalo de nuevo."
+
+Aceptar: "Aceptaste el encargo. El pago del contratador quedó en custodia y quedan vinculadas las partes. Aquí arrancarían los plazos de entrega."
+
+IDEA 3: La idea al aceptar se genera una pestaña en la cual se tendra un chat en vivo entre el emprendedor y el contratador, con un campo de anexar, para añadir las entregas, tambien el contador de 7 dias, para que el siempre tenga presente cuando tiempo tiene, tambien un apartado con el contexto de la solicitud.
+
+Refererente a la idea 3 implementa para tener este flujo listo, si en algun spec futuro se menciona simplemente se adelanto dicho trabajo.
+```
 
 

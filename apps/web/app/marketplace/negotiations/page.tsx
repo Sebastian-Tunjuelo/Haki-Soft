@@ -1,5 +1,5 @@
-import { NegotiationsHarness } from '@/src/components/negotiations-harness';
+import { NegotiationsWorkspace } from '@/src/components/negotiations-workspace';
 
-export default function NegotiationsHarnessPage() {
-  return <NegotiationsHarness />;
+export default function NegotiationsPage() {
+  return <NegotiationsWorkspace />;
 }

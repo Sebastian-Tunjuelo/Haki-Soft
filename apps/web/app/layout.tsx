@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Navbar } from '@/src/components/navbar';
+import { WorkRequestAlert } from '@/src/components/work-request-alert';
 import { SmoothScrollProvider } from '@/app/providers/smooth-scroll';
 import './globals.css';
 
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <SmoothScrollProvider>
             <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
               <Navbar />
+              <WorkRequestAlert />
               <main className="app-container" style={{ padding: '32px 20px', flex: 1 }}>
                 {children}
               </main>

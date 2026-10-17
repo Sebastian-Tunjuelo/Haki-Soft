@@ -15,6 +15,7 @@ import { SystemClock } from '../identity/system-clock';
 import { WalletCallbackController, WalletController } from '../identity/wallet.controller';
 import { WalletService } from '../identity/wallet.service';
 import { WalletVerifiedGuard } from '../identity/wallet-verified.guard';
+import { EscrowService } from '../escrow/escrow.service';
 import { IdempotencyStore } from '../marketplace/idempotency.store';
 import { MarketplaceController } from '../marketplace/marketplace.controller';
 import { MarketplaceService } from '../marketplace/marketplace.service';
@@ -138,6 +139,13 @@ describe('SPEC-05 negotiations HTTP', () => {
         MarketplaceService,
         NegotiationsService,
         IdempotencyStore,
+        {
+          provide: EscrowService,
+          useValue: {
+            notifySellerIfConfirmationPending: async () => undefined,
+            lockEscrowAfterMutualAgreement: async () => undefined,
+          },
+        },
         { provide: CLOCK, useValue: clock },
         { provide: IDENTITY_REPOSITORY, useValue: identityRepo },
         { provide: WALLET_OWNERSHIP_GATEWAY, useValue: gateway },

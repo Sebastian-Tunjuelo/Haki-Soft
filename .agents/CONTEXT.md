@@ -131,20 +131,25 @@ La plataforma **TaskStream AI** opera su propia billetera oficial en Interledger
 
 ### 5.2. Flujo Preliminar (Etapa 0): Dos Modalidades de Contratación (Gig Fijo vs. Publicación con Ofertas)
 
-**TaskStream AI** distingue de forma estricta dos formas de llegar a una orden. **El flujo financiero (escrow, relojes de 7d / 32h / 30m, etc.) no comienza hasta que ambas partes hayan aceptado la actividad** y el Buyer complete el fondeo. Antes de ese punto, quien publicó la petición puede **cancelarla** si aún no fue aceptada.
+**TaskStream AI** distingue de forma estricta dos formas de llegar a una orden. **El dinero solo entra a escrow cuando el emprendedor (Freelancer) acepta** (o, en Camino B, al cerrar el acuerdo mutuo). Hasta entonces el pago **no se envía**. Los relojes de 7d / 32h / 30m arrancan en `ESCROW_LOCKED`.
 
 #### A. Contratación Directa de un Gig (Precio Fijo — No Negociable)
 
 1. El Freelancer publica un **Gig** con precio fijo (ej. *“Edición de fotos — \$80 USD”*).
-2. El Buyer pulsa **Contratar** a ese precio: **no hay negociación**; el monto del Gig es el monto de la orden.
-3. Cuando **ambos lados aceptan** la actividad y el Buyer fondea el escrow, se genera la `TaskOrderCard` y arranca la Etapa 1 (`ESCROW_LOCKED`).
+2. El Buyer elige el Gig y pulsa **Pagar / Contratar**: aparece un modal *“¿Seguro que quieres contratar a X?”* (confirmar o denegar).
+3. Si confirma: se crea la solicitud en `PENDING_ESCROW_FUNDING`. **El dinero aún no se manda.** El Freelancer tiene **24 h** para responder. Salidas sin envío de fondos:
+   * el Buyer se arrepiente y cancela;
+   * pasan las 24 h sin respuesta del Freelancer;
+   * el Freelancer rechaza.
+4. Si el Freelancer **acepta**: el **100 %** del contratador entra a `taskstream-escrow` **al instante**, quedan vinculadas las partes, arranca la Etapa 1 (`ESCROW_LOCKED` + timers) y se abre el **espacio de trabajo** (chat en vivo, anexos de entrega, contador de plazo y contexto de la solicitud).
+5. Si pasan **24 h** sin respuesta del Freelancer, la solicitud pasa a `CANCELLED` automáticamente (el dinero no se manda) y el Buyer queda notificado en la vista de custodia.
 
 #### B. Publicación de Tarea por el Buyer (Presupuesto Tope — Ofertas `<=` Máximo)
 
 1. **Publicación (Buyer A):** Publica en el tablón indicando categoría, título, descripción, criterios preliminares, plazo (máx. 7 días) y **presupuesto máximo** (`initialBudgetUSDInCents`). Estado: `OPEN_FOR_PROPOSALS`.
 2. **Bandeja de ofertas (Freelancers):** Varios freelancers pueden enviar propuestas en paralelo con `proposedBudgetUSDInCents <= initialBudgetUSDInCents`. El sistema **rechaza** cualquier oferta por encima del tope. El Buyer ve la **lista de ofertas y perfiles** y **elige una**.
 3. **Aceptación mutua y arranque:**
-   * Al aceptar una oferta, la publicación pasa a `AGREED_AND_LOCKED`, las demás ofertas quedan descartadas respecto a esa publicación, y **solo entonces** (tras aceptación de ambas partes + fondeo) arranca la Etapa 1.
+   * Al aceptar una oferta, la publicación pasa a `AGREED_AND_LOCKED`, las demás ofertas quedan descartadas respecto a esa publicación, y **al instante** el 100 % entra a escrow (`ESCROW_LOCKED`) — no hay paso intermedio de “depositar después”.
    * Si no hay acuerdo con un ofertante concreto, esa propuesta se cierra (`DISCREPANCY_CLOSED_PATH_2`) y la publicación **sigue** `OPEN_FOR_PROPOSALS` para el resto.
    * El Buyer puede **cancelar** la publicación antes de aceptar alguna oferta.
 
@@ -165,8 +170,8 @@ La plataforma **TaskStream AI** opera su propia billetera oficial en Interledger
 
 #### Etapa 1: Inicio de una Orden y Plazo Inicial de Entrega (7 Días)
 
-1. Tras la **aceptación mutua** de la actividad (Gig fijo o oferta elegida sobre publicación), el Buyer deposita el **100 %** en `taskstream-escrow` mediante concesión interactiva GNAP.
-2. La orden pasa a `ESCROW_LOCKED` y comienza el **plazo inicial de 7 días**.
+1. En el momento en que el Freelancer **acepta** (Gig) o se cierra el **acuerdo mutuo** (publicación), el **100 %** del Buyer entra a `taskstream-escrow` (GNAP real a cargo de BE-1; MVP puede simular el lock).
+2. La orden pasa a `ESCROW_LOCKED`, quedan vinculadas las partes y comienza el **plazo inicial de 7 días**.
 3. El Freelancer debe entregar conforme al alcance acordado.
 
 #### Etapa 2: Si el Freelancer Entrega Dentro de los Primeros 7 Días (o de la Extensión Aprobada) — Revisión de 32 Horas
@@ -335,7 +340,7 @@ export const MvpAiAuditableModalityEnum = z.enum([
  * ESTADOS DEL CICLO DE VIDA DE LA ORDEN
  */
 export const TaskLifecycleStatusEnum = z.enum([
-  'PENDING_ESCROW_FUNDING',         // Ambas partes aceptaron; esperando fondeo GNAP del Buyer
+  'PENDING_ESCROW_FUNDING',         // Solicitud creada; esperando aceptación del Freelancer (dinero aún no enviado)
   'ESCROW_LOCKED',                  // Plazo inicial de 7 días activo
   'EXTENSION_REQUESTED',            // Extensión pedida SOLO al vencer 7d; Buyer tiene 24h
   'ESCROW_EXTENDED',                // Extensión aprobada (hasta 14 días totales desde el inicio)

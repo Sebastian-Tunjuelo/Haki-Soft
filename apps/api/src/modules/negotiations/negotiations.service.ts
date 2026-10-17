@@ -16,6 +16,7 @@ import {
   type NegotiationProposalDetail,
   type TaskCategory,
 } from '@taskstream/shared-schemas';
+import { EscrowService } from '../escrow/escrow.service';
 import { DomainError } from '../identity/domain-error';
 import { IDENTITY_REPOSITORY } from '../identity/identity.tokens';
 import type { IdentityRepository } from '../identity/identity.types';
@@ -32,6 +33,7 @@ export class NegotiationsService {
     @Inject(MARKETPLACE_REPOSITORY) private readonly marketplace: MarketplaceRepository,
     @Inject(IDENTITY_REPOSITORY) private readonly identity: IdentityRepository,
     @Inject(IdempotencyStore) private readonly idempotency: IdempotencyStore,
+    @Inject(EscrowService) private readonly escrow: EscrowService,
   ) {}
 
   async createProposal(userId: string, body: unknown, idempotencyKey?: string) {
@@ -255,6 +257,8 @@ export class NegotiationsService {
       taskOrder: this.negotiations.toTaskOrderCard(result.order),
     };
     this.idempotency.set(`neg:accept:${userId}`, key, 201, response);
+    // Camino 1: acuerdo mutuo ya cerrado → dinero a escrow al instante.
+    void this.escrow.lockEscrowAfterMutualAgreement(result.order.id);
     return response;
   }
 
@@ -329,6 +333,8 @@ export class NegotiationsService {
 
     const response: HireFixedGigResult = { taskOrder: this.negotiations.toTaskOrderCard(order) };
     this.idempotency.set(`neg:hire:${userId}`, key, 201, response);
+    // Push inmediato al Freelancer (SSE) si está en la plataforma.
+    void this.escrow.notifySellerIfConfirmationPending(order.id);
     return response;
   }
 

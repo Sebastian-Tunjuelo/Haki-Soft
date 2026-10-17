@@ -1,10 +1,13 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useRouter } from 'next/navigation';
 import { CoverBanner } from './cover-banner';
 import { GalleryCarousel } from './gallery-carousel';
 import { ReviewsSection, type ReviewsPayload } from './reviews-section';
 import { RichTextField } from './rich-text-field';
+import { HireConfirmModal } from '@/src/components/hire-confirm-modal';
+import { humanError } from '@/src/lib/api-client';
 import type {
   GalleryItem,
   PageDocument,
@@ -34,12 +37,18 @@ export function StorefrontPage({
   initial: StorefrontGig | StorefrontPublication;
   viewerUserId: string | null;
 }) {
+  const router = useRouter();
   const ownerId = kind === 'gig' ? (initial as StorefrontGig).seller.userId : (initial as StorefrontPublication).buyerUserId;
   const isOwner = Boolean(viewerUserId && viewerUserId === ownerId);
   const [mode, setMode] = useState<'edit' | 'preview'>(isOwner ? 'edit' : 'preview');
   const [entity, setEntity] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [hiring, setHiring] = useState(false);
+  const [hireConfirmOpen, setHireConfirmOpen] = useState(false);
+  const [hireBrief, setHireBrief] = useState(
+    'Quiero contratar este Gig con el alcance publicado y entrega dentro del plazo máximo.',
+  );
   const [error, setError] = useState<string | null>(null);
   /** Categoría elegida en UI; vacío = aún no seleccionada en edición. */
   const [categoryDraft, setCategoryDraft] = useState<string>(initial.category ?? '');
@@ -284,6 +293,45 @@ export function StorefrontPage({
     await loadReviews();
   }
 
+  async function hireGig() {
+    if (kind !== 'gig' || isOwner) return;
+    const gig = entity as StorefrontGig;
+    setHiring(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/v1/negotiations/gigs/${gig.gigId}/hire`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': crypto.randomUUID(),
+        },
+        body: JSON.stringify({
+          gigId: gig.gigId,
+          expectedPriceUSDInCents: gig.priceUSDInCents,
+          projectBrief: hireBrief.trim(),
+          buyerAssumesDoubleFxConversion: true,
+        }),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(humanError(res.status, payload));
+        return;
+      }
+      const taskId = payload?.taskOrder?.taskId as string | undefined;
+      if (!taskId) {
+        setError('La orden se creó pero no pudimos abrir el checkout.');
+        return;
+      }
+      setHireConfirmOpen(false);
+      // Solicitud pendiente: el dinero no se manda hasta que el emprendedor acepte.
+      router.push(`/orders/${taskId}/escrow`);
+    } catch {
+      setError(humanError(0, { code: 'API_UNREACHABLE' }));
+    } finally {
+      setHiring(false);
+    }
+  }
+
   const about = pageDocument.blocks.find((b) => b.type === 'about');
   const body = pageDocument.blocks.find((b) => b.type === 'body');
   const links = pageDocument.blocks.find((b) => b.type === 'links');
@@ -293,8 +341,20 @@ export function StorefrontPage({
     CATEGORIES.find((item) => item.value === (editable ? categoryDraft : meta.category))?.label ??
     (meta.category ? meta.category.replaceAll('_', ' ') : 'Sin categoría');
 
+  const hirePersonName =
+    kind === 'gig' ? (entity as StorefrontGig).seller.displayName : 'esta persona';
+  const hireAmountCents = kind === 'gig' ? (entity as StorefrontGig).priceUSDInCents : 0;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0, paddingBottom: 48 }}>
+      <HireConfirmModal
+        open={hireConfirmOpen}
+        personName={hirePersonName}
+        amountCents={hireAmountCents}
+        busy={hiring}
+        onConfirm={() => void hireGig()}
+        onCancel={() => setHireConfirmOpen(false)}
+      />
       <CoverBanner
         cover={cover}
         editable={editable}
@@ -455,6 +515,53 @@ export function StorefrontPage({
             Plazo máximo de entrega: {MAX_DELIVERY_DAYS} días (si lo completas antes, es decisión del freelancer).
           </p>
         </section>
+
+        {kind === 'gig' && !isOwner ? (
+          <section
+            style={{
+              border: '1px solid var(--border)',
+              borderRadius: 14,
+              padding: 18,
+              background: 'var(--surface)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+            }}
+          >
+            <h2 style={{ ...sectionTitle, margin: 0 }}>Contratar este Gig</h2>
+            <p style={{ margin: 0, fontSize: 14, color: 'var(--text-secondary)' }}>
+              Precio fijo {meta.moneyLabel}. El dinero solo entra a escrow si {hirePersonName} acepta (máx. 24 h).
+            </p>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, color: 'var(--text-secondary)' }}>
+              Brief del proyecto
+              <textarea
+                value={hireBrief}
+                onChange={(e) => setHireBrief(e.target.value)}
+                rows={3}
+                style={{
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  padding: '8px 10px',
+                  background: 'transparent',
+                  color: 'var(--text-primary)',
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                }}
+              />
+            </label>
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--text-muted)' }}>
+              Al continuar confirmas que asumes la doble conversión de divisa (FX) cuando el pago sí se envíe.
+            </p>
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={hiring || hireBrief.trim().length < 15 || !viewerUserId}
+              onClick={() => setHireConfirmOpen(true)}
+            >
+              {!viewerUserId ? 'Inicia sesión para contratar' : 'Pagar / Contratar'}
+            </button>
+          </section>
+        ) : null}
 
         <section>
           <h2 style={sectionTitle}>Sobre mí</h2>

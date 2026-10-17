@@ -62,10 +62,6 @@ export function ReviewsSection({
         </div>
       </div>
 
-      <p style={{ margin: 0, fontSize: 13, color: 'var(--text-muted)' }}>
-        Solo puedes dejar una reseña si ya hubo un servicio acordado con esta persona (entrega o reembolso).
-      </p>
-
       {reviews.reviews.length === 0 ? (
         <p style={{ margin: 0, color: 'var(--text-secondary)' }}>Todavía no hay calificaciones públicas.</p>
       ) : (

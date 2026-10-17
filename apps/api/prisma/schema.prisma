@@ -69,8 +69,8 @@ enum NegotiationProposalStatus {
 }
 
 enum TaskLifecycleStatus {
-  PENDING_ESCROW_FUNDING // Aceptación mutua; esperando fondeo
-  ESCROW_LOCKED // Plazo inicial 7 días
+  PENDING_ESCROW_FUNDING // Solicitud enviada; esperando aceptación del Freelancer (sin dinero en escrow)
+  ESCROW_LOCKED // Freelancer aceptó → fondeo 100% + plazo inicial 7 días
   EXTENSION_REQUESTED // Extensión pedida SOLO al vencer 7d; Buyer 24h
   ESCROW_EXTENDED // Extensión aprobada (máx. 14 días totales)
   IN_REVIEW // Revisión 32h
@@ -79,6 +79,7 @@ enum TaskLifecycleStatus {
   DISPUTED // Mediación (tras 2ª corrección o en 30m)
   COMPLETED // 96% Freelancer + 4% wallet dueño
   REFUNDED // 100% Buyer; actividad muere
+  CANCELLED // Antes de fondeo: Buyer se arrepiente, Seller rechaza o vencen 24h
   AUTO_REFUNDED_INITIAL_EXPIRED // 7d sin pedir extensión
   AUTO_REFUNDED_BY_TIMEOUT // Buyer no responde 24h a extensión
   AUTO_REFUNDED_EXTENDED_EXPIRED // Sin entrega en extensión
@@ -194,6 +195,7 @@ model User {
   sentNegotiationMessages NegotiationMessage[]    @relation("MessageSender")
   buyerTaskOrders         TaskOrder[]             @relation("BuyerOrders")
   sellerTaskOrders        TaskOrder[]             @relation("SellerOrders")
+  orderChatMessages       TaskOrderChatMessage[]  @relation("OrderChatMessages")
   resolvedDisputes        DisputeCase[]           @relation("DisputeAdminReviewer")
 
   @@index([countryCode])
@@ -467,6 +469,8 @@ model TaskOrder {
   expectedMediaType   DeliverableMediaType @map("expected_media_type")
   initialDeliveryDays Int                  @map("initial_delivery_days")
   lifecycleStatus     TaskLifecycleStatus  @default(PENDING_ESCROW_FUNDING) @map("lifecycle_status")
+  /// Confirmación explícita del Freelancer (DEC-OPEN-01 Opción A). En Camino 1 (oferta) se setea al aceptar.
+  sellerConfirmedAt   DateTime?            @map("seller_confirmed_at")
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
   closedAt            DateTime?            @map("closed_at")
@@ -483,12 +487,29 @@ model TaskOrder {
   deliverables        TaskDeliverable[]
   disputeCase         DisputeCase?
   timerJobs           ScheduledTimerJob[]
+  chatMessages        TaskOrderChatMessage[]
 
   @@index([buyerId, lifecycleStatus])
   @@index([sellerId, lifecycleStatus])
   @@index([gigId])
   @@index([lifecycleStatus])
   @@map("task_orders")
+}
+
+/// Chat en vivo entre Buyer y Seller tras aceptar (adelanto de flujo post-escrow).
+model TaskOrderChatMessage {
+  id                 String   @id @default(uuid()) @db.Uuid
+  taskOrderId        String   @map("task_order_id") @db.Uuid
+  senderId           String   @map("sender_id") @db.Uuid
+  body               String   @db.Text
+  attachmentFileName String?  @map("attachment_file_name") @db.VarChar(255)
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  taskOrder TaskOrder @relation(fields: [taskOrderId], references: [id], onDelete: Cascade)
+  sender    User      @relation("OrderChatMessages", fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([taskOrderId, createdAt])
+  @@map("task_order_chat_messages")
 }
 
 model TaskAcceptanceCriterion {
