@@ -8,6 +8,10 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// Prisma no modela CHECK, índices parciales, triggers ni vistas. Viven en
+// prisma/sql/domain_checks.sql y en las migraciones; revisa toda migración
+// generada con `prisma migrate dev` para que no los elimine.
+
 // ============================================================================
 // 1. ENUMS DEL DOMINIO
 // ============================================================================
@@ -29,6 +33,11 @@ enum WalletVerificationStatus {
   EXPIRED
 }
 
+enum PlatformWalletRole {
+  ESCROW_CUSTODY // taskstream-escrow: recibe el 100 % y emite payouts/reembolsos
+  OWNER_FEE_COLLECTION // wallet del dueño que recibe el 4 %
+}
+
 enum TaskCategory {
   DIGITAL_MARKETING
   GRAPHICS_AND_DESIGN
@@ -40,16 +49,11 @@ enum TaskCategory {
 
 enum DeliverableMediaType {
   IMAGE_RASTER_VECTOR // Auditable por IA en el MVP (Imagen)
-  DOCUMENT_TEXT       // Auditable por IA en el MVP (Texto)
-  CODE_ARCHIVE        // Planteado para IA Post-MVP
-  DATA_CAMPAIGN       // Planteado para IA Post-MVP
-  VIDEO_STREAM        // Planteado para IA Post-MVP
-  AUDIO_TRACK         // Planteado para IA Post-MVP
-}
-
-enum MvpAiAuditableModality {
-  IMAGE
-  TEXT
+  DOCUMENT_TEXT // Auditable por IA en el MVP (Texto)
+  CODE_ARCHIVE // Planteado para IA Post-MVP
+  DATA_CAMPAIGN // Planteado para IA Post-MVP
+  VIDEO_STREAM // Planteado para IA Post-MVP
+  AUDIO_TRACK // Planteado para IA Post-MVP
 }
 
 enum PublicationStatus {
@@ -65,18 +69,18 @@ enum NegotiationProposalStatus {
 }
 
 enum TaskLifecycleStatus {
-  PENDING_ESCROW_FUNDING         // Aceptación mutua; esperando fondeo
-  ESCROW_LOCKED                  // Plazo inicial 7 días
-  EXTENSION_REQUESTED            // Extensión pedida SOLO al vencer 7d; Buyer 24h
-  ESCROW_EXTENDED                // Extensión aprobada (máx. 14 días totales)
-  IN_REVIEW                      // Revisión 32h
-  REVISION_REQUESTED             // Corrección (máx. 2 globales)
-  FINAL_CLAIM_WINDOW_30M         // 30 min para pedir disputa
-  DISPUTED                       // Mediación (tras 2ª corrección o en 30m)
-  COMPLETED                      // 96% Freelancer + 4% wallet dueño
-  REFUNDED                       // 100% Buyer; actividad muere
-  AUTO_REFUNDED_INITIAL_EXPIRED  // 7d sin pedir extensión
-  AUTO_REFUNDED_BY_TIMEOUT       // Buyer no responde 24h a extensión
+  PENDING_ESCROW_FUNDING // Aceptación mutua; esperando fondeo
+  ESCROW_LOCKED // Plazo inicial 7 días
+  EXTENSION_REQUESTED // Extensión pedida SOLO al vencer 7d; Buyer 24h
+  ESCROW_EXTENDED // Extensión aprobada (máx. 14 días totales)
+  IN_REVIEW // Revisión 32h
+  REVISION_REQUESTED // Corrección (máx. 2 globales)
+  FINAL_CLAIM_WINDOW_30M // 30 min para pedir disputa
+  DISPUTED // Mediación (tras 2ª corrección o en 30m)
+  COMPLETED // 96% Freelancer + 4% wallet dueño
+  REFUNDED // 100% Buyer; actividad muere
+  AUTO_REFUNDED_INITIAL_EXPIRED // 7d sin pedir extensión
+  AUTO_REFUNDED_BY_TIMEOUT // Buyer no responde 24h a extensión
   AUTO_REFUNDED_EXTENDED_EXPIRED // Sin entrega en extensión
 }
 
@@ -96,8 +100,8 @@ enum EscrowLedgerStatus {
 
 enum OpenPaymentsOperationType {
   ESCROW_LOCK
-  FREELANCER_PAYOUT_96      // OutgoingPayment 96% → wallet Freelancer
-  PLATFORM_FEE_PAYOUT_4     // OutgoingPayment 4% → wallet del dueño (distinta del escrow)
+  FREELANCER_PAYOUT_96 // OutgoingPayment 96% → wallet Freelancer
+  PLATFORM_FEE_PAYOUT_4 // OutgoingPayment 4% → wallet del dueño (distinta del escrow)
   BUYER_REFUND_100
 }
 
@@ -115,6 +119,14 @@ enum PreviewProcessingStatus {
   FAILED
 }
 
+enum DeliverableReviewDecision {
+  PENDING_REVIEW // Reloj DELIVERY_REVIEW_32H corriendo
+  ACCEPTED_BY_BUYER // Aceptación expresa → ventana 30m
+  ACCEPTED_BY_TIMEOUT // 32h sin respuesta → ventana 30m
+  REVISION_REQUESTED // Consume 1 de las 2 correcciones globales
+  MEDIATION_REQUESTED // Solo sobre la 2ª corrección → DISPUTED
+}
+
 enum AiAdvisoryLabel {
   HIGH_COMPLIANCE
   PARTIAL_COMPLIANCE
@@ -130,7 +142,7 @@ enum CriterionEvalStatus {
 
 enum DisputeOriginType {
   BUYER_MEDIATION_AFTER_2ND_REVISION // Buyer pide mediación/reembolso tras 2ª corrección
-  FINAL_30M_CLAIM_WINDOW             // Petición de disputa en ventana de 30 min
+  FINAL_30M_CLAIM_WINDOW // Petición de disputa en ventana de 30 min
 }
 
 enum AdminBinaryResolution {
@@ -140,11 +152,11 @@ enum AdminBinaryResolution {
 }
 
 enum TimerJobType {
-  INITIAL_DELIVERY_7D        // 7 días iniciales de entrega
-  EXTENSION_RESPONSE_24H     // 24 horas para que el Buyer responda a la extensión
+  INITIAL_DELIVERY_7D // 7 días iniciales de entrega
+  EXTENSION_RESPONSE_24H // 24 horas para que el Buyer responda a la extensión
   EXTENDED_DELIVERY_UP_TO_7D // Hasta 7 días adicionales aprobados (máx. 14 días totales)
-  DELIVERY_REVIEW_32H        // 32 horas para que el Buyer revise una entrega
-  FINAL_CLAIM_WINDOW_30M     // 30 minutos de ventana final antes de liberar 96% / 4%
+  DELIVERY_REVIEW_32H // 32 horas para que el Buyer revise una entrega
+  FINAL_CLAIM_WINDOW_30M // 30 minutos de ventana final antes de liberar 96% / 4%
 }
 
 enum TimerJobStatus {
@@ -156,7 +168,7 @@ enum TimerJobStatus {
 }
 
 // ============================================================================
-// 2. IDENTIDAD, PERFILES Y BILLETERAS MULTIMONEDA
+// 2. CONTEXTO IDENTIDAD: USUARIOS, PERFILES Y BILLETERAS
 // ============================================================================
 
 model User {
@@ -173,21 +185,21 @@ model User {
 
   sellerProfile           SellerProfile?
   wallets                 UserWallet[]
-  gigs                    Gig[]                      @relation("SellerGigs")
-  publications            ClientTaskPublication[]    @relation("BuyerPublications")
-  buyerNegotiations       NegotiationProposal[]      @relation("BuyerNegotiations")
-  freelancerNegotiations  NegotiationProposal[]      @relation("FreelancerNegotiations")
-  sentNegotiationMessages NegotiationMessage[]       @relation("MessageSender")
-  buyerTaskOrders         TaskOrder[]                @relation("BuyerOrders")
-  sellerTaskOrders        TaskOrder[]                @relation("SellerOrders")
-  requestedExtensions     DeadlineExtensionRequest[] @relation("ExtensionRequester")
-  openedDisputes          DisputeCase[]              @relation("DisputeOpener")
-  resolvedDisputes        DisputeCase[]              @relation("DisputeAdminReviewer")
+  gigs                    Gig[]                   @relation("SellerGigs")
+  publications            ClientTaskPublication[] @relation("BuyerPublications")
+  buyerNegotiations       NegotiationProposal[]   @relation("BuyerNegotiations")
+  freelancerNegotiations  NegotiationProposal[]   @relation("FreelancerNegotiations")
+  sentNegotiationMessages NegotiationMessage[]    @relation("MessageSender")
+  buyerTaskOrders         TaskOrder[]             @relation("BuyerOrders")
+  sellerTaskOrders        TaskOrder[]             @relation("SellerOrders")
+  resolvedDisputes        DisputeCase[]           @relation("DisputeAdminReviewer")
 
   @@index([countryCode])
   @@map("users")
 }
 
+/// Las métricas (órdenes completadas, puntaje IA promedio) se leen de la vista
+/// v_seller_profile_stats; no se almacenan aquí.
 model SellerProfile {
   id                     String   @id @default(uuid()) @db.Uuid
   userId                 String   @unique @map("user_id") @db.Uuid
@@ -196,9 +208,6 @@ model SellerProfile {
   skills                 String[]
   languages              String[]
   webMonetizationEnabled Boolean  @default(true) @map("web_monetization_enabled")
-  ratingAvg              Decimal  @default(0.00) @map("rating_avg") @db.Decimal(3, 2)
-  completedOrdersCount   Int      @default(0) @map("completed_orders_count")
-  aiAdvisoryScoreAvg     Decimal  @default(0.00) @map("ai_advisory_score_avg") @db.Decimal(5, 2)
   createdAt              DateTime @default(now()) @map("created_at")
   updatedAt              DateTime @updatedAt @map("updated_at")
 
@@ -207,6 +216,9 @@ model SellerProfile {
   @@map("seller_profiles")
 }
 
+/// Una fila por dirección de wallet. `walletAddressUrl` es inmutable: reemplazar la
+/// wallet crea una fila nueva y desactiva la anterior, que sigue referenciada por
+/// los EscrowLedger históricos. Máximo una activa por usuario (índice parcial SQL).
 model UserWallet {
   id                String    @id @default(uuid()) @db.Uuid
   userId            String    @map("user_id") @db.Uuid
@@ -217,16 +229,14 @@ model UserWallet {
   resourceServerUrl String    @map("resource_server_url")
   isVerified        Boolean   @default(false) @map("is_verified")
   verifiedAt        DateTime? @map("verified_at")
-  /// Regla de negocio: como máximo UNA wallet con isActive=true por userId (enforce en servicio + índice parcial SQL).
-  /// Al verificar una nueva, la anterior pasa a isActive=false (reemplazo).
-  isActive          Boolean   @default(true) @map("is_active")
+  isActive          Boolean   @default(false) @map("is_active")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
   user                   User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
   verificationChallenges WalletVerificationChallenge[]
-  buyerOrders            TaskOrder[]                   @relation("BuyerOrderWallet")
-  sellerOrders           TaskOrder[]                   @relation("SellerOrderWallet")
+  buyerEscrowLedgers     EscrowLedger[]                @relation("LedgerBuyerWallet")
+  sellerEscrowLedgers    EscrowLedger[]                @relation("LedgerSellerWallet")
 
   @@index([userId, isActive])
   @@map("user_wallets")
@@ -236,6 +246,8 @@ model WalletVerificationChallenge {
   id                  String                   @id @default(uuid()) @db.Uuid
   walletId            String                   @map("wallet_id") @db.Uuid
   clientNonce         String                   @unique @map("client_nonce")
+  /// Nonce que devuelve el auth server en `interact.finish`. Hace falta para recomputar el hash GNAP.
+  finishNonce         String                   @map("finish_nonce")
   continueUri         String                   @map("continue_uri")
   continueAccessToken String                   @map("continue_access_token")
   interactRedirectUri String                   @map("interact_redirect_uri")
@@ -252,9 +264,42 @@ model WalletVerificationChallenge {
   @@map("wallet_verification_challenges")
 }
 
+/// Wallets propias de TaskStream. Máximo una activa por rol (índice parcial SQL).
+model PlatformWallet {
+  id               String             @id @default(uuid()) @db.Uuid
+  role             PlatformWalletRole
+  walletAddressUrl String             @unique @map("wallet_address_url")
+  assetCode        String             @map("asset_code") @db.VarChar(6)
+  assetScale       Int                @map("asset_scale")
+  isActive         Boolean            @default(true) @map("is_active")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  custodyEscrowLedgers  EscrowLedger[] @relation("LedgerCustodyWallet")
+  ownerFeeEscrowLedgers EscrowLedger[] @relation("LedgerOwnerFeeWallet")
+
+  @@index([role, isActive])
+  @@map("platform_wallets")
+}
+
 // ============================================================================
-// 3. MARKETPLACE, PUBLICACIONES Y NEGOCIACIÓN
+// 3. CONTEXTO MARKETPLACE: CATÁLOGO, PUBLICACIONES Y NEGOCIACIÓN
 // ============================================================================
+
+/// Tabla de referencia: pares categoría ↔ tipo de medio permitidos en el MVP.
+/// Gig, ClientTaskPublication y TaskOrder la referencian con FK compuesta, de modo
+/// que `expectedMediaType` nunca contradice a `category`.
+model TaskCategoryMediaType {
+  category  TaskCategory
+  mediaType DeliverableMediaType @map("media_type")
+
+  gigs         Gig[]
+  publications ClientTaskPublication[]
+  taskOrders   TaskOrder[]
+
+  @@id([category, mediaType])
+  @@map("task_category_media_types")
+}
 
 model Gig {
   id                  String               @id @default(uuid()) @db.Uuid
@@ -264,15 +309,17 @@ model Gig {
   title               String               @db.VarChar(120)
   description         String               @db.Text
   priceUSDInCents     Int                  @map("price_usd_in_cents")
-  initialDeliveryDays Int                  @default(7) @map("initial_delivery_days") // Máx. 7 días iniciales
+  initialDeliveryDays Int                  @default(7) @map("initial_delivery_days")
+  /// Plantilla validada por Zod; se copia a task_acceptance_criteria al nacer la orden.
   defaultCriteriaJson Json                 @map("default_criteria_json")
   allowedExtensions   String[]             @map("allowed_extensions")
   isActive            Boolean              @default(true) @map("is_active")
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
 
-  seller     User        @relation("SellerGigs", fields: [sellerId], references: [id], onDelete: Restrict)
-  taskOrders TaskOrder[]
+  seller        User                  @relation("SellerGigs", fields: [sellerId], references: [id], onDelete: Restrict)
+  categoryMedia TaskCategoryMediaType @relation(fields: [category, expectedMediaType], references: [category, mediaType], onDelete: Restrict)
+  taskOrders    TaskOrder[]
 
   @@index([category, isActive])
   @@index([sellerId])
@@ -287,7 +334,8 @@ model ClientTaskPublication {
   title                   String               @db.VarChar(120)
   description             String               @db.Text
   initialBudgetUSDInCents Int                  @map("initial_budget_usd_in_cents")
-  initialDeliveryDays     Int                  @default(7) @map("initial_delivery_days") // Máx. 7 días iniciales
+  initialDeliveryDays     Int                  @default(7) @map("initial_delivery_days")
+  /// Plantilla validada por Zod; se copia a task_acceptance_criteria al nacer la orden.
   preliminaryCriteriaJson Json                 @map("preliminary_criteria_json")
   allowedExtensions       String[]             @map("allowed_extensions")
   status                  PublicationStatus    @default(OPEN_FOR_PROPOSALS)
@@ -295,29 +343,34 @@ model ClientTaskPublication {
   createdAt               DateTime             @default(now()) @map("created_at")
   updatedAt               DateTime             @updatedAt @map("updated_at")
 
-  buyer      User                  @relation("BuyerPublications", fields: [buyerId], references: [id], onDelete: Restrict)
-  proposals  NegotiationProposal[]
-  taskOrders TaskOrder[]
+  buyer         User                  @relation("BuyerPublications", fields: [buyerId], references: [id], onDelete: Restrict)
+  categoryMedia TaskCategoryMediaType @relation(fields: [category, expectedMediaType], references: [category, mediaType], onDelete: Restrict)
+  proposals     NegotiationProposal[]
 
+  @@unique([id, buyerId, initialBudgetUSDInCents])
   @@index([status, category])
   @@index([buyerId])
   @@map("client_task_publications")
 }
 
+/// `buyerId` e `initialBudgetUSDInCents` se replican de la publicación porque el
+/// CHECK de oferta a la baja y el anti self-dealing son por fila; la FK compuesta
+/// hacia ClientTaskPublication garantiza que nunca diverjan.
 model NegotiationProposal {
   id                       String                    @id @default(uuid()) @db.Uuid
   publicationId            String                    @map("publication_id") @db.Uuid
   buyerId                  String                    @map("buyer_id") @db.Uuid
-  freelancerId             String                    @map("freelancer_id") @db.Uuid
   initialBudgetUSDInCents  Int                       @map("initial_budget_usd_in_cents")
-  proposedBudgetUSDInCents Int                       @map("proposed_budget_usd_in_cents") // <= initialBudgetUSDInCents
+  freelancerId             String                    @map("freelancer_id") @db.Uuid
+  proposedBudgetUSDInCents Int                       @map("proposed_budget_usd_in_cents")
+  proposedDeliveryDays     Int                       @map("proposed_delivery_days")
   status                   NegotiationProposalStatus @default(IN_NEGOTIATION)
   closedReason             String?                   @map("closed_reason") @db.VarChar(250)
   createdAt                DateTime                  @default(now()) @map("created_at")
   updatedAt                DateTime                  @updatedAt @map("updated_at")
   closedAt                 DateTime?                 @map("closed_at")
 
-  publication ClientTaskPublication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  publication ClientTaskPublication @relation(fields: [publicationId, buyerId, initialBudgetUSDInCents], references: [id, buyerId, initialBudgetUSDInCents], onDelete: Restrict, onUpdate: Cascade)
   buyer       User                  @relation("BuyerNegotiations", fields: [buyerId], references: [id], onDelete: Restrict)
   freelancer  User                  @relation("FreelancerNegotiations", fields: [freelancerId], references: [id], onDelete: Restrict)
   messages    NegotiationMessage[]
@@ -334,6 +387,7 @@ model NegotiationMessage {
   senderId                String   @map("sender_id") @db.Uuid
   messageText             String   @map("message_text") @db.Text
   offeredAmountUSDInCents Int?     @map("offered_amount_usd_in_cents")
+  offeredDeliveryDays     Int?     @map("offered_delivery_days")
   createdAt               DateTime @default(now()) @map("created_at")
 
   proposal NegotiationProposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
@@ -344,72 +398,47 @@ model NegotiationMessage {
 }
 
 // ============================================================================
-// 4. ORDEN DE TAREA, PLAZOS (7d, 24h, +7d, 32h, 30m) Y CORRECCIONES (MÁX. 2)
+// 4. CONTEXTO CONTRATACIÓN: ORDEN (RAÍZ DEL AGREGADO) Y TÉRMINOS CONGELADOS
 // ============================================================================
 
+/// Contrato entre Buyer y Freelancer. No guarda dinero, wallets, contadores ni
+/// relojes: el dinero vive en EscrowLedger, cada plazo en ScheduledTimerJob y las
+/// correcciones usadas se derivan de TaskDeliverable (vista v_task_order_revision_usage).
+/// title/scope/category/expectedMediaType/initialDeliveryDays son la foto inmutable
+/// de los términos acordados: el Gig puede editarse después sin alterar la orden.
+/// Origen: exactamente uno de gigId o proposalId (CHECK chk_task_order_single_origin).
 model TaskOrder {
-  id                          String                  @id @default(uuid()) @db.Uuid
-  buyerId                     String                  @map("buyer_id") @db.Uuid
-  sellerId                    String                  @map("seller_id") @db.Uuid
-  buyerWalletId               String                  @map("buyer_wallet_id") @db.Uuid
-  sellerWalletId              String                  @map("seller_wallet_id") @db.Uuid
-  publicationId               String?                 @map("publication_id") @db.Uuid
-  proposalId                  String?                 @unique @map("proposal_id") @db.Uuid
-  gigId                       String?                 @map("gig_id") @db.Uuid
-  title                       String                  @db.VarChar(120)
-  scopeDescription            String                  @map("scope_description") @db.Text
-  category                    TaskCategory
-  expectedMediaType           DeliverableMediaType    @map("expected_media_type")
-  aiAuditableModality         MvpAiAuditableModality? @map("ai_auditable_modality") // Presente solo si es IMAGE o TEXT en el MVP
-  lifecycleStatus             TaskLifecycleStatus     @default(PENDING_ESCROW_FUNDING) @map("lifecycle_status")
+  id                  String               @id @default(uuid()) @db.Uuid
+  buyerId             String               @map("buyer_id") @db.Uuid
+  sellerId            String               @map("seller_id") @db.Uuid
+  gigId               String?              @map("gig_id") @db.Uuid
+  proposalId          String?              @unique @map("proposal_id") @db.Uuid
+  title               String               @db.VarChar(120)
+  scopeDescription    String               @map("scope_description") @db.Text
+  category            TaskCategory
+  expectedMediaType   DeliverableMediaType @map("expected_media_type")
+  initialDeliveryDays Int                  @map("initial_delivery_days")
+  lifecycleStatus     TaskLifecycleStatus  @default(PENDING_ESCROW_FUNDING) @map("lifecycle_status")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  closedAt            DateTime?            @map("closed_at")
 
-  // Distribución: 96% Freelancer / 4% wallet del dueño (billetera distinta del escrow)
-  totalAmountUSDInCents       Int                     @map("total_amount_usd_in_cents")       // 100%
-  freelancerPayoutUSDInCents  Int                     @map("freelancer_payout_usd_in_cents")  // 96%
-  platformFeeUSDInCents       Int                     @map("platform_fee_usd_in_cents")       // 4% → platformOwnerWallet
-  buyerOriginCurrency         String                  @map("buyer_origin_currency") @db.VarChar(6)
-  sellerTargetCurrency        String                  @map("seller_target_currency") @db.VarChar(6)
-
-  // Reglas Globales de Plazos y Correcciones
-  initialDeliveryDays         Int                     @default(7) @map("initial_delivery_days")     // 7 días iniciales
-  reviewWindowHours           Int                     @default(32) @map("review_window_hours")      // 32 horas por cada entrega
-  finalClaimWindowMinutes     Int                     @default(30) @map("final_claim_window_minutes") // 30 minutos ventana final
-  maxRevisionsAllowed         Int                     @default(2) @map("max_revisions_allowed")     // Máximo 2 por orden
-  revisionsUsed               Int                     @default(0) @map("revisions_used")            // Global (0..2), no se reinicia con extensión
-  extensionGrantedDays        Int                     @default(0) @map("extension_granted_days")    // 0 o 1..7 días adicionales (máx. 14d totales)
-
-  // Marcas de Tiempo de los Relojes Independientes
-  escrowLockedAt              DateTime?               @map("escrow_locked_at")
-  initialDeliveryDeadlineAt   DateTime?               @map("initial_delivery_deadline_at")  // +7 días desde inicio
-  extendedDeliveryDeadlineAt  DateTime?               @map("extended_delivery_deadline_at") // Hasta +7 días adicionales (máx. 14d desde inicio)
-  currentReviewStartedAt      DateTime?               @map("current_review_started_at")
-  currentReviewExpiresAt      DateTime?               @map("current_review_expires_at")     // +32 horas desde la entrega vigente
-  finalClaimWindowStartedAt   DateTime?               @map("final_claim_window_started_at")
-  finalClaimWindowExpiresAt   DateTime?               @map("final_claim_window_expires_at") // +30 minutos tras aceptación expresa o automática
-  completedAt                 DateTime?               @map("completed_at")
-  refundedAt                  DateTime?               @map("refunded_at")
-  createdAt                   DateTime                @default(now()) @map("created_at")
-  updatedAt                   DateTime                @updatedAt @map("updated_at")
-
-  buyer                User                      @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Restrict)
-  seller               User                      @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: Restrict)
-  buyerWallet          UserWallet                @relation("BuyerOrderWallet", fields: [buyerWalletId], references: [id], onDelete: Restrict)
-  sellerWallet         UserWallet                @relation("SellerOrderWallet", fields: [sellerWalletId], references: [id], onDelete: Restrict)
-  publication          ClientTaskPublication?    @relation(fields: [publicationId], references: [id], onDelete: SetNull)
-  proposal             NegotiationProposal?      @relation(fields: [proposalId], references: [id], onDelete: SetNull)
-  gig                  Gig?                      @relation(fields: [gigId], references: [id], onDelete: SetNull)
-  acceptanceCriteria   TaskAcceptanceCriterion[]
-  technicalConstraint  TaskTechnicalConstraint?
-  extensionRequest     DeadlineExtensionRequest?
-  escrowLedger         EscrowLedger?
-  openPaymentsTxs      OpenPaymentsTransaction[]
-  deliverables         TaskDeliverable[]
-  aiAdvisorReports     AiAdvisorReport[]
-  disputeCase          DisputeCase?
-  scheduledTimerJobs   ScheduledTimerJob[]
+  buyer               User                      @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Restrict)
+  seller              User                      @relation("SellerOrders", fields: [sellerId], references: [id], onDelete: Restrict)
+  gig                 Gig?                      @relation(fields: [gigId], references: [id], onDelete: Restrict)
+  proposal            NegotiationProposal?      @relation(fields: [proposalId], references: [id], onDelete: Restrict)
+  categoryMedia       TaskCategoryMediaType     @relation(fields: [category, expectedMediaType], references: [category, mediaType], onDelete: Restrict)
+  acceptanceCriteria  TaskAcceptanceCriterion[]
+  technicalConstraint TaskTechnicalConstraint?
+  extensionRequest    DeadlineExtensionRequest?
+  escrowLedger        EscrowLedger?
+  deliverables        TaskDeliverable[]
+  disputeCase         DisputeCase?
+  timerJobs           ScheduledTimerJob[]
 
   @@index([buyerId, lifecycleStatus])
   @@index([sellerId, lifecycleStatus])
+  @@index([gigId])
   @@index([lifecycleStatus])
   @@map("task_orders")
 }
@@ -422,7 +451,7 @@ model TaskAcceptanceCriterion {
   isMandatory   Boolean @default(true) @map("is_mandatory")
   sortOrder     Int     @default(0) @map("sort_order")
 
-  taskOrder     TaskOrder               @relation(fields: [taskOrderId], references: [id], onDelete: Cascade)
+  taskOrder     TaskOrder               @relation(fields: [taskOrderId], references: [id], onDelete: Restrict)
   aiEvaluations AiCriterionEvaluation[]
 
   @@unique([taskOrderId, criterionCode])
@@ -439,56 +468,73 @@ model TaskTechnicalConstraint {
   minDurationSeconds Int?     @map("min_duration_seconds")
   maxDurationSeconds Int?     @map("max_duration_seconds")
 
-  taskOrder TaskOrder @relation(fields: [taskOrderId], references: [id], onDelete: Cascade)
+  taskOrder TaskOrder @relation(fields: [taskOrderId], references: [id], onDelete: Restrict)
 
   @@map("task_technical_constraints")
 }
 
+/// El solicitante es siempre el seller de la orden y el plazo de decisión del Buyer
+/// es el ScheduledTimerJob EXTENSION_RESPONSE_24H; ninguno se duplica aquí.
 model DeadlineExtensionRequest {
-  id                      String                 @id @default(uuid()) @db.Uuid
-  taskOrderId             String                 @unique @map("task_order_id") @db.Uuid // Garantiza 1 única extensión por orden
-  requestedById           String                 @map("requested_by_id") @db.Uuid
-  requestedExtraDays      Int                    @map("requested_extra_days")          // Hasta 7 días adicionales (1..7)
-  reason                  String                 @db.VarChar(500)
-  requestedAt             DateTime               @default(now()) @map("requested_at")
-  buyerDecisionDeadlineAt DateTime               @map("buyer_decision_deadline_at")    // +24 horas para aprobar o rechazar
-  respondedAt             DateTime?              @map("responded_at")
-  status                  ExtensionRequestStatus @default(PENDING_BUYER_DECISION)
+  id                 String                 @id @default(uuid()) @db.Uuid
+  taskOrderId        String                 @unique @map("task_order_id") @db.Uuid
+  requestedExtraDays Int                    @map("requested_extra_days")
+  reason             String                 @db.VarChar(500)
+  status             ExtensionRequestStatus @default(PENDING_BUYER_DECISION)
+  requestedAt        DateTime               @default(now()) @map("requested_at")
+  respondedAt        DateTime?              @map("responded_at")
 
-  taskOrder   TaskOrder @relation(fields: [taskOrderId], references: [id], onDelete: Cascade)
-  requestedBy User      @relation("ExtensionRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+  taskOrder TaskOrder @relation(fields: [taskOrderId], references: [id], onDelete: Restrict)
 
-  @@index([status, buyerDecisionDeadlineAt])
+  @@index([status])
   @@map("deadline_extension_requests")
 }
 
 // ============================================================================
-// 5. LIBRO MAYOR EN ESCROW Y TRANSACCIONES OPEN PAYMENTS
+// 5. CONTEXTO FINANZAS: ESCROW Y TRANSACCIONES OPEN PAYMENTS
 // ============================================================================
 
+/// Agregado financiero de la orden. Las wallets referenciadas son filas inmutables,
+/// así que el payout y el reembolso usan la dirección vigente al contratar aunque
+/// el usuario cambie de wallet después. platformFee y freelancerPayout se
+/// materializan porque son los montos instruidos a Open Payments; el CHECK
+/// chk_escrow_exact_96_4_split los ata a floor(total * 4 / 100).
+/// Lo efectivamente movido se lee de las transacciones (vista v_escrow_ledger_settlement).
 model EscrowLedger {
   id                         String             @id @default(uuid()) @db.Uuid
   taskOrderId                String             @unique @map("task_order_id") @db.Uuid
-  escrowWalletAddress        String             @default("https://ilp.interledger-test.dev/taskstream-escrow") @map("escrow_wallet_address")
-  platformOwnerWalletAddress String             @map("platform_owner_wallet_address") // Wallet del dueño que recibe el 4%
-  lockedAmountUSDInCents     Int                @default(0) @map("locked_amount_usd_in_cents")
-  releasedToSellerUSDInCents Int                @default(0) @map("released_to_seller_usd_in_cents")
-  platformFeePaidOutInCents  Int                @default(0) @map("platform_fee_paid_out_in_cents") // 4% transferido (no “retenido” informal)
-  refundedToBuyerUSDInCents  Int                @default(0) @map("refunded_to_buyer_usd_in_cents")
+  buyerWalletId              String             @map("buyer_wallet_id") @db.Uuid
+  sellerWalletId             String             @map("seller_wallet_id") @db.Uuid
+  custodyWalletId            String             @map("custody_wallet_id") @db.Uuid
+  ownerFeeWalletId           String             @map("owner_fee_wallet_id") @db.Uuid
+  totalAmountUSDInCents      Int                @map("total_amount_usd_in_cents")
+  platformFeeUSDInCents      Int                @map("platform_fee_usd_in_cents")
+  freelancerPayoutUSDInCents Int                @map("freelancer_payout_usd_in_cents")
   status                     EscrowLedgerStatus @default(AWAITING_FUNDS)
+  fundsLockedAt              DateTime?          @map("funds_locked_at")
+  settledAt                  DateTime?          @map("settled_at")
   createdAt                  DateTime           @default(now()) @map("created_at")
   updatedAt                  DateTime           @updatedAt @map("updated_at")
 
-  taskOrder    TaskOrder                 @relation(fields: [taskOrderId], references: [id], onDelete: Restrict)
-  transactions OpenPaymentsTransaction[]
+  taskOrder      TaskOrder                 @relation(fields: [taskOrderId], references: [id], onDelete: Restrict)
+  buyerWallet    UserWallet                @relation("LedgerBuyerWallet", fields: [buyerWalletId], references: [id], onDelete: Restrict)
+  sellerWallet   UserWallet                @relation("LedgerSellerWallet", fields: [sellerWalletId], references: [id], onDelete: Restrict)
+  custodyWallet  PlatformWallet            @relation("LedgerCustodyWallet", fields: [custodyWalletId], references: [id], onDelete: Restrict)
+  ownerFeeWallet PlatformWallet            @relation("LedgerOwnerFeeWallet", fields: [ownerFeeWalletId], references: [id], onDelete: Restrict)
+  transactions   OpenPaymentsTransaction[]
 
+  @@index([status])
+  @@index([buyerWalletId])
+  @@index([sellerWalletId])
   @@map("escrow_ledgers")
 }
 
+/// Una fila por intento de cada pierna (lock, 96 %, 4 %, reembolso). Como máximo un
+/// intento COMPLETED y uno en curso por pierna (índices parciales SQL), lo que
+/// permite reintentar solo la pierna fallida sin duplicar la otra.
 model OpenPaymentsTransaction {
   id                  String                    @id @default(uuid()) @db.Uuid
   escrowLedgerId      String                    @map("escrow_ledger_id") @db.Uuid
-  taskOrderId         String                    @map("task_order_id") @db.Uuid
   operationType       OpenPaymentsOperationType @map("operation_type")
   attemptNumber       Int                       @default(1) @map("attempt_number")
   idempotencyKey      String                    @unique @map("idempotency_key")
@@ -512,9 +558,8 @@ model OpenPaymentsTransaction {
   completedAt         DateTime?                 @map("completed_at")
 
   escrowLedger EscrowLedger @relation(fields: [escrowLedgerId], references: [id], onDelete: Restrict)
-  taskOrder    TaskOrder    @relation(fields: [taskOrderId], references: [id], onDelete: Restrict)
 
-  @@index([taskOrderId, operationType])
+  @@unique([escrowLedgerId, operationType, attemptNumber])
   @@index([status])
   @@map("open_payments_transactions")
 }
@@ -533,57 +578,58 @@ model RafikiWebhookEvent {
 }
 
 // ============================================================================
-// 6. ENTREGABLES, CONSEJERO DE IA (IMAGEN Y TEXTO EN MVP) Y DISPUTAS
+// 6. CONTEXTO EJECUCIÓN: ENTREGAS, CONSEJERO DE IA Y DISPUTAS
 // ============================================================================
 
+/// Cada entrega lleva su propia decisión de revisión. revisionsUsed =
+/// count(review_decision = 'REVISION_REQUESTED'); el vencimiento de las 32h es el
+/// ScheduledTimerJob DELIVERY_REVIEW_32H de esta entrega.
 model TaskDeliverable {
-  id                 String                  @id @default(uuid()) @db.Uuid
-  taskOrderId        String                  @map("task_order_id") @db.Uuid
-  revisionNumber     Int                     @map("revision_number") // 0 = Inicial, 1 = Corrección 1, 2 = Corrección 2
-  originalR2Key      String                  @map("original_r2_key")
-  previewR2Key       String?                 @map("preview_r2_key")
-  fileName           String                  @map("file_name") @db.VarChar(255)
-  mimeType           String                  @map("mime_type") @db.VarChar(120)
-  fileExtension      String                  @map("file_extension") @db.VarChar(20)
-  fileSizeBytes      BigInt                  @map("file_size_bytes")
-  sha256Checksum     String                  @map("sha256_checksum") @db.Char(64)
-  previewStatus      PreviewProcessingStatus @default(PENDING_PROCESSING) @map("preview_status")
-  isOriginalUnlocked Boolean                 @default(false) @map("is_original_unlocked")
-  buyerRevisionNotes String?                 @map("buyer_revision_notes") @db.Text
-  reviewStartedAt    DateTime                @default(now()) @map("review_started_at")
-  reviewExpiresAt    DateTime                @map("review_expires_at") // +32 horas para esta entrega
-  submittedAt        DateTime                @default(now()) @map("submitted_at")
-  unlockedAt         DateTime?               @map("unlocked_at")
+  id                 String                    @id @default(uuid()) @db.Uuid
+  taskOrderId        String                    @map("task_order_id") @db.Uuid
+  revisionNumber     Int                       @map("revision_number") // 0 = Inicial, 1 = Corrección 1, 2 = Corrección 2
+  originalR2Key      String                    @unique @map("original_r2_key")
+  previewR2Key       String?                   @unique @map("preview_r2_key")
+  fileName           String                    @map("file_name") @db.VarChar(255)
+  mimeType           String                    @map("mime_type") @db.VarChar(120)
+  fileExtension      String                    @map("file_extension") @db.VarChar(20)
+  fileSizeBytes      BigInt                    @map("file_size_bytes")
+  sha256Checksum     String                    @map("sha256_checksum") @db.Char(64)
+  previewStatus      PreviewProcessingStatus   @default(PENDING_PROCESSING) @map("preview_status")
+  submittedAt        DateTime                  @default(now()) @map("submitted_at")
+  reviewDecision     DeliverableReviewDecision @default(PENDING_REVIEW) @map("review_decision")
+  reviewDecidedAt    DateTime?                 @map("review_decided_at")
+  buyerRevisionNotes String?                   @map("buyer_revision_notes") @db.Text
+  originalUnlockedAt DateTime?                 @map("original_unlocked_at")
 
-  taskOrder       TaskOrder        @relation(fields: [taskOrderId], references: [id], onDelete: Cascade)
+  taskOrder       TaskOrder           @relation(fields: [taskOrderId], references: [id], onDelete: Restrict)
   aiAdvisorReport AiAdvisorReport?
+  timerJobs       ScheduledTimerJob[]
 
   @@unique([taskOrderId, revisionNumber])
-  @@index([taskOrderId, previewStatus])
+  @@index([taskOrderId, reviewDecision])
+  @@index([previewStatus])
   @@map("task_deliverables")
 }
 
+/// Audita una entrega concreta; la orden, la revisión y la modalidad (IMAGE | TEXT)
+/// se derivan de la entrega. El disclaimer obligatorio es una constante del contrato
+/// Zod (MANDATORY_AI_DISCLAIMER), no un dato por fila.
 model AiAdvisorReport {
-  id                           String                 @id @default(uuid()) @db.Uuid
-  deliverableId                String                 @unique @map("deliverable_id") @db.Uuid
-  taskOrderId                  String                 @map("task_order_id") @db.Uuid
-  revisionEvaluated            Int                    @map("revision_evaluated")
-  auditableModality            MvpAiAuditableModality @map("auditable_modality") // IMAGE | TEXT en MVP
-  advisoryScore                Int                    @map("advisory_score")     // 0..100
-  advisoryLabel                AiAdvisoryLabel        @map("advisory_label")
-  executiveSummaryForBuyer     String                 @map("executive_summary_for_buyer") @db.VarChar(500)
-  suggestionsForFreelancer     String[]               @map("suggestions_for_freelancer")
-  promptInjectionDetected      Boolean                @default(false) @map("prompt_injection_detected")
-  emptyOrCorruptedFileDetected Boolean                @default(false) @map("empty_or_corrupted_file_detected")
-  deterministicCheckPassed     Boolean                @default(true) @map("deterministic_check_passed")
-  mandatoryDisclaimer          String                 @default("Este informe es estrictamente consultivo para tareas de imagen y texto. El Consejero de IA nunca aprueba ni ejecuta pagos.") @map("mandatory_disclaimer")
-  createdAt                    DateTime               @default(now()) @map("created_at")
+  id                           String          @id @default(uuid()) @db.Uuid
+  deliverableId                String          @unique @map("deliverable_id") @db.Uuid
+  advisoryScore                Int             @map("advisory_score")
+  advisoryLabel                AiAdvisoryLabel @map("advisory_label")
+  executiveSummaryForBuyer     String          @map("executive_summary_for_buyer") @db.VarChar(500)
+  suggestionsForFreelancer     String[]        @map("suggestions_for_freelancer")
+  promptInjectionDetected      Boolean         @default(false) @map("prompt_injection_detected")
+  emptyOrCorruptedFileDetected Boolean         @default(false) @map("empty_or_corrupted_file_detected")
+  deterministicCheckPassed     Boolean         @default(true) @map("deterministic_check_passed")
+  createdAt                    DateTime        @default(now()) @map("created_at")
 
-  deliverable         TaskDeliverable         @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
-  taskOrder           TaskOrder               @relation(fields: [taskOrderId], references: [id], onDelete: Cascade)
+  deliverable         TaskDeliverable         @relation(fields: [deliverableId], references: [id], onDelete: Restrict)
   criteriaEvaluations AiCriterionEvaluation[]
 
-  @@index([taskOrderId, revisionEvaluated])
   @@map("ai_advisor_reports")
 }
 
@@ -595,46 +641,55 @@ model AiCriterionEvaluation {
   evidence    String              @map("evidence") @db.VarChar(300)
 
   aiReport  AiAdvisorReport         @relation(fields: [aiReportId], references: [id], onDelete: Cascade)
-  criterion TaskAcceptanceCriterion @relation(fields: [criterionId], references: [id], onDelete: Cascade)
+  criterion TaskAcceptanceCriterion @relation(fields: [criterionId], references: [id], onDelete: Restrict)
 
   @@unique([aiReportId, criterionId])
+  @@index([criterionId])
   @@map("ai_criterion_evaluations")
 }
 
+/// Ambos orígenes los inicia el Buyer de la orden, por eso no hay `openedById`.
 model DisputeCase {
   id                      String                @id @default(uuid()) @db.Uuid
   taskOrderId             String                @unique @map("task_order_id") @db.Uuid
-  openedById              String                @map("opened_by_id") @db.Uuid
   originType              DisputeOriginType     @map("origin_type")
   claimReason             String                @map("claim_reason") @db.Text
   freelancerDefense       String?               @map("freelancer_defense") @db.Text
   adminReviewerId         String?               @map("admin_reviewer_id") @db.Uuid
-  binaryResolution        AdminBinaryResolution @default(PENDING) @map("binary_resolution") // 100% Buyer o 96%/4% Freelancer
-  resolutionJustification String?               @map("resolution_justification") @db.Text   // Justificación obligatoria basada en evidencias
+  binaryResolution        AdminBinaryResolution @default(PENDING) @map("binary_resolution")
+  resolutionJustification String?               @map("resolution_justification") @db.Text
   openedAt                DateTime              @default(now()) @map("opened_at")
   resolvedAt              DateTime?             @map("resolved_at")
 
   taskOrder     TaskOrder @relation(fields: [taskOrderId], references: [id], onDelete: Restrict)
-  openedBy      User      @relation("DisputeOpener", fields: [openedById], references: [id], onDelete: Restrict)
   adminReviewer User?     @relation("DisputeAdminReviewer", fields: [adminReviewerId], references: [id], onDelete: Restrict)
 
   @@index([binaryResolution])
   @@map("dispute_cases")
 }
 
+/// Única fuente de verdad de todos los plazos. `expiresAt` es inmutable: un plazo
+/// nuevo es una fila nueva. Como máximo un reloj SCHEDULED por orden (índice parcial)
+/// y la duración de cada tipo está fijada por CHECK. El worker de BullMQ relee esta
+/// fila antes de actuar, así un reintento no puede usar un plazo distinto.
 model ScheduledTimerJob {
-  id           String         @id @default(uuid()) @db.Uuid
-  taskOrderId  String         @map("task_order_id") @db.Uuid
-  timerType    TimerJobType   @map("timer_type")
-  bullmqJobId  String         @unique @map("bullmq_job_id")
-  scheduledFor DateTime       @map("scheduled_for")
-  status       TimerJobStatus @default(SCHEDULED)
-  executedAt   DateTime?      @map("executed_at")
-  cancelledAt  DateTime?      @map("cancelled_at")
-  createdAt    DateTime       @default(now()) @map("created_at")
+  id            String         @id @default(uuid()) @db.Uuid
+  taskOrderId   String         @map("task_order_id") @db.Uuid
+  deliverableId String?        @map("deliverable_id") @db.Uuid
+  timerType     TimerJobType   @map("timer_type")
+  bullmqJobId   String         @unique @map("bullmq_job_id")
+  startedAt     DateTime       @map("started_at")
+  expiresAt     DateTime       @map("expires_at")
+  status        TimerJobStatus @default(SCHEDULED)
+  executedAt    DateTime?      @map("executed_at")
+  cancelledAt   DateTime?      @map("cancelled_at")
+  createdAt     DateTime       @default(now()) @map("created_at")
 
-  taskOrder TaskOrder @relation(fields: [taskOrderId], references: [id], onDelete: Cascade)
+  taskOrder   TaskOrder        @relation(fields: [taskOrderId], references: [id], onDelete: Restrict)
+  deliverable TaskDeliverable? @relation(fields: [deliverableId], references: [id], onDelete: Restrict)
 
-  @@index([taskOrderId, timerType, status])
+  @@index([taskOrderId, status])
+  @@index([status, expiresAt])
+  @@index([deliverableId])
   @@map("scheduled_timer_jobs")
 }

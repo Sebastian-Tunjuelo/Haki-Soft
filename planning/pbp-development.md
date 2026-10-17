@@ -56,7 +56,7 @@ flowchart LR
 
 #### A. Especificaciones de la Fase
 * **`SPEC-00.md`:** Creación de la carpeta `specs` y su `README.md` con el índice maestro de especificaciones desde `SPEC-00` hasta `SPEC-12` (`Deploy`).
-* **`SPEC-01.md`:** Definición de los contratos compartidos en `shared-schemas` y del modelo relacional de base de datos en 3NF (`schema.prisma`) libre de *God-Entities*.
+* **`SPEC-01.md`:** Definición de los contratos compartidos en `shared-schemas` y del modelo relacional de base de datos v2 (`schema.prisma` + `domain_checks.sql`), documentado en sus tres pasos en `architecture-overview.md` §5, con `TaskOrder` desacoplada.
 
 #### B. Trabajo Paralelo por Rol
 * **`AI-1`:** Crea la carpeta `specs` y su `README.md` (`SPEC-00.md`), e inicializa `shared-schemas` (`SPEC-01.md`) exportando los esquemas de órdenes, plazos, contrato de entrada/salida de IA y generadores de *mocks*.
@@ -111,7 +111,7 @@ flowchart LR
 
 #### B. Trabajo Paralelo por Rol
 * **`BE-1` (`🛡️ Autoría Manual — Uso de IA Mínimo/Nulo`):** `escrow-payment.service.ts` con fondeo (`receiveAmount`), payout dual 96/4 a wallets distintas, reembolsos 100 %, grants y rotación de tokens.
-* **`BE-2`:** Idempotencia `SHA-256`, `EscrowLedger` con `platformOwnerWalletAddress`, webhooks Rafiki.
+* **`BE-2`:** Idempotencia `SHA-256`, `EscrowLedger` con FK a las wallets de las partes y a `PlatformWallet` (custodia y fee del dueño), una fila de `OpenPaymentsTransaction` por intento de cada pierna, webhooks Rafiki.
 * **`FE-1`:** Checkout mostrando 96 % / 4 % (wallet dueño) e inicio de **7 días** tras fondeo.
 * **`FE-2`:** Escena 3D de bóveda escrow.
 * **`AI-1`:** Invariantes `100 % = 96 % + 4 %` e idempotencia.

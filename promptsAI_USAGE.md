@@ -22,6 +22,11 @@ Este archivo contiene el **registro histórico, secuencial e íntegro (sin omisi
 | **Prompt #010** | `2026-10-16` | `Cursor` | `Planeación`, `Gobernanza`, `Backend` | Aplicar todas las aclaraciones en la documentación SSoT y planeación alineada. | [`.agents/CONTEXT.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/CONTEXT.md), [`planning/architecture-overview.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/architecture-overview.md), [`planning/taskboard.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/taskboard.md), [`planning/pbp-development.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/pbp-development.md), [`planning/sdd-process.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/planning/sdd-process.md), [`validacion.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/.agents/skills/taskstream-spec/references/validacion.md) (+ réplicas), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 | **Prompt #011** | `2026-10-16` | `Cursor` | `Planeación`, `Gobernanza`, `Frontend`, `Backend`, `IA`, `Tests` | Redactar e implementar SPEC-00 y SPEC-01; redactar SPEC-02 y SPEC-03 sin implementar integraciones externas. | `specs/_template.md`, `specs/README.md`, `specs/SPEC-00.md`, `specs/SPEC-01.md`, `specs/SPEC-02.md`, `specs/SPEC-03.md`, `packages/shared-schemas/`, `apps/web/`, `apps/api/`, `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `pnpm-lock.yaml`, `.gitignore`, `.env.example`, `planning/taskboard.md`, `AI_USAGE.md`, `promptsAI_USAGE.md`, `prompts/AI_USAGE.md` |
 | **Prompt #012** | `2026-10-16` | `Antigravity` | `Herramientas / DX`, `Backend`, `Gobernanza` | Aprovisionamiento e integración en el proyecto `Haki-Soft` del CLI interactivo oficial de Open Payments (`tools/open-payments-cli`) y del servidor MCP (`tools/open-payments-mcp`) con compilación TypeScript, configuración `.env.example`, desacoplamiento Git y manual operativo `tools/README.md`. | [`tools/README.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/README.md), [`tools/open-payments-cli/.env.example`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli/.env.example), [`tools/open-payments-cli/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-cli), [`tools/open-payments-mcp/`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/tools/open-payments-mcp), [`AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/sebas/OneDrive/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #013** | `2026-10-16` | `Antigravity` | `Gobernanza`, `Frontend`, `Backend`, `Planeación` | Incorporación e instalación multi-agente (`.agents`, `.kiro`, `.claude`) de 6 skills de alta adopción para potenciar el soporte de Zod (`zod-validation-utilities`, `zod-schema-validation`), redacción y síntesis de specs (`to-spec`) y diseño frontend (`frontend-design`, `shadcn-ui`, `tailwind-css-patterns`), más su articulación con `taskstream-spec`. | Directorios de *skills* en `.agents/skills/`, `.kiro/skills/`, `.claude/skills/`, [`taskstream-spec/SKILL.md`](file:///c:/Users/maico/Desktop/Haki-Soft/.agents/skills/taskstream-spec/SKILL.md), [`skills-lock.json`](file:///c:/Users/maico/Desktop/Haki-Soft/skills-lock.json), [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #014** | `2026-10-16` | `Antigravity` | `Frontend`, `Gobernanza`, `Backend`, `Planeación` | Implementación de `SPEC-02` ejerciendo roles FE-1 y FE-2 (Clerk v6, selector de modo y verificación de billetera panamericana con Subject Grant y hash SHA-256). | [`apps/web/middleware.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/middleware.ts), [`apps/web/app/`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app), [`apps/web/src/`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src), [`planning/taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Soft/planning/taskboard.md), [`specs/SPEC-02.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/SPEC-02.md), [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
+| **Prompt #015** | `2026-10-16` | `Antigravity` | `Frontend`, `Planeación`, `Gobernanza`, `Tests` | Solicitud de implementación de `SPEC-03` desde los roles FE-1 y FE-2 (motor 3D y scroll). Análisis inicial de requerimientos e inspección de contexto sin alteración de archivos. | Ninguno (análisis e inspección de especificaciones) |
+| **Prompt #016** | `2026-10-16` | `Antigravity` | `Gobernanza` | Solicitud de pausa inmediata por el usuario; detención inmediata de tareas sin modificaciones y reporte de estado. | Ninguno (pausa inmediata confirmada) |
+| **Prompt #017** | `2026-10-16` | `Antigravity` | `Frontend`, `Planeación`, `Gobernanza`, `Tests` | Implementación completa de `SPEC-03` desde FE-1 y FE-2: `SmoothScrollProvider` (Lenis + GSAP ticker con `lagSmoothing(0)`), escena `HeroScene` en Three.js/R3F con mutación de refs (zero-setState), `HeroSceneLoader` aislado (`ssr: false`), composición de landing por FE-1, suite Vitest con 8/8 pruebas verdes y actualización de `taskboard.md` y `SPEC-03.md` a `[DONE]` / `TESTED`. | [`apps/web/app/providers/smooth-scroll.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/providers/smooth-scroll.tsx), [`apps/web/app/scenes/`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/scenes), [`apps/web/app/layout.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/layout.tsx), [`apps/web/app/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/page.tsx), [`apps/web/vitest.config.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/vitest.config.ts), [`apps/web/src/tests/spec-03-scroll-canvas.test.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/tests/spec-03-scroll-canvas.test.ts), [`planning/taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Soft/planning/taskboard.md), [`specs/SPEC-03.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/SPEC-03.md), [`specs/README.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/README.md), [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md), [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md), [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) |
 
 ---
 
@@ -643,3 +648,309 @@ necesito que redactes y implementes la spec 0 y 1 y luego redactes las specs has
 @[conversation:"Interledger CLI And MCP Tools"] pon el cli y mcp en este proyecto
 ```
 
+---
+
+### Prompt #013 — Instalación Multi-Agente de Skills Adicionales para Zod, Redacción de Specs y Frontend Design
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Gobernanza`, `Frontend`, `Backend`, `Planeación`
+* **Resumen de su funcionalidad:**
+  1. Realiza búsqueda e instala vía `npx skills add` con soporte multi-agente (`.agents/skills`, `.kiro/skills` y `.claude/skills`) de 6 skills de alta adopción comunitaria:
+     * **Soporte de Zod:** `zod-validation-utilities` (`giuseppe-trisciuoglio/developer-kit`) y `zod-schema-validation` (`mindrally/skills`) para estructuración de contratos Zod, inferencia de tipos estricta (`z.infer`), validación en capas API (DTOs de NestJS), transformaciones seguras y validación de formularios con React Hook Form.
+     * **Redacción de Specs:** `to-spec` (`mattpocock/skills`) para sintetizar ágilmente discusiones técnicas hacia borradores de especificaciones estructuradas, trabajando en sinergia con la skill rectora `taskstream-spec` (`SPEC-00` a `SPEC-12`).
+     * **Frontend Design:** `frontend-design` (`anthropics/skills`), `shadcn-ui` y `tailwind-css-patterns` (`giuseppe-trisciuoglio/developer-kit`) para dirección visual distintiva e intencional, componentes accesibles basados en Radix UI (`shadcn/ui`), sistemas utility-first de espaciado, layout y temas oscuros coordinados con Next.js 15.5, React 19 y las escenas 3D de Canvas.
+  2. Actualiza la tabla de interoperabilidad y orquestación documental en `taskstream-spec/SKILL.md` (y réplicas en `.kiro` y `.claude`) integrando formalmente las nuevas skills especializadas.
+  3. Mantiene la trazabilidad inmutable y sincronización dual de gobernanza en `skills-lock.json`, `AI_USAGE.md`, `promptsAI_USAGE.md` y `prompts/AI_USAGE.md`.
+* **Archivos creados / modificados:**
+  * `.agents/skills/frontend-design/` *(Instalado)*
+  * `.agents/skills/shadcn-ui/` *(Instalado)*
+  * `.agents/skills/tailwind-css-patterns/` *(Instalado)*
+  * `.agents/skills/to-spec/` *(Instalado)*
+  * `.agents/skills/zod-schema-validation/` *(Instalado)*
+  * `.agents/skills/zod-validation-utilities/` *(Instalado)*
+  * `.kiro/skills/` y `.claude/skills/` *(Réplicas sincronizadas)*
+  * [`.agents/skills/taskstream-spec/SKILL.md`](file:///c:/Users/maico/Desktop/Haki-Soft/.agents/skills/taskstream-spec/SKILL.md) *(Modificado y sincronizado)*
+  * [`skills-lock.json`](file:///c:/Users/maico/Desktop/Haki-Soft/skills-lock.json) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Añade skills adicionales para apoyar a zod, redactar specs y frontend design
+```
+
+---
+
+### Prompt #014 — Implementación de SPEC-02 ejerciendo los roles FE-1 y FE-2 (Clerk v6, Selector de Modo y Verificación de Billetera Multimoneda)
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Frontend`, `Gobernanza`, `Backend`, `Planeación`
+* **Resumen de su funcionalidad:**
+  1. Ejerce los dos roles de frontend (`FE-1` y `FE-2`) para implementar las vistas y contratos de `SPEC-02`:
+     - **FE-1 (Arquitectura y Funcionalidad Core):** Configuración de Clerk v6 con middleware mínimo `clerkMiddleware()` en Next.js 15.5 (`apps/web/middleware.ts`), protección de rutas con verificación en servidor `await auth()`, vistas de autenticación `/sign-in` y `/sign-up`, endpoints REST para `activeMode` y descubrimiento/retos GNAP, y adaptadores MSW en `apps/web/src/mocks/handlers.ts`.
+     - **FE-2 (Diseño Interactivo y Experiencia de Usuario):** Diseño de tokens visuales slate obsidian en `apps/web/app/globals.css` (conforme a `frontend-design`), componente táctil interactivo `ModeSwitcher` (`/settings/mode`) para alternar entre `Buyer Mode` y `Seller Mode` con feedback visual de invariantes, y flujo interactivo completo de verificación de billetera `WalletVerification` (`/onboarding/wallet`) con máquina de 6 estados (`EMPTY`, `DISCOVERING`, `PENDING_REDIRECT`, `VERIFIED`, `FAILED_HASH`, `EXPIRED`), presets de billeteras panamericanas (USD, COP, CAD, BRL, MXN), inspector criptográfico de hash SHA-256 (`gnapInteractHash`) e historial atómico de reemplazo de billetera anterior.
+  2. Resuelve la compatibilidad universal del módulo `idempotency.ts` (`packages/shared-schemas`) para bundlers de cliente y servidor, añade alias `@/*` en TypeScript y configura fallbacks webpack en `apps/web/next.config.ts`.
+  3. Actualiza el tablero operativo `planning/taskboard.md` marcando `T-F1-FE1-01` como `[DONE]`, añade la versión `1.1.0` en el historial de `specs/SPEC-02.md`, y mantiene la trazabilidad estricta y sincronizada en `AI_USAGE.md`, `promptsAI_USAGE.md` y `prompts/AI_USAGE.md`.
+* **Archivos creados / modificados:**
+  * [`apps/web/middleware.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/middleware.ts) *(Creado)*
+  * [`apps/web/app/globals.css`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/globals.css) *(Creado)*
+  * [`apps/web/app/layout.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/layout.tsx) *(Modificado)*
+  * [`apps/web/app/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/page.tsx) *(Modificado)*
+  * [`apps/web/app/sign-in/[[...sign-in]]/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/sign-in/[[...sign-in]]/page.tsx) *(Creado)*
+  * [`apps/web/app/sign-up/[[...sign-up]]/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/sign-up/[[...sign-up]]/page.tsx) *(Creado)*
+  * [`apps/web/app/settings/mode/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/settings/mode/page.tsx) *(Creado)*
+  * [`apps/web/app/onboarding/wallet/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/onboarding/wallet/page.tsx) *(Creado)*
+  * [`apps/web/app/api/v1/me/mode/route.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/api/v1/me/mode/route.ts) *(Creado)*
+  * [`apps/web/app/api/v1/me/wallet/discovery/route.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/api/v1/me/wallet/discovery/route.ts) *(Creado)*
+  * [`apps/web/app/api/v1/me/wallet/challenges/route.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/api/v1/me/wallet/challenges/route.ts) *(Creado)*
+  * [`apps/web/app/api/v1/me/wallet/route.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/api/v1/me/wallet/route.ts) *(Creado)*
+  * [`apps/web/src/lib/wallet-mock-store.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/lib/wallet-mock-store.ts) *(Creado)*
+  * [`apps/web/src/components/navbar.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/components/navbar.tsx) *(Creado)*
+  * [`apps/web/src/components/mode-switcher.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/components/mode-switcher.tsx) *(Creado)*
+  * [`apps/web/src/components/wallet-verification.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/components/wallet-verification.tsx) *(Creado)*
+  * [`apps/web/src/mocks/handlers.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/mocks/handlers.ts) *(Modificado)*
+  * [`apps/web/next.config.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/next.config.ts) *(Modificado)*
+  * [`apps/web/tsconfig.json`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/tsconfig.json) *(Modificado)*
+  * [`apps/web/package.json`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/package.json) *(Modificado)*
+  * [`packages/shared-schemas/src/idempotency.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/packages/shared-schemas/src/idempotency.ts) *(Modificado)*
+  * [`planning/taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Soft/planning/taskboard.md) *(Modificado)*
+  * [`specs/SPEC-02.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/SPEC-02.md) *(Modificado)*
+  * [`.env.example`](file:///c:/Users/maico/Desktop/Haki-Soft/.env.example) *(Modificado)*
+  * [`apps/web/.env.local`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/.env.local) *(Creado)*
+  * [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Implementa la spec 02 ejerciendo los dos roles de frontend. Guiate a través de los diferentes documentos de planeación y apoyandote de las skills de diseño. Recuerda delimitarte a unicamente la spec, no implementar caracteristicas extra. Mantén lo que es seguridad, buenas prácticas de programación y en general realiza una implementación óptima y eficaz de las vistas, recuerda hacerlo interactivo, en caso de requerir animación 3D o utilización de la tecnología scroll trigger, añadelo al proyecto sin errores de compilación ni de ningun tipo
+```
+
+---
+
+### Prompt #015 — Solicitud de Implementación de SPEC-03 desde los Dos Roles de Frontend (FE-1 y FE-2)
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Frontend`, `Planeación`, `Gobernanza`, `Tests`
+* **Resumen de su funcionalidad:**
+  1. Solicitud de implementación de `SPEC-03` ejerciendo ambos roles frontend (`FE-1` y `FE-2`) bajo la metodología SDD Evolutivo + BDD, sincronización del motor 3D y actualización de planeación.
+  2. Análisis preliminar de requerimientos, dependencias y contratos visuales previo a la ejecución.
+* **Archivos creados / modificados:**
+  * Ninguno durante este turno (fase de análisis e inspección de especificaciones).
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Implementa la spec 3 desde los dos roles de frontend, siguiendo el mismo flujo de desarrollo. Recuerda utilizar las skills necesarias para el desarrollo de esta spec y modifica los archivos necesarios para que la spec se vea implementada en la planeación 
+```
+
+---
+
+### Prompt #016 — Pausa Momentánea de Ejecución Solicitada por el Usuario
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Gobernanza`
+* **Resumen de su funcionalidad:**
+  1. El usuario envía el comando de pausa.
+  2. La IA detiene la ejecución inmediatamente sin realizar modificaciones de archivos y confirma el estado en espera de instrucciones.
+* **Archivos creados / modificados:**
+  * Ninguno (pausa confirmada de inmediato).
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+pausa
+```
+
+---
+
+### Prompt #017 — Continuación y Culminación de la Implementación de SPEC-03 (FE-1 / FE-2)
+
+* **Herramienta de IA utilizada:** `Antigravity`
+* **Área(s) donde toma lugar:** `Frontend`, `Planeación`, `Gobernanza`, `Tests`
+* **Resumen de su funcionalidad:**
+  1. **Rol FE-2 (Motor 3D, Lenis y GSAP ScrollTrigger):**
+     - Instalación y configuración de dependencias de renderizado 3D y física de scroll en `apps/web`: `gsap` (3.12.5+), `@gsap/react` (2.1.1), `lenis` (1.1.18+), `three` (0.170.0), `@react-three/fiber` (9.0.0+), `@react-three/drei` (10.0.0+) y `@types/three`.
+     - Creación de `apps/web/app/providers/smooth-scroll.tsx`: sincronización estricta de Lenis con el ticker de GSAP (`lagSmoothing(0)`), actualización de eventos `lenis.on('scroll', ScrollTrigger.update)`, soporte de accesibilidad `prefers-reduced-motion` y reversión/destrucción completa de triggers y ticker al desmontar ruta.
+     - Creación de `apps/web/app/scenes/hero-scene.tsx`: escena 3D WebGL con núcleo de custodia Escrow y canales orbitales Interledger, mutación directa sobre `useRef` con ScrollTrigger scrub (invariante crítica de CERO llamadas a `setState` en scroll), función pura `isWebGLAvailable()` y fallback HTML determinista ante `WEBGL_UNAVAILABLE`.
+     - Creación de `apps/web/app/scenes/hero-scene-loader.tsx`: dynamic import aislado con `ssr: false` y placeholder de 480px para prevenir Cumulative Layout Shift (CLS).
+  2. **Rol FE-1 (Layout, Landing Page, Accesibilidad y Semántica):**
+     - Integración del `SmoothScrollProvider` en `apps/web/app/layout.tsx`.
+     - Maquetación y composición rica de la landing en `apps/web/app/page.tsx` con integración armónica de la escena 3D, timeline cronológico de escrow con plazos inmutables (7d, 24h, 32h, 30m) y desglose matemático exacto de la invariante 96% / 4% con `splitSingleBlockEscrow`.
+  3. **Pruebas y Calidad (FE-2 / Tests):**
+     - Configuración de Vitest (`apps/web/vitest.config.ts`) y script de pruebas en `package.json`.
+     - Creación de suite BDD de pruebas unitarias y de integración (`apps/web/src/tests/spec-03-scroll-canvas.test.ts`) cubriendo `TEST-01` a `TEST-04` y `RF-01` a `RF-06` (8/8 pruebas verdes).
+  4. **Planeación y Gobernanza:**
+     - Actualización de `planning/taskboard.md` marcando tareas `T-F1-FE2-01` y `T-F1-FE2-02` como `[DONE]`.
+     - Transición de estado en `specs/SPEC-03.md` y `specs/README.md` a `Testeada (TESTED)` y registro de versión 1.1.0 en §12.
+     - Actualización y sincronización estricta de trazabilidad en `AI_USAGE.md`, `promptsAI_USAGE.md` y `prompts/AI_USAGE.md`.
+* **Archivos creados / modificados:**
+  * [`apps/web/app/providers/smooth-scroll.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/providers/smooth-scroll.tsx) *(Creado)*
+  * [`apps/web/app/scenes/hero-scene.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/scenes/hero-scene.tsx) *(Creado)*
+  * [`apps/web/app/scenes/hero-scene-loader.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/scenes/hero-scene-loader.tsx) *(Creado)*
+  * [`apps/web/vitest.config.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/vitest.config.ts) *(Creado)*
+  * [`apps/web/src/tests/spec-03-scroll-canvas.test.ts`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/src/tests/spec-03-scroll-canvas.test.ts) *(Creado)*
+  * [`apps/web/app/layout.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/layout.tsx) *(Modificado)*
+  * [`apps/web/app/page.tsx`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/app/page.tsx) *(Modificado)*
+  * [`apps/web/package.json`](file:///c:/Users/maico/Desktop/Haki-Soft/apps/web/package.json) *(Modificado)*
+  * [`planning/taskboard.md`](file:///c:/Users/maico/Desktop/Haki-Soft/planning/taskboard.md) *(Modificado)*
+  * [`specs/SPEC-03.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/SPEC-03.md) *(Modificado)*
+  * [`specs/README.md`](file:///c:/Users/maico/Desktop/Haki-Soft/specs/README.md) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/maico/Desktop/Haki-Soft/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Continua implementando
+```
+
+---
+
+### Prompt #018 — Redacción de `SPEC-04` y `SPEC-05` con Seguridad Fintech, Escenarios BDD y Planteamiento de Brechas/Decisiones Abiertas en `taskboard.md`
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Planeación`, `Gobernanza`, `Backend`, `Frontend`, `IA`, `Tests`
+* **Resumen de su funcionalidad:**
+  1. **Redacción de `specs/SPEC-04.md` (`Redactada (DRAFTED)`):**
+     - Especificación completa en 12 secciones del catálogo de 6 categorías del MVP (`CATEGORY_MEDIA_CONSTRAINTS_MAP`), Gigs a precio fijo no negociables, publicaciones de Buyer con presupuesto tope (`ClientTaskPublication`) y cancelación atómica previa al acuerdo, inyección segura Server-Side de W3C Web Monetization (`<link rel="monetization">`) y escena 3D de categorías + `ScrollTrigger.batch()` a 60–120 FPS.
+     - Cierre de brechas de seguridad en el flujo de Marketplace: prevención de IDOR tomando `buyerId`/`sellerId` exclusivamente del token Clerk en servidor, `WalletVerifiedGuard` obligatorio, rango financiero seguro `[100 .. 50_000_000]` centavos para impedir *Fee Truncation* (`platformFee = 0` en Rafiki) e *Integer Overflow* en `INT4` de PostgreSQL, exclusión de `.svg` ejecutables y sanitización temprana anti-*Prompt Injection*.
+  2. **Redacción de `specs/SPEC-05.md` (`Redactada (DRAFTED)`):**
+     - Especificación completa en 12 secciones del motor de contratación de Gig fijo y bandeja de ofertas competitivas a la baja (`proposedBudgetUSDInCents <= initialBudgetUSDInCents`), bifurcación entre Camino 1 (`AGREED_PATH_1` con bloqueo pesimista `SELECT ... FOR UPDATE`, cierre en cascada de propuestas competidoras e instanciación atómica de `TaskOrder` en `PENDING_ESCROW_FUNDING` + `EscrowLedger` en `AWAITING_FUNDS`) y Camino 2 (`DISCREPANCY_CLOSED_PATH_2` manteniendo la publicación en `OPEN_FOR_PROPOSALS`), junto con el clasificador determinista `resolveMvpAiAuditableModality`.
+     - Cierre de brechas de seguridad en negociación: prohibición estricta de *Self-Dealing* (`buyerId !== sellerId` y wallets distintas), aislamiento entre freelancers competidores (*Anti-Bid Sniping*), confirmación explícita de términos (`expectedAmountUSDInCents` y `expectedDeliveryDays`) contra ataques *TOCTOU / Bait-and-Switch*, y congelamiento inmutable de `TaskAcceptanceCriterion`.
+  3. **Validación SDD y Actualización Documental (Sin implementar código):**
+     - Ejecución del validador `.agents/skills/taskstream-spec/scripts/check-spec.mjs` sobre `specs/SPEC-04.md` y `specs/SPEC-05.md` con **0 errores bloqueantes**.
+     - Actualización de `specs/README.md` registrando `SPEC-04` y `SPEC-05` como `Redactada (DRAFTED)`.
+     - Adición de la **Sección 4** al final de `planning/taskboard.md` planteando brechas de seguridad fintech (`SEC-GAP-01` a `SEC-GAP-07`), decisiones abiertas críticas (`DEC-OPEN-01` a `DEC-OPEN-05`) y pendientes técnicos urgentes (`URG-SYNC-01` a `URG-SYNC-03`).
+* **Archivos creados / modificados:**
+  * [`specs/SPEC-04.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/specs/SPEC-04.md) *(Creado)*
+  * [`specs/SPEC-05.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/specs/SPEC-05.md) *(Creado)*
+  * [`specs/README.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/specs/README.md) *(Modificado)*
+  * [`planning/taskboard.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/planning/taskboard.md) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+```text
+Redacta la spec 4 y 5 teniendo en cuenta los documentos de planeación, no rompiendo la jerarquía que propone el proyecto de fuentes de verdad. Sigue al pie de la letra las reglas de negocio planteada, recuerda que es una fintech por lo cual la seguridad es muy importante, cierra todas las brechas posibles de seguridad en el flujo. Plantea cosas pendientes urgentes o decisiones abiertas que son muy necesarias, brechas de seguridad, etc. ponlo como una sección en la parte final del documento taskboard, solo plantea, no implementes nada. Sigue el BDD en la redacción de las specs y plantealas de la mejor manera posible para que al momento de implementarlas salga de buena calidad. Recuerda usar las skills necesarias y modificar al final los documentos para que estas specs queden redactadas, no implementes nada
+```
+
+---
+
+### Prompt #019 — Auditoría y Rediseño del Modelo de Datos v2: Desacople de `TaskOrder` y Estandarización en los 3 Pasos (Conceptual, Lógico y Físico)
+
+* **Herramienta de IA utilizada:** `Cursor`
+* **Área(s) donde toma lugar:** `Backend`, `Planeación`, `Gobernanza`, `Tests`
+* **Resumen de su funcionalidad:**
+  1. **Desacople de `TaskOrder` (de 31 a 14 columnas) en `apps/api/prisma/schema.prisma`:** la orden guarda solo partes, origen (`gigId` XOR `proposalId`), términos congelados y estado. Montos 96/4 y las cuatro wallets pasan a `EscrowLedger`; los plazos viven solo en `ScheduledTimerJob` (`startedAt` / `expiresAt` inmutables); las correcciones usadas se derivan de `TaskDeliverable.reviewDecision`. Se eliminan las FK redundantes `AiAdvisorReport.taskOrderId` y `OpenPaymentsTransaction.taskOrderId`. Se crean `PlatformWallet` (custodia y fee del dueño) y la tabla de referencia `TaskCategoryMediaType`. Todas las relaciones de contratos y dinero pasan a `ON DELETE RESTRICT`.
+  2. **Capa física canónica en `apps/api/prisma/sql/domain_checks.sql` y nueva migración `20261017000000_decouple_task_order`:** `CHECK` de rango `[100, 50_000_000]`, fórmula entera `floor(total*4/100)` con `::bigint`, anti self-dealing, coherencia de timestamps y duración fija por tipo de reloj; índices únicos parciales (wallet activa, acuerdo único por publicación — SEC-GAP-01 —, una pierna de pago completada y una en curso — SEC-GAP-06 —, revisión pendiente y reloj activo únicos); triggers de origen e inmutabilidad de la orden, wallets del ledger, relojes, secuencia de revisiones y alcance de IA; vistas `v_task_order_revision_usage`, `v_task_order_active_deadline`, `v_escrow_ledger_settlement` y `v_seller_profile_stats`.
+  3. **Documentación en los 3 pasos:** reescritura de `planning/architecture-overview.md` §5 (conceptual con contextos delimitados y reglas R-01..R-12; lógico con esquema relacional, dependencias funcionales, 1FN–FNBC, desnormalizaciones justificadas, tabla de resolución de los 10 hallazgos de la auditoría y 14 hallazgos propios; físico con convenciones, fórmula canónica, catálogo de `CHECK`, índices parciales, triggers, vistas, política de borrado y operación de migraciones).
+  4. **Desviaciones justificadas respecto a la auditoría:** se mantuvo `floor` (no *round half up*) porque `taskboard.md` §3 regla 8 es la fuente superior; el vencimiento de la revisión vive solo en el reloj (no en `TaskDeliverable`) para tener una única fuente de verdad; la orden referencia a su origen (y no al revés) porque el Marketplace está aguas arriba de la Contratación.
+  5. **Contratos y sincronización:** `money.ts` (constantes de rango y fórmula entera), `schemas.ts` (`proposalId` en `TaskOrderCardSchema`, `proposedDeliveryDays`, rango de montos, anti self-dealing), mocks y pruebas; `.agents/CONTEXT.md` §8.2, `planning/taskboard.md` (regla 8 y SEC-GAP-01..04/06), `planning/pbp-development.md`, `specs/SPEC-01.md` (1.3.0), `specs/SPEC-04.md` (0.2.0), `specs/SPEC-05.md` (0.2.0) y la skill `taskstream-spec`.
+  6. **Verificación:** `prisma validate` OK; las 3 migraciones aplicadas en orden sobre PostgreSQL embebido (PGlite) con 45/45 escenarios positivos y negativos; `domain_checks.sql` aplicado sobre el DDL fresco; Vitest de `shared-schemas` 13/13 y `tsc` limpio; `check-spec.mjs` con 0 errores en SPEC-01, SPEC-04 y SPEC-05. No se tocaron `open-payments.service.ts`, `escrow-payment.service.ts` ni claves `Ed25519`.
+* **Archivos creados / modificados:**
+  * [`apps/api/prisma/schema.prisma`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/apps/api/prisma/schema.prisma) *(Modificado)*
+  * [`apps/api/prisma/sql/domain_checks.sql`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/apps/api/prisma/sql/domain_checks.sql) *(Modificado)*
+  * [`apps/api/prisma/migrations/20261017000000_decouple_task_order/migration.sql`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/apps/api/prisma/migrations/20261017000000_decouple_task_order/migration.sql) *(Creado)*
+  * [`packages/shared-schemas/src/money.ts`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/packages/shared-schemas/src/money.ts) *(Modificado)*
+  * [`packages/shared-schemas/src/schemas.ts`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/packages/shared-schemas/src/schemas.ts) *(Modificado)*
+  * [`packages/shared-schemas/src/mocks.ts`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/packages/shared-schemas/src/mocks.ts) *(Modificado)*
+  * [`packages/shared-schemas/src/index.ts`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/packages/shared-schemas/src/index.ts) *(Modificado)*
+  * [`packages/shared-schemas/src/contracts.test.ts`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/packages/shared-schemas/src/contracts.test.ts) *(Modificado)*
+  * [`planning/architecture-overview.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/planning/architecture-overview.md) *(Modificado)*
+  * [`.agents/CONTEXT.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/.agents/CONTEXT.md) *(Modificado)*
+  * [`planning/taskboard.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/planning/taskboard.md) *(Modificado)*
+  * [`planning/pbp-development.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/planning/pbp-development.md) *(Modificado)*
+  * [`specs/SPEC-01.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/specs/SPEC-01.md) *(Modificado)*
+  * [`specs/SPEC-04.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/specs/SPEC-04.md) *(Modificado)*
+  * [`specs/SPEC-05.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/specs/SPEC-05.md) *(Modificado)*
+  * [`.agents/skills/taskstream-spec/SKILL.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/.agents/skills/taskstream-spec/SKILL.md) *(Modificado)*
+  * [`AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/AI_USAGE.md) *(Modificado)*
+  * [`promptsAI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/promptsAI_USAGE.md) *(Modificado)*
+  * [`prompts/AI_USAGE.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/prompts/AI_USAGE.md) *(Modificado)*
+* **Texto de Prompt Enviado a la IA (Verbatim):**
+
+````text
+A continuación se presenta la auditoría técnica del modelado de datos presente en [`architecture-overview.md`](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/planning/architecture-overview.md#L224-L968), respondiendo puntualmente a cada uno de los aspectos consultados:
+
+---
+
+### 1. ¿Está bien estandarizado en sus 3 pasos clásicos?
+**Dictamen: Parcialmente / Incompleto.**
+
+En ingeniería de bases de datos, el modelado formal requiere 3 pasos secuenciales diferenciados:
+1. **Modelo Conceptual:** Entidades puras de negocio, límites de contexto y cardinalidades de alto nivel, independientes de la tecnología.
+2. **Modelo Lógico:** Normalización rigurosa (1NF, 2NF, 3NF), resolución de dependencias funcionales, claves candidatas y eliminación de dependencias transitivas.
+3. **Modelo Físico:** Tipado concreto del RDBMS (PostgreSQL), DDL, índices (`@@index`), constraints de integridad (`CHECK`), estrategias de borrado referencial (`Cascade`, `Restrict`) y mapeos de tablas.
+
+**Hallazgo en el archivo:**
+* El documento **comprime y mezcla los pasos 1 y 2**: salta directamente de un diagrama Mermaid (`erDiagram`) a la definición física en [Prisma 6](file:///c:/Users/saram/OneDrive/Escritorio/HakiSoft-Project(1)/planning/architecture-overview.md#L274-L920) y a los scripts SQL de PostgreSQL.
+* Afirma estar en **3NF**, pero no documenta el modelo conceptual ni desglosa la transición lógica formal. El diagrama de Mermaid es un híbrido entre lógico y físico (ya incluye relaciones dirigidas por claves foráneas técnicas en lugar de relaciones de dominio).
+
+---
+
+### 2. ¿Existe una *God Entity*?
+**Dictamen: Sí, latente y en gestación (`TaskOrder` y en menor medida `User`).**
+
+Aunque la sección 5.1 sostiene que el modelo está *"libre de God-Entities"*, en la práctica:
+* **`TaskOrder` acumula 31 atributos propios y 14 relaciones foráneas directas**.
+  * Absorbe responsabilidades de **cuatro dominios distintos**:
+    1. *Negociación y Contratación:* `publicationId`, `proposalId`, `gigId`.
+    2. *Finanzas y Escrow:* montos 96/4, monedas origen/destino, referencias a wallets.
+    3. *Operación y Plazos:* contadores de revisiones y 9 columnas de marcas de tiempo (`*DeadlineAt`, `*ExpiresAt`, `*StartedAt`).
+    4. *Inspección e IA:* `aiAuditableModality`, relaciones con `AiAdvisorReport` y `TaskDeliverable`.
+* Si bien no llega al extremo de una tabla monolítica que guarde los mensajes o transacciones dentro de sí (hubo acierto en extraer `EscrowLedger` y `TaskDeliverable`), **`TaskOrder` actúa como un embudo centralizado sobrecargado**, violando el principio de responsabilidad única (*Single Responsibility Principle* en agregados DDD).
+
+---
+
+### 3. ¿Es completamente necesario que `TaskOrder` esté tan acoplada a las demás entidades?
+**Dictamen: No. Gran parte del acoplamiento es innecesario, redundante o circular.**
+
+1. **Acoplamiento polimórfico de origen (`publicationId`, `proposalId`, `gigId`):**
+   * Si una orden proviene de una oferta (`proposalId`), esa `NegotiationProposal` ya apunta a `publicationId`. Mantener ambas FKs en `TaskOrder` crea una **dependencia redundante y desnormalizada**.
+2. **Doble relación con el subsistema de IA (`AiAdvisorReport`):**
+   * `AiAdvisorReport` tiene relación 1:1 con `TaskDeliverable`, pero a la vez guarda una clave foránea `taskOrderId` directa hacia `TaskOrder`. Es un acoplamiento redundante: la IA audita una *entrega*, no la orden abstracta.
+3. **Acoplamiento circular con Transacciones Open Payments:**
+   * `OpenPaymentsTransaction` tiene tanto `taskOrderId` como `escrowLedgerId`. Dado que `EscrowLedger` es 1:1 con `TaskOrder`, esta doble vinculación crea un triángulo referencial evitable.
+4. **Acoplamiento de Wallets en `TaskOrder` y en `EscrowLedger`:**
+   * `TaskOrder` retiene `buyerWalletId` y `sellerWalletId`, mientras que `EscrowLedger` custodia los movimientos financieros y retiene `platformOwnerWalletAddress`. Las wallets transaccionales deberían pertenecer exclusivamente al agregado financiero (`EscrowLedger`).
+
+---
+
+### 4. Posibles fallos y riesgos detectados en el modelado
+
+1. **Riesgo de *Split-Brain* en tiempos y plazos (Múltiples fuentes de verdad):**
+   * La expiración de la revisión de 32 horas está modelada en 3 sitios distintos:
+     - `TaskOrder.currentReviewExpiresAt`
+     - `TaskDeliverable.reviewExpiresAt`
+     - `ScheduledTimerJob.scheduledFor`
+   * Si una actualización asíncrona o job de BullMQ falla o reintenta, es muy factible que los 3 valores diverjan, provocando estados inconsistentes en la base de datos.
+2. **Regla de 96/4 y colisión con centavos indivisibles:**
+   * El constraint SQL `chk_task_order_exact_96_4_split` exige que:
+     `freelancer_payout_usd_in_cents + platform_fee_usd_in_cents = total_amount_usd_in_cents`.
+   * Para montos impares (ej. 1555 centavos: 4% = 62.2, 96% = 1492.8), el modelo de base de datos no especifica una política de redondeo determinista. Si el backend trunca ambos hacia abajo ($62 + 1492 = 1554$), el `CHECK` constraint de PostgreSQL **rechazará la inserción y tumbará la transacción**.
+3. **Inexistencia de constraint físico para la regla de *"máximo 1 wallet activa"*:**
+   * El comentario en `UserWallet` estipula que solo puede haber una wallet activa por usuario. Sin embargo, Prisma no soporta índices condicionales nativos y en la sección 5.4 **se omitió el DDL de PostgreSQL** para crear el índice único parcial:
+     `CREATE UNIQUE INDEX uq_user_wallets_single_active ON user_wallets (user_id) WHERE is_active = true;`
+   * Esto deja la integridad del sistema dependiendo únicamente del código de aplicación, vulnerable a condiciones de carrera concurrentes.
+4. **Múltiples rutas de borrado en cascada (*Cascade Cycles*):**
+   * `TaskDeliverable` tiene `onDelete: Cascade` hacia `TaskOrder`.
+   * `AiAdvisorReport` tiene `onDelete: Cascade` hacia `TaskOrder` **y además** hacia `TaskDeliverable`.
+   * Esto puede generar conflictos o advertencias en motores relacionales al existir múltiples caminos de cascada sobre la misma jerarquía.
+
+---
+
+### 5. Recomendaciones de mejora
+
+1. **Desacoplar `TaskOrder` aplicando Límites de Contexto (Bounded Contexts):**
+   * **Contratación:** Reemplazar `publicationId`, `proposalId` y `gigId` por un identificador de origen único o permitir que `NegotiationProposal` y `Gig` sean los que conozcan el `orderId` resultante, no al revés.
+   * **Auditoría de IA:** Desvincular `AiAdvisorReport` de `TaskOrder`. La relación natural es estrictamente `TaskDeliverable 1:1 AiAdvisorReport`.
+   * **Finanzas:** Mover las referencias a las billeteras de pago (`buyerWalletId`, `sellerWalletId`) al modelo `EscrowLedger`.
+2. **Unificar la Fuente de Verdad de los Plazos:**
+   * Eliminar las columnas temporales redundantes en `TaskOrder` (`currentReviewExpiresAt`, `currentReviewStartedAt`). Las fechas de inicio y vencimiento de una revisión deben residir exclusivamente en la entrega evaluada (`TaskDeliverable`), y el temporizador en `ScheduledTimerJob` debe sincronizarse referenciando a dicha entrega.
+3. **Completar las restricciones SQL faltantes:**
+   * Incluir formalmente el índice parcial de wallet única activa en las migraciones SQL.
+   * Documentar la fórmula canónica de redondeo (ej. *Round half up* en la comisión de la plataforma y el remanente exacto al freelancer: `freelancerPayout = total - platformFee`).
+
+Teniendo en cuenta esta auditoria y posibles hallazgos propios que hagas a mejorar, modifica el modelado de datos encontrado en el documento architecture e implementa las mejoras del modelado de datos ya planteada, lo principal es desacoplar la entidad TaskOrder y realizar mejores practicas en el MER. Resuelve incongruencias y posibles fallos con el modelado de datos. Estandariza por completo la base de datos en sus 3 pasos. Ayudate de skills si así lo crees conveniente. Y modifica el resto de archivos que se vean relacionados con el modelado de datos
+````

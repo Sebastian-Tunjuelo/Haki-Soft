@@ -1,12 +1,23 @@
-/** Regla 8 de `planning/taskboard.md` §3. Centavos enteros, truncado hacia abajo. */
+/** Rango de montos que aceptan Gig, publicación, propuesta y escrow (CHECK SQL espejo). */
+export const MIN_MARKETPLACE_AMOUNT_USD_IN_CENTS = 100;
+export const MAX_MARKETPLACE_AMOUNT_USD_IN_CENTS = 50_000_000;
+
+/**
+ * Regla 8 de `planning/taskboard.md` §3: fee = floor(total * 4 / 100), payout = total - fee.
+ * Aritmética entera para coincidir bit a bit con chk_escrow_exact_96_4_split.
+ */
 export function splitSingleBlockEscrow(totalAmountUSDInCents: number): {
   platformFeeUSDInCents: number;
   freelancerPayoutUSDInCents: number;
 } {
-  if (!Number.isInteger(totalAmountUSDInCents) || totalAmountUSDInCents <= 0) {
+  if (
+    !Number.isInteger(totalAmountUSDInCents) ||
+    totalAmountUSDInCents < MIN_MARKETPLACE_AMOUNT_USD_IN_CENTS ||
+    totalAmountUSDInCents > MAX_MARKETPLACE_AMOUNT_USD_IN_CENTS
+  ) {
     throw new Error('INVALID_TOTAL_AMOUNT');
   }
-  const platformFeeUSDInCents = Math.floor(totalAmountUSDInCents * 0.04);
+  const platformFeeUSDInCents = Math.floor((totalAmountUSDInCents * 4) / 100);
   const freelancerPayoutUSDInCents = totalAmountUSDInCents - platformFeeUSDInCents;
   return { platformFeeUSDInCents, freelancerPayoutUSDInCents };
 }
